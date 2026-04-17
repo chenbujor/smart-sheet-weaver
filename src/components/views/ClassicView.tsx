@@ -5,6 +5,8 @@ import { useAppStore } from '@/lib/store';
 import { CLASSES } from '@/lib/srd';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { FeaturesView } from '@/components/views/FeaturesView';
+import { EquipmentView } from '@/components/views/EquipmentView';
 
 interface Props { character: Character; derived: Derived }
 

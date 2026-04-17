@@ -12,6 +12,8 @@ import { CONDITIONS, WEAPON_MASTERIES } from '@/lib/srd';
 import { SourceTag } from '@/components/SourceTag';
 import { evalFormula, activeTierValue } from '@/lib/rules';
 import { cn } from '@/lib/utils';
+import { FeaturesView } from '@/components/views/FeaturesView';
+import { EquipmentView } from '@/components/views/EquipmentView';
 
 interface Props {
   character: Character;
