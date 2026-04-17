@@ -151,6 +151,18 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
         </section>
       </div>
 
+      {/* Embedded Equipment */}
+      <div>
+        <h2 className="font-display text-xl text-oxblood-deep mb-2">Equipment</h2>
+        <EquipmentView character={c} derived={d} />
+      </div>
+
+      {/* Embedded Features & Bonuses */}
+      <div>
+        <h2 className="font-display text-xl text-oxblood-deep mb-2">Features & Bonuses</h2>
+        <FeaturesView character={c} derived={d} />
+      </div>
+
       {/* Notes */}
       <section className="parchment-panel rounded-md p-5">
         <div className="relative z-10">

@@ -375,47 +375,17 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         </section>
       </div>
 
-      {/* Features (full width below) */}
-      {c.features.length > 0 && (
-        <section className="parchment-panel rounded-md p-5 lg:col-span-3">
-          <div className="relative z-10">
-            <h3 className="font-display text-lg text-oxblood-deep">Features &amp; Resources</h3>
-            <div className="ink-divider my-2" />
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {c.features.map((f) => {
-                const max = f.usesFormula ? evalFormula(f.usesFormula, { pb: d.pb, level: c.level, abilities: c.abilities }) : 0;
-                const tier = activeTierValue(f.tiers, c.level);
-                return (
-                  <div key={f.id} className="stat-block rounded-sm p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="font-display text-base text-ink">{f.name}</div>
-                        <div className="mt-0.5 flex items-center gap-1 flex-wrap">
-                          <SourceTag source={f.source} label={f.sourceLabel} />
-                          {f.reset && f.reset !== 'none' && (
-                            <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">
-                              {f.reset} rest
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-sm text-ink-faded"><KeywordText text={f.description} /></p>
-                    {tier && (
-                      <p className="mt-1 text-xs italic text-oxblood-deep">Tier (L{c.level}): {tier}</p>
-                    )}
-                    {max > 0 && (
-                      <div className="mt-2">
-                        <Pips total={max} used={Math.min(max, f.used ?? 0)} onChange={(u) => setFeatureUsed(c.id, f.id, u)} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Embedded Equipment + Features (full width) */}
+      <div className="lg:col-span-3 space-y-4">
+        <div>
+          <h2 className="font-display text-xl text-oxblood-deep mb-2">Equipment</h2>
+          <EquipmentView character={c} derived={d} />
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-oxblood-deep mb-2">Features & Bonuses</h2>
+          <FeaturesView character={c} derived={d} />
+        </div>
+      </div>
     </div>
   );
 };
