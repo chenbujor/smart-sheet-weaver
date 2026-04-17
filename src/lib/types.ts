@@ -135,6 +135,14 @@ export interface Character {
   inventory: InventoryItem[];
   weapons: Weapon[];
 
+  // Proficiencies (free text lists, comma-separable)
+  proficiencies?: {
+    armor?: string[];
+    weapons?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
+
   notes?: string;
   createdAt: number;
   updatedAt: number;
