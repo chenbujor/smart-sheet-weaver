@@ -34,17 +34,7 @@ export const newCharacter = (name = 'New Adventurer'): Character => {
     features: [],
     spells: [],
     inventory: [],
-    weapons: [
-      {
-        id: uid(),
-        name: 'Longsword',
-        ability: 'str',
-        damageDice: '1d8',
-        damageType: 'slashing',
-        proficient: true,
-        masteryId: 'sap',
-      },
-    ],
+    weapons: [],
     notes: '',
     createdAt: Date.now(),
     updatedAt: Date.now(),
