@@ -143,6 +143,21 @@ export interface Character {
     languages?: string[];
   };
 
+  // Flat numeric bonuses applied to derived stats
+  bonuses?: {
+    abilities?: Partial<Record<AbilityKey, number>>;     // +X to ability score
+    skills?: Record<string, number>;                      // +X to skill check
+    saves?: Partial<Record<AbilityKey, number>>;          // +X to specific save (e.g. STR vs grapple)
+    hpMax?: number;                                       // +X to max HP
+    spellSaveDc?: number;                                 // +X to all spell save DCs
+    spellAttack?: number;                                 // +X to all spell attack rolls
+    ac?: number;                                          // +X to AC
+    initiative?: number;                                  // +X to initiative
+    speed?: number;                                       // +X ft speed
+    passivePerception?: number;                           // +X passive perception
+    maxConcentrations?: number;                           // extra concurrent concentrations (default 1)
+  };
+
   notes?: string;
   createdAt: number;
   updatedAt: number;
