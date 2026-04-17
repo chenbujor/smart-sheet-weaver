@@ -9,6 +9,7 @@ import { KeywordText } from '@/components/KeywordText';
 import { evalFormula, activeTierValue, type Derived } from '@/lib/rules';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { BonusesPanel } from '@/components/BonusesPanel';
 
 interface Props { character: Character; derived: Derived }
 
