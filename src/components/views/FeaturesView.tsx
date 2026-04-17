@@ -211,8 +211,9 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
         ))}
       </div>
 
-      {/* Proficiencies */}
+      {/* Right column */}
       <div className="space-y-4">
+        <BonusesPanel character={c} />
         <section className="parchment-panel rounded-md p-5">
           <div className="relative z-10 space-y-3">
             <h3 className="font-display text-lg text-oxblood-deep">Proficiencies</h3>
