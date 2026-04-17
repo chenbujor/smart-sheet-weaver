@@ -122,7 +122,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {ABILITY_KEYS.map((k) => {
                 const prof = c.proficientSaves.includes(k);
-                const bonus = saveBonus(c.abilities, k, prof, d.pb) - d.exhaustionPenalty;
+                const bonus = saveBonus(d.effectiveAbilities, k, prof, d.pb) + (c.bonuses?.saves?.[k] ?? 0) - d.exhaustionPenalty;
                 return (
                   <div key={k} className="stat-block rounded-sm p-2 flex items-center gap-2">
                     <span className={cn('inline-block h-2.5 w-2.5 rounded-full border border-ink/60', prof && 'bg-oxblood')} />
@@ -349,7 +349,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             <div className="space-y-1 text-sm">
               {SKILLS.map((s) => {
                 const lvl = c.skills[s.id] ?? 'none';
-                const bonus = skillBonus(c.abilities, lvl, s.ability, d.pb) - d.exhaustionPenalty;
+                const bonus = skillBonus(d.effectiveAbilities, lvl, s.ability, d.pb) + (c.bonuses?.skills?.[s.id] ?? 0) - d.exhaustionPenalty;
                 return (
                   <div key={s.id} className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">

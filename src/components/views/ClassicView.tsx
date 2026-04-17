@@ -101,7 +101,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
             <div className="ink-divider" />
             {ABILITY_KEYS.map((k) => {
               const prof = c.proficientSaves.includes(k);
-              const bonus = saveBonus(c.abilities, k, prof, d.pb);
+              const bonus = saveBonus(d.effectiveAbilities, k, prof, d.pb) + (c.bonuses?.saves?.[k] ?? 0);
               return (
                 <label key={k} className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-secondary/40">
                   <button
@@ -125,7 +125,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
             <div className="ink-divider" />
             {SKILLS.map((s) => {
               const lvl = c.skills[s.id] ?? 'none';
-              const bonus = skillBonus(c.abilities, lvl, s.ability, d.pb);
+              const bonus = skillBonus(d.effectiveAbilities, lvl, s.ability, d.pb) + (c.bonuses?.skills?.[s.id] ?? 0);
               const next = lvl === 'none' ? 'prof' : lvl === 'prof' ? 'expert' : 'none';
               return (
                 <button
