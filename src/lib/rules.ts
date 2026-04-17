@@ -169,6 +169,16 @@ export const saveBonus = (
   pb: number
 ) => abilityMod(abilities[ability]) + (proficient ? pb : 0);
 
+// Apply ability bonuses to a base Abilities object (returns new copy)
+export const effectiveAbilities = (c: Character): Abilities => {
+  const ab = { ...c.abilities };
+  const bonuses = c.bonuses?.abilities ?? {};
+  (Object.keys(bonuses) as AbilityKey[]).forEach((k) => {
+    ab[k] = (ab[k] ?? 10) + (bonuses[k] ?? 0);
+  });
+  return ab;
+};
+
 // Derived snapshot used everywhere
 export interface Derived {
   pb: number;
@@ -179,25 +189,32 @@ export interface Derived {
   spellSlots: number[];           // by level 1..n (max)
   pactSlots?: { count: number; level: number };
   cantripTier: 1 | 5 | 11 | 17;
-  exhaustionPenalty: number;      // -2 per level
+  exhaustionPenalty: number;
   passivePerception: number;
   spellSaveDcByAbility: Record<AbilityKey, number>;
   spellAttackByAbility: Record<AbilityKey, number>;
+  effectiveAbilities: Abilities;
+  effectiveSpeed: number;
+  effectiveAc: number;
+  maxConcentrations: number;
 }
 
 export const deriveCharacter = (c: Character, cls: ClassDef | undefined): Derived => {
   const pb = proficiencyBonus(c.level);
-  const max = hpMax(cls, c.level, c.abilities, c.hpMaxOverride);
+  const eff = effectiveAbilities(c);
+  const b = c.bonuses ?? {};
+  const baseHp = hpMax(cls, c.level, eff, c.hpMaxOverride);
+  const max = baseHp + (b.hpMax ?? 0);
   const slots = cls ? spellSlotsFor(cls.caster, c.level) : [];
   const pact = cls?.caster === 'pact' ? pactSlotsFor(c.level) : undefined;
   const passive =
-    10 + skillBonus(c.abilities, c.skills['perception'] ?? 'none', 'wis', pb);
+    10 + skillBonus(eff, c.skills['perception'] ?? 'none', 'wis', pb) + (b.passivePerception ?? 0);
 
   const spellSaveDcByAbility = {} as Record<AbilityKey, number>;
   const spellAttackByAbility = {} as Record<AbilityKey, number>;
   (['str', 'dex', 'con', 'int', 'wis', 'cha'] as AbilityKey[]).forEach((a) => {
-    spellSaveDcByAbility[a] = saveDC(pb, c.abilities[a]);
-    spellAttackByAbility[a] = spellAttack(pb, c.abilities[a]);
+    spellSaveDcByAbility[a] = saveDC(pb, eff[a]) + (b.spellSaveDc ?? 0);
+    spellAttackByAbility[a] = spellAttack(pb, eff[a]) + (b.spellAttack ?? 0);
   });
 
   return {
@@ -205,7 +222,7 @@ export const deriveCharacter = (c: Character, cls: ClassDef | undefined): Derive
     hpMax: max,
     hitDiceTotal: c.level,
     hitDiceRemaining: c.level - c.hitDiceUsed,
-    initiative: initiative(c.abilities),
+    initiative: initiative(eff) + (b.initiative ?? 0),
     spellSlots: slots,
     pactSlots: pact,
     cantripTier: cantripScalingTier(c.level),
@@ -213,5 +230,9 @@ export const deriveCharacter = (c: Character, cls: ClassDef | undefined): Derive
     passivePerception: passive,
     spellSaveDcByAbility,
     spellAttackByAbility,
+    effectiveAbilities: eff,
+    effectiveSpeed: c.speed + (b.speed ?? 0),
+    effectiveAc: (c.ac ?? 10) + (b.ac ?? 0),
+    maxConcentrations: 1 + (b.maxConcentrations ?? 0),
   };
 };

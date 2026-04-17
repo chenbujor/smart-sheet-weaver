@@ -12,6 +12,8 @@ import { CONDITIONS, WEAPON_MASTERIES } from '@/lib/srd';
 import { SourceTag } from '@/components/SourceTag';
 import { evalFormula, activeTierValue } from '@/lib/rules';
 import { cn } from '@/lib/utils';
+import { FeaturesView } from '@/components/views/FeaturesView';
+import { EquipmentView } from '@/components/views/EquipmentView';
 
 interface Props {
   character: Character;
@@ -122,7 +124,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {ABILITY_KEYS.map((k) => {
                 const prof = c.proficientSaves.includes(k);
-                const bonus = saveBonus(c.abilities, k, prof, d.pb) - d.exhaustionPenalty;
+                const bonus = saveBonus(d.effectiveAbilities, k, prof, d.pb) + (c.bonuses?.saves?.[k] ?? 0) - d.exhaustionPenalty;
                 return (
                   <div key={k} className="stat-block rounded-sm p-2 flex items-center gap-2">
                     <span className={cn('inline-block h-2.5 w-2.5 rounded-full border border-ink/60', prof && 'bg-oxblood')} />
@@ -227,6 +229,9 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                 onChange={(e) => update(c.id, { ac: parseInt(e.target.value || '10', 10) })}
                 className="mx-auto h-12 w-16 text-center font-display text-2xl"
               />
+              {(c.bonuses?.ac ?? 0) !== 0 && (
+                <div className="text-[0.65rem] text-oxblood-deep">= {d.effectiveAc}</div>
+              )}
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Initiative</div>
@@ -234,7 +239,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Speed</div>
-              <div className="font-display text-2xl text-ink">{c.speed - c.exhaustion * 5}<span className="text-sm text-ink-faded"> ft</span></div>
+              <div className="font-display text-2xl text-ink">{d.effectiveSpeed - c.exhaustion * 5}<span className="text-sm text-ink-faded"> ft</span></div>
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded flex items-center justify-center gap-1"><Eye className="h-3 w-3" />Passive Perception</div>
@@ -349,7 +354,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             <div className="space-y-1 text-sm">
               {SKILLS.map((s) => {
                 const lvl = c.skills[s.id] ?? 'none';
-                const bonus = skillBonus(c.abilities, lvl, s.ability, d.pb) - d.exhaustionPenalty;
+                const bonus = skillBonus(d.effectiveAbilities, lvl, s.ability, d.pb) + (c.bonuses?.skills?.[s.id] ?? 0) - d.exhaustionPenalty;
                 return (
                   <div key={s.id} className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -370,47 +375,17 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         </section>
       </div>
 
-      {/* Features (full width below) */}
-      {c.features.length > 0 && (
-        <section className="parchment-panel rounded-md p-5 lg:col-span-3">
-          <div className="relative z-10">
-            <h3 className="font-display text-lg text-oxblood-deep">Features &amp; Resources</h3>
-            <div className="ink-divider my-2" />
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {c.features.map((f) => {
-                const max = f.usesFormula ? evalFormula(f.usesFormula, { pb: d.pb, level: c.level, abilities: c.abilities }) : 0;
-                const tier = activeTierValue(f.tiers, c.level);
-                return (
-                  <div key={f.id} className="stat-block rounded-sm p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="font-display text-base text-ink">{f.name}</div>
-                        <div className="mt-0.5 flex items-center gap-1 flex-wrap">
-                          <SourceTag source={f.source} label={f.sourceLabel} />
-                          {f.reset && f.reset !== 'none' && (
-                            <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">
-                              {f.reset} rest
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-sm text-ink-faded"><KeywordText text={f.description} /></p>
-                    {tier && (
-                      <p className="mt-1 text-xs italic text-oxblood-deep">Tier (L{c.level}): {tier}</p>
-                    )}
-                    {max > 0 && (
-                      <div className="mt-2">
-                        <Pips total={max} used={Math.min(max, f.used ?? 0)} onChange={(u) => setFeatureUsed(c.id, f.id, u)} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Embedded Equipment + Features (full width) */}
+      <div className="lg:col-span-3 space-y-4">
+        <div>
+          <h2 className="font-display text-xl text-oxblood-deep mb-2">Equipment</h2>
+          <EquipmentView character={c} derived={d} />
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-oxblood-deep mb-2">Features & Bonuses</h2>
+          <FeaturesView character={c} derived={d} />
+        </div>
+      </div>
     </div>
   );
 };
