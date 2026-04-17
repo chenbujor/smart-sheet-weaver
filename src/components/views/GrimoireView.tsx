@@ -197,7 +197,7 @@ const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').Spell
                   <button
                     key={s.id}
                     className="w-full rounded-sm border border-ink/20 bg-parchment-light p-2 text-left hover:bg-secondary"
-                    onClick={() => { onAdd({ ...s, id: undefined as any, source: 'class' }); setOpen(false); }}
+                    onClick={() => { const { id: _id, ...rest } = s; onAdd({ ...rest, source: 'class' }); setOpen(false); }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-display text-ink">{s.name}</span>
