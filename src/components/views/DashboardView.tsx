@@ -227,6 +227,9 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                 onChange={(e) => update(c.id, { ac: parseInt(e.target.value || '10', 10) })}
                 className="mx-auto h-12 w-16 text-center font-display text-2xl"
               />
+              {(c.bonuses?.ac ?? 0) !== 0 && (
+                <div className="text-[0.65rem] text-oxblood-deep">= {d.effectiveAc}</div>
+              )}
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Initiative</div>
@@ -234,7 +237,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Speed</div>
-              <div className="font-display text-2xl text-ink">{c.speed - c.exhaustion * 5}<span className="text-sm text-ink-faded"> ft</span></div>
+              <div className="font-display text-2xl text-ink">{d.effectiveSpeed - c.exhaustion * 5}<span className="text-sm text-ink-faded"> ft</span></div>
             </div>
             <div>
               <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded flex items-center justify-center gap-1"><Eye className="h-3 w-3" />Passive Perception</div>
