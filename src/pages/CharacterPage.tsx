@@ -8,11 +8,12 @@ import { DashboardView } from '@/components/views/DashboardView';
 import { GrimoireView } from '@/components/views/GrimoireView';
 import { ClassicView } from '@/components/views/ClassicView';
 import { EquipmentView } from '@/components/views/EquipmentView';
+import { FeaturesView } from '@/components/views/FeaturesView';
 import { Button } from '@/components/ui/button';
 import { RestControls } from '@/components/RestControls';
 import { cn } from '@/lib/utils';
 
-type ViewKey = 'dashboard' | 'equipment' | 'grimoire' | 'classic';
+type ViewKey = 'dashboard' | 'features' | 'equipment' | 'grimoire' | 'classic';
 
 const CharacterPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,7 @@ const CharacterPage = () => {
 
   const tabs: { key: ViewKey; label: string }[] = [
     { key: 'dashboard', label: 'Dashboard' },
+    { key: 'features', label: 'Features' },
     { key: 'equipment', label: 'Equipment' },
     { key: 'grimoire', label: 'Grimoire' },
     { key: 'classic', label: 'Classic Sheet' },
@@ -96,6 +98,7 @@ const CharacterPage = () => {
 
       <main className="container py-5 animate-fade-in">
         {view === 'dashboard' && <DashboardView character={character} derived={derived} />}
+        {view === 'features' && <FeaturesView character={character} derived={derived} />}
         {view === 'equipment' && <EquipmentView character={character} derived={derived} />}
         {view === 'grimoire' && <GrimoireView character={character} derived={derived} />}
         {view === 'classic' && <ClassicView character={character} derived={derived} />}
