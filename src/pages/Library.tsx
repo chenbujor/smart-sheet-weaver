@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppStore, exportAllJson, exportCharacterJson, downloadJson, parseImport, newCharacter } from '@/lib/store';
 import { CLASSES } from '@/lib/srd';
@@ -8,6 +8,7 @@ import { Plus, Download, Upload, Trash2, ScrollText, Sparkles } from 'lucide-rea
 import { toast } from 'sonner';
 
 const Library = () => {
+  const navigate = useNavigate();
   const characters = useAppStore((s) => s.characters);
   const addCharacter = useAppStore((s) => s.addCharacter);
   const deleteCharacter = useAppStore((s) => s.deleteCharacter);
@@ -18,7 +19,7 @@ const Library = () => {
 
   const handleCreate = () => {
     const id = addCharacter(newCharacter('New Adventurer'));
-    window.location.hash = `#/character/${id}`;
+    navigate(`/character/${id}`);
   };
 
   const handleExportAll = () => {
