@@ -1,10 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem } from './types';
-import { CLASSES, SAMPLE_SPELLS } from './srd';
+import type {
+  Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
+  GlossaryTerm, CustomEntry, Library, LibraryCategory,
+} from './types';
+import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
 import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+const seedGlossary = (): GlossaryTerm[] =>
+  CONDITIONS.map((c) => ({ id: c.id, name: c.name, description: c.description }));
+
+const emptyLibrary = (): Library => ({
+  glossary: seedGlossary(),
+  spells: [],
+  features: [],
+  weapons: [],
+  items: [],
+  custom: [],
+});
 
 export const newCharacter = (name = 'New Adventurer'): Character => {
   const cls = CLASSES.find((c) => c.id === 'fighter')!;
