@@ -108,6 +108,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       characters: {},
+      library: emptyLibrary(),
 
       addCharacter: (c) => {
         const ch = c ?? newCharacter();
@@ -437,11 +438,78 @@ export const useAppStore = create<AppState>()(
         }),
 
       importAll: (data) =>
-        set(() => ({ characters: data.characters || {} })),
+        set((s) => ({
+          characters: data.characters ?? s.characters,
+          library: data.library
+            ? {
+                glossary: data.library.glossary ?? s.library.glossary,
+                spells: data.library.spells ?? s.library.spells,
+                features: data.library.features ?? s.library.features,
+                weapons: data.library.weapons ?? s.library.weapons,
+                items: data.library.items ?? s.library.items,
+                custom: data.library.custom ?? s.library.custom,
+              }
+            : s.library,
+        })),
+
+      // ----- Library CRUD ----------------------------------------------
+      addLibraryEntry: (category, entry) => {
+        const id = (entry as any).id || uid();
+        set((s) => {
+          const list = (s.library[category] as any[]).slice();
+          list.push({ ...(entry as any), id });
+          return { library: { ...s.library, [category]: list } as Library };
+        });
+        return id;
+      },
+
+      updateLibraryEntry: (category, id, patch) =>
+        set((s) => {
+          const list = (s.library[category] as any[]).map((e) =>
+            e.id === id ? { ...e, ...(patch as any) } : e,
+          );
+          return { library: { ...s.library, [category]: list } as Library };
+        }),
+
+      removeLibraryEntry: (category, id) =>
+        set((s) => {
+          const list = (s.library[category] as any[]).filter((e) => e.id !== id);
+          return { library: { ...s.library, [category]: list } as Library };
+        }),
+
+      copyFromLibrary: (characterId, category, libraryEntryId) =>
+        set((s) => {
+          const cur = s.characters[characterId];
+          if (!cur) return s;
+          const tmpl = (s.library[category] as any[]).find((e) => e.id === libraryEntryId);
+          if (!tmpl) return s;
+          const copy = { ...tmpl, id: uid() };
+          const next = { ...cur } as Character;
+          if (category === 'spells') next.spells = [...cur.spells, copy as SpellEntry];
+          if (category === 'features') next.features = [...cur.features, copy as CharacterFeature];
+          if (category === 'weapons') next.weapons = [...cur.weapons, copy as Weapon];
+          if (category === 'items') next.inventory = [...cur.inventory, copy as InventoryItem];
+          return { characters: { ...s.characters, [characterId]: touch(next) } };
+        }),
+
+      resetGlossary: () =>
+        set((s) => ({ library: { ...s.library, glossary: seedGlossary() } })),
     }),
     {
       name: 'dnd2024-vault',
-      version: 1,
+      version: 2,
+      migrate: (persisted: any, fromVersion) => {
+        if (!persisted) return persisted;
+        if (fromVersion < 2) {
+          persisted.library = persisted.library ?? emptyLibrary();
+          // ensure SRD conditions are present in glossary
+          const have = new Set((persisted.library.glossary as GlossaryTerm[]).map((g) => g.id));
+          for (const seed of seedGlossary()) {
+            if (!have.has(seed.id)) persisted.library.glossary.push(seed);
+          }
+        }
+        return persisted;
+      },
     }
   )
 );
@@ -450,7 +518,13 @@ export const useAppStore = create<AppState>()(
 export { uid, SAMPLE_SPELLS };
 
 export const exportAllJson = () => {
-  const data = { version: 1, exportedAt: new Date().toISOString(), characters: useAppStore.getState().characters };
+  const s = useAppStore.getState();
+  const data = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    characters: s.characters,
+    library: s.library,
+  };
   return JSON.stringify(data, null, 2);
 };
 
