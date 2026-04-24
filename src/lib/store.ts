@@ -58,6 +58,7 @@ export const newCharacter = (name = 'New Adventurer'): Character => {
 
 interface AppState {
   characters: Record<string, Character>;
+  library: Library;
   // mutations
   addCharacter: (c?: Character) => string;
   deleteCharacter: (id: string) => void;
@@ -86,9 +87,19 @@ interface AppState {
   // rests
   shortRest: (id: string, hitDiceSpent: { rolled: number; count: number }) => void;
   longRest: (id: string) => void;
+  // library CRUD (generic)
+  addLibraryEntry: <K extends LibraryCategory>(category: K, entry: Omit<Library[K][number], 'id'> & { id?: string }) => string;
+  updateLibraryEntry: <K extends LibraryCategory>(category: K, id: string, patch: Partial<Library[K][number]>) => void;
+  removeLibraryEntry: (category: LibraryCategory, id: string) => void;
+  copyFromLibrary: (
+    characterId: string,
+    category: 'spells' | 'features' | 'weapons' | 'items',
+    libraryEntryId: string,
+  ) => void;
+  resetGlossary: () => void;
   // io
   importCharacters: (data: Character[]) => void;
-  importAll: (state: { characters: Record<string, Character> }) => void;
+  importAll: (state: { characters?: Record<string, Character>; library?: Library }) => void;
 }
 
 const touch = (c: Character): Character => ({ ...c, updatedAt: Date.now() });
