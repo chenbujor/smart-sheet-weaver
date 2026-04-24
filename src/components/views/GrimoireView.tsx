@@ -169,7 +169,7 @@ const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').Spell
   const [custom, setCustom] = useState({
     name: '', level: 0, school: 'Evocation', castingTime: 'Action',
     range: '60 ft', components: 'V, S', duration: 'Instantaneous',
-    description: '', concentration: false,
+    description: '', higherLevels: '', concentration: false,
   });
 
   return (
@@ -230,11 +230,25 @@ const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').Spell
               onChange={(e) => setCustom({ ...custom, description: e.target.value })}
               className="w-full rounded-sm border border-ink/40 bg-parchment-light p-2 text-sm min-h-24"
             />
+            <label className="block text-xs text-ink-faded">
+              At Higher Levels (scaling)
+              <textarea
+                placeholder="e.g. The damage increases by 1d6 for each spell slot level above 3rd. (Or for cantrips: 2d10 at L5, 3d10 at L11, 4d10 at L17.)"
+                value={custom.higherLevels}
+                onChange={(e) => setCustom({ ...custom, higherLevels: e.target.value })}
+                className="mt-0.5 w-full rounded-sm border border-ink/40 bg-parchment-light p-2 text-sm min-h-16"
+              />
+            </label>
             <Button
               className="w-full bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
               onClick={() => {
                 if (!custom.name) return;
-                onAdd({ ...custom, source: 'custom' });
+                const { higherLevels, ...rest } = custom;
+                onAdd({
+                  ...rest,
+                  source: 'custom',
+                  ...(higherLevels.trim() ? { higherLevels: higherLevels.trim() } : {}),
+                });
                 setOpen(false);
               }}
             >

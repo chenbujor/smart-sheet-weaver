@@ -18,7 +18,7 @@ export const RestControls = ({ character: c, derived: d }: Props) => {
   const shortRest = useAppStore((s) => s.shortRest);
   const longRest = useAppStore((s) => s.longRest);
   const [open, setOpen] = useState(false);
-  const [diceToSpend, setDiceToSpend] = useState(1);
+  const [diceToSpend, setDiceToSpend] = useState(0);
   const cls = CLASSES.find((x) => x.id === c.classId);
   const die = cls?.hitDie ?? 8;
   const conMod = abilityMod(c.abilities.con);
@@ -32,14 +32,14 @@ export const RestControls = ({ character: c, derived: d }: Props) => {
   };
 
   const handleShort = () => {
-    const cap = Math.min(diceToSpend, d.hitDiceRemaining);
-    if (cap <= 0) {
-      toast.error('No hit dice remaining');
-      return;
-    }
-    const rolled = rollDice(cap);
+    const cap = Math.max(0, Math.min(diceToSpend, d.hitDiceRemaining));
+    const rolled = cap > 0 ? rollDice(cap) : 0;
     shortRest(c.id, { rolled, count: cap });
-    toast.success(`Short rest: spent ${cap} hit di${cap === 1 ? 'e' : 'ce'}, recovered ${rolled} HP`);
+    if (cap === 0) {
+      toast.success('Short rest taken — short-rest resources restored');
+    } else {
+      toast.success(`Short rest: spent ${cap} hit di${cap === 1 ? 'e' : 'ce'}, recovered ${rolled} HP`);
+    }
     setOpen(false);
   };
 
