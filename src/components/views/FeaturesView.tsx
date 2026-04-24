@@ -68,8 +68,10 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
                 </span>
               )}
             </div>
-            {!open && f.description && (
-              <p className="mt-1 text-sm text-ink-faded line-clamp-1">{f.description}</p>
+            {f.description && (
+              <p className="mt-1 text-sm text-ink-faded whitespace-pre-wrap">
+                <KeywordText text={f.description} />
+              </p>
             )}
             {tier && (
               <p className="mt-0.5 text-xs italic text-oxblood-deep">Tier (L{c.level}): {tier}</p>
