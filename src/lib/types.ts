@@ -162,3 +162,35 @@ export interface Character {
   createdAt: number;
   updatedAt: number;
 }
+
+// =====================================================================
+// Shared Library — reusable templates + glossary, persisted globally
+// =====================================================================
+
+export interface GlossaryTerm {
+  id: string;
+  name: string;
+  description: string;
+  aliases?: string[];
+}
+
+export interface CustomEntry {
+  id: string;
+  name: string;
+  category: string;             // free-form bucket: "Race", "Faction", "Lore", ...
+  description: string;
+  treatAsGlossary?: boolean;    // if true, name (and aliases) auto-underline like glossary
+  aliases?: string[];
+}
+
+export interface Library {
+  glossary: GlossaryTerm[];
+  spells: SpellEntry[];
+  features: CharacterFeature[];
+  weapons: Weapon[];
+  items: InventoryItem[];
+  custom: CustomEntry[];
+}
+
+export type LibraryCategory = keyof Library;
+
