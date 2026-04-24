@@ -4,7 +4,7 @@ import { useAppStore, exportAllJson, exportCharacterJson, downloadJson, parseImp
 import { CLASSES } from '@/lib/srd';
 import { proficiencyBonus } from '@/lib/rules';
 import { useRef } from 'react';
-import { Plus, Download, Upload, Trash2, ScrollText, Sparkles } from 'lucide-react';
+import { Plus, Download, Upload, Trash2, ScrollText, Sparkles, BookMarked } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Library = () => {
@@ -62,6 +62,11 @@ const Library = () => {
             <Button onClick={handleCreate} className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep">
               <Plus className="mr-1.5 h-4 w-4" /> New Character
             </Button>
+            <Link to="/library">
+              <Button variant="outline" className="border-ink/40 bg-parchment-light hover:bg-secondary">
+                <BookMarked className="mr-1.5 h-4 w-4" /> Library
+              </Button>
+            </Link>
             <Button variant="outline" onClick={handleExportAll} className="border-ink/40 bg-parchment-light hover:bg-secondary">
               <Download className="mr-1.5 h-4 w-4" /> Export All
             </Button>
