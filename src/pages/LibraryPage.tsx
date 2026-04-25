@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
@@ -9,10 +9,11 @@ import { KeywordText } from '@/components/KeywordText';
 import { cn } from '@/lib/utils';
 import type {
   GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, Weapon, InventoryItem,
-  AbilityKey, SourceType, ResetType, LibraryCategory,
+  AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
+import { SKILLS } from '@/lib/rules';
 
 type TabKey = LibraryCategory;
 
@@ -22,6 +23,7 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'features', label: 'Features', icon: Sparkles },
   { key: 'weapons', label: 'Weapons', icon: Sword },
   { key: 'items', label: 'Items', icon: Backpack },
+  { key: 'actions', label: 'Actions', icon: Swords },
   { key: 'custom', label: 'Custom', icon: ScrollText },
 ];
 
