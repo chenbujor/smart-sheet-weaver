@@ -10,6 +10,7 @@ import { evalFormula, activeTierValue, type Derived } from '@/lib/rules';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
+import { LibraryPicker } from '@/components/LibraryPicker';
 
 interface Props { character: Character; derived: Derived }
 
@@ -184,23 +185,26 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
         {grouped.map((g) => (
           <section key={g.key} className="parchment-panel rounded-md p-5">
             <div className="relative z-10">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h3 className="font-display text-lg text-oxblood-deep">{g.group}</h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    addFeature(c.id, {
-                      name: `New ${g.label} Feature`,
-                      source: g.key,
-                      description: '',
-                      reset: 'none',
-                    });
-                  }}
-                  className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <LibraryPicker characterId={c.id} category="features" label="From Library" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      addFeature(c.id, {
+                        name: `New ${g.label} Feature`,
+                        source: g.key,
+                        description: '',
+                        reset: 'none',
+                      });
+                    }}
+                    className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                  </Button>
+                </div>
               </div>
               <div className="ink-divider my-2" />
               {g.features.length === 0 ? (

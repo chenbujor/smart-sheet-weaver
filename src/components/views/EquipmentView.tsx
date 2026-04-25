@@ -7,6 +7,7 @@ import { Plus, Trash2, Sparkle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Derived } from '@/lib/rules';
 import { abilityMod, formatMod } from '@/lib/rules';
+import { LibraryPicker } from '@/components/LibraryPicker';
 
 interface Props { character: Character; derived: Derived }
 
@@ -27,24 +28,27 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
       {/* Weapons */}
       <section className="parchment-panel rounded-md p-5">
         <div className="relative z-10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <h3 className="font-display text-lg text-oxblood-deep">Weapons & Attacks</h3>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                addWeapon(c.id, {
-                  name: 'New Weapon',
-                  ability: 'str',
-                  damageDice: '1d6',
-                  damageType: 'slashing',
-                  proficient: true,
-                })
-              }
-              className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <LibraryPicker characterId={c.id} category="weapons" label="From Library" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  addWeapon(c.id, {
+                    name: 'New Weapon',
+                    ability: 'str',
+                    damageDice: '1d6',
+                    damageType: 'slashing',
+                    proficient: true,
+                  })
+                }
+                className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            </div>
           </div>
           <div className="ink-divider my-2" />
           {c.weapons.length === 0 ? (
@@ -143,16 +147,19 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
       {/* Inventory */}
       <section className="parchment-panel rounded-md p-5">
         <div className="relative z-10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <h3 className="font-display text-lg text-oxblood-deep">Inventory</h3>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => addInventory(c.id, { name: 'New Item', qty: 1 })}
-              className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <LibraryPicker characterId={c.id} category="items" label="From Library" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => addInventory(c.id, { name: 'New Item', qty: 1 })}
+                className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
+              </Button>
+            </div>
           </div>
           <div className="ink-divider my-2" />
           <div className="mb-2 text-xs text-ink-faded">
