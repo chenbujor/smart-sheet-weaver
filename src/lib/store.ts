@@ -566,6 +566,7 @@ export const useAppStore = create<AppState>()(
           if (category === 'features') next.features = [...cur.features, copy as CharacterFeature];
           if (category === 'weapons') next.weapons = [...cur.weapons, copy as Weapon];
           if (category === 'items') next.inventory = [...cur.inventory, copy as InventoryItem];
+          if (category === 'actions') next.actions = [...(cur.actions ?? []), copy as CharacterAction];
           return { characters: { ...s.characters, [characterId]: touch(next) } };
         }),
 
