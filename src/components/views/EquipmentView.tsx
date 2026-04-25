@@ -1,17 +1,20 @@
-import type { Character, AbilityKey } from '@/lib/types';
+import type { Character, AbilityKey, CharacterAction, ActionTime } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { WEAPON_MASTERIES } from '@/lib/srd';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Sparkle } from 'lucide-react';
+import { Plus, Trash2, Sparkle, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Derived } from '@/lib/rules';
-import { abilityMod, formatMod } from '@/lib/rules';
+import { abilityMod, formatMod, SKILLS } from '@/lib/rules';
 import { LibraryPicker } from '@/components/LibraryPicker';
+import { SmartTextarea } from '@/components/SmartText';
+import { KeywordText } from '@/components/KeywordText';
 
 interface Props { character: Character; derived: Derived }
 
 const ABIL: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+const ACTION_TIMES: ActionTime[] = ['action', 'bonus', 'reaction', 'free', 'special'];
 
 export const EquipmentView = ({ character: c, derived: d }: Props) => {
   const addWeapon = useAppStore((s) => s.addWeapon);
