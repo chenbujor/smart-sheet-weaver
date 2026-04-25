@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
   GlossaryTerm, CustomEntry, Library, LibraryCategory,
+  LibraryAction, CharacterAction,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
 import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
@@ -12,12 +13,45 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const seedGlossary = (): GlossaryTerm[] =>
   CONDITIONS.map((c) => ({ id: c.id, name: c.name, description: c.description }));
 
+const seedActions = (): LibraryAction[] => [
+  {
+    id: 'shove',
+    name: 'Shove',
+    description: 'Replace one of the attacks of your Attack action with a Strength (Athletics) check vs. the target\'s Athletics or Acrobatics. On a success, push 5 ft or knock prone.',
+    actionTime: 'action',
+    range: '5 ft',
+    skill: 'athletics',
+    proficient: true,
+  },
+  {
+    id: 'grapple',
+    name: 'Grapple',
+    description: 'Replace one attack with a Strength (Athletics) check vs. the target\'s Athletics or Acrobatics. On a success, the target has the Grappled condition.',
+    actionTime: 'action',
+    range: '5 ft',
+    skill: 'athletics',
+    proficient: true,
+  },
+  {
+    id: 'unarmed-strike',
+    name: 'Unarmed Strike',
+    description: 'Make a melee attack roll against a creature within 5 ft. On a hit, the target takes bludgeoning damage equal to 1 + your Strength modifier.',
+    actionTime: 'action',
+    range: '5 ft',
+    ability: 'str',
+    proficient: true,
+    damageDice: '1',
+    damageType: 'bludgeoning',
+  },
+];
+
 const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
   features: [],
   weapons: [],
   items: [],
+  actions: seedActions(),
   custom: [],
 });
 
