@@ -411,6 +411,45 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
+      addAction: (id, a) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({ ...cur, actions: [...(cur.actions ?? []), { ...a, id: uid() }] }),
+            },
+          };
+        }),
+
+      removeAction: (id, aid) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({ ...cur, actions: (cur.actions ?? []).filter((a) => a.id !== aid) }),
+            },
+          };
+        }),
+
+      updateAction: (id, aid, patch) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({
+                ...cur,
+                actions: (cur.actions ?? []).map((a) => (a.id === aid ? { ...a, ...patch } : a)),
+              }),
+            },
+          };
+        }),
+
       shortRest: (id, { rolled, count }) =>
         set((s) => {
           const cur = s.characters[id];
