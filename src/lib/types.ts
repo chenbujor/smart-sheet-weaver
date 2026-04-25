@@ -183,12 +183,40 @@ export interface CustomEntry {
   aliases?: string[];
 }
 
+// An "action" is anything you do in combat that resolves with a d20 check
+// or auto-applies. It defaults to an ability or skill, but on a character
+// sheet the user can override which ability/skill is rolled.
+export type ActionTime = 'action' | 'bonus' | 'reaction' | 'free' | 'special';
+
+export interface LibraryAction {
+  id: string;
+  name: string;
+  description?: string;
+  actionTime?: ActionTime;
+  range?: string;
+  // ONE of these defines the default roll:
+  ability?: AbilityKey;       // e.g. "str" for Shove
+  skill?: string;             // skill id, e.g. "athletics" for a grapple
+  proficient?: boolean;       // add PB to the d20 (defaults true if skill set)
+  damageDice?: string;        // optional damage line
+  damageType?: string;
+  saveAbility?: AbilityKey;   // if the target makes a save, which ability
+  notes?: string;
+}
+
+// On a character, an action keeps the same shape but can override
+// the ability/skill used for its roll.
+export interface CharacterAction extends LibraryAction {
+  // overrides come from editing ability/skill directly on the copy
+}
+
 export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
   features: CharacterFeature[];
   weapons: Weapon[];
   items: InventoryItem[];
+  actions: LibraryAction[];
   custom: CustomEntry[];
 }
 
