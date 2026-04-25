@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { BookMarked, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-type Category = 'spells' | 'features' | 'weapons' | 'items';
+type Category = 'spells' | 'features' | 'weapons' | 'items' | 'actions';
 
 interface Props {
   characterId: string;
@@ -22,6 +22,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   features: 'Feature',
   weapons: 'Weapon',
   items: 'Item',
+  actions: 'Action',
 };
 
 export const LibraryPicker = ({ characterId, category, trigger, label }: Props) => {
