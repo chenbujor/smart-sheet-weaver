@@ -23,8 +23,34 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
   const addInventory = useAppStore((s) => s.addInventory);
   const removeInventory = useAppStore((s) => s.removeInventory);
   const updateInventory = useAppStore((s) => s.updateInventory);
+  const addAction = useAppStore((s) => s.addAction);
+  const removeAction = useAppStore((s) => s.removeAction);
+  const updateAction = useAppStore((s) => s.updateAction);
 
   const totalWeight = c.inventory.reduce((sum, i) => sum + (i.weight ?? 0) * i.qty, 0);
+  const actions = c.actions ?? [];
+
+  // Resolve the bonus added to the d20 for this action.
+  // Skill: ability mod of skill's native ability + (PB if proficient)
+  // Ability: ability mod + (PB if proficient)
+  const actionBonus = (a: CharacterAction): { value: number; label: string } => {
+    if (a.skill) {
+      const skill = SKILLS.find((s) => s.id === a.skill);
+      const ab = skill?.ability ?? 'str';
+      const profTier = c.skills[a.skill] ?? (a.proficient ? 'prof' : 'none');
+      const pbAdd = profTier === 'expert' ? d.pb * 2 : profTier === 'prof' ? d.pb : 0;
+      return {
+        value: abilityMod(d.effectiveAbilities[ab]) + pbAdd,
+        label: `${skill?.name ?? a.skill} (${ab.toUpperCase()})`,
+      };
+    }
+    const ab = a.ability ?? 'str';
+    const pbAdd = a.proficient ? d.pb : 0;
+    return {
+      value: abilityMod(d.effectiveAbilities[ab]) + pbAdd,
+      label: ab.toUpperCase(),
+    };
+  };
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
