@@ -134,6 +134,7 @@ export interface Character {
   spells: SpellEntry[];
   inventory: InventoryItem[];
   weapons: Weapon[];
+  actions?: CharacterAction[];   // combat actions (Shove, Grapple, custom)
 
   // Proficiencies (free text lists, comma-separable)
   proficiencies?: {
