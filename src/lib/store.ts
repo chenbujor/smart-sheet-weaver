@@ -575,7 +575,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'dnd2024-vault',
-      version: 2,
+      version: 3,
       migrate: (persisted: any, fromVersion) => {
         if (!persisted) return persisted;
         if (fromVersion < 2) {
@@ -584,6 +584,12 @@ export const useAppStore = create<AppState>()(
           const have = new Set((persisted.library.glossary as GlossaryTerm[]).map((g) => g.id));
           for (const seed of seedGlossary()) {
             if (!have.has(seed.id)) persisted.library.glossary.push(seed);
+          }
+        }
+        if (fromVersion < 3) {
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (!Array.isArray(persisted.library.actions)) {
+            persisted.library.actions = seedActions();
           }
         }
         return persisted;
