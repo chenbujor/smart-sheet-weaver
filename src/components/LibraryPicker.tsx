@@ -42,6 +42,7 @@ export const LibraryPicker = ({ characterId, category, trigger, label }: Props) 
     if (category === 'features') return [e.sourceLabel, e.reset && e.reset !== 'none' ? `${e.reset} rest` : null].filter(Boolean).join(' · ');
     if (category === 'weapons') return [e.damageDice, e.damageType].filter(Boolean).join(' ');
     if (category === 'items') return e.qty ? `qty ${e.qty}` : '';
+    if (category === 'actions') return [e.actionTime, e.skill ? `(${e.skill})` : e.ability?.toUpperCase()].filter(Boolean).join(' · ');
     return '';
   };
 
