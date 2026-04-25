@@ -640,3 +640,193 @@ const CustomTab = () => {
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Actions tab
+// ---------------------------------------------------------------------------
+
+const ACTION_TIMES: ActionTime[] = ['action', 'bonus', 'reaction', 'free', 'special'];
+
+const ActionsTab = () => {
+  const list = useAppStore((s) => s.library.actions);
+  const add = useAppStore((s) => s.addLibraryEntry);
+  const update = useAppStore((s) => s.updateLibraryEntry);
+  const remove = useAppStore((s) => s.removeLibraryEntry);
+  const [q, setQ] = useState('');
+
+  const filtered = useMemo(
+    () => list.filter((a) => !q || a.name.toLowerCase().includes(q.toLowerCase())),
+    [list, q],
+  );
+
+  // Toggle between rolling with a flat ability or a skill
+  const setRoll = (id: string, kind: 'ability' | 'skill', value: string) => {
+    if (kind === 'ability') {
+      update('actions', id, { ability: value as AbilityKey, skill: undefined });
+    } else {
+      update('actions', id, { skill: value, ability: undefined });
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchBar value={q} onChange={setQ} placeholder="Search actions..." />
+        <Button
+          onClick={() =>
+            add('actions', {
+              name: 'New Action',
+              actionTime: 'action',
+              ability: 'str',
+              proficient: true,
+              description: '',
+            } as Omit<LibraryAction, 'id'>)
+          }
+          className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add Action
+        </Button>
+      </div>
+      <p className="text-xs italic text-ink-faded">
+        Combat actions like Shove, Grapple, or homebrew. Each one defaults to a specific ability score
+        or skill — when added to a character you can override which one to roll with.
+      </p>
+      {filtered.length === 0 ? (
+        <EmptyState message="No actions yet." />
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((a) => {
+            const useSkill = !!a.skill;
+            return (
+              <div key={a.id} className="parchment-panel rounded-md p-3">
+                <div className="relative z-10 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <SmartInput
+                      value={a.name}
+                      onValueChange={(v) => update('actions', a.id, { name: v })}
+                      className="font-display flex-1"
+                    />
+                    <select
+                      value={a.actionTime ?? 'action'}
+                      onChange={(e) => update('actions', a.id, { actionTime: e.target.value as ActionTime })}
+                      className="rounded-sm border border-ink/40 bg-parchment-light px-2 py-1.5 text-sm capitalize"
+                    >
+                      {ACTION_TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <button
+                      onClick={() => remove('actions', a.id)}
+                      className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3 text-xs">
+                    <label className="flex flex-col text-ink-faded">
+                      Roll type
+                      <select
+                        value={useSkill ? 'skill' : 'ability'}
+                        onChange={(e) => {
+                          if (e.target.value === 'skill') {
+                            setRoll(a.id, 'skill', a.skill ?? 'athletics');
+                          } else {
+                            setRoll(a.id, 'ability', a.ability ?? 'str');
+                          }
+                        }}
+                        className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1"
+                      >
+                        <option value="ability">Ability check</option>
+                        <option value="skill">Skill check</option>
+                      </select>
+                    </label>
+                    {useSkill ? (
+                      <label className="flex flex-col text-ink-faded">
+                        Skill
+                        <select
+                          value={a.skill ?? 'athletics'}
+                          onChange={(e) => setRoll(a.id, 'skill', e.target.value)}
+                          className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1"
+                        >
+                          {SKILLS.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name} ({s.ability.toUpperCase()})</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <label className="flex flex-col text-ink-faded">
+                        Ability
+                        <select
+                          value={a.ability ?? 'str'}
+                          onChange={(e) => setRoll(a.id, 'ability', e.target.value)}
+                          className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase"
+                        >
+                          {ABILITY_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
+                        </select>
+                      </label>
+                    )}
+                    <label className="flex flex-col text-ink-faded">
+                      Range
+                      <Input
+                        value={a.range ?? ''}
+                        onChange={(e) => update('actions', a.id, { range: e.target.value })}
+                        placeholder="5 ft"
+                        className="mt-0.5 h-8"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3 text-xs">
+                    <label className="flex flex-col text-ink-faded">
+                      Damage dice (optional)
+                      <Input
+                        value={a.damageDice ?? ''}
+                        onChange={(e) => update('actions', a.id, { damageDice: e.target.value })}
+                        placeholder="1d6"
+                        className="mt-0.5 h-8"
+                      />
+                    </label>
+                    <label className="flex flex-col text-ink-faded">
+                      Damage type
+                      <Input
+                        value={a.damageType ?? ''}
+                        onChange={(e) => update('actions', a.id, { damageType: e.target.value })}
+                        placeholder="bludgeoning"
+                        className="mt-0.5 h-8"
+                      />
+                    </label>
+                    <label className="flex flex-col text-ink-faded">
+                      Save (optional)
+                      <select
+                        value={a.saveAbility ?? ''}
+                        onChange={(e) => update('actions', a.id, { saveAbility: (e.target.value || undefined) as AbilityKey | undefined })}
+                        className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase"
+                      >
+                        <option value="">— none —</option>
+                        {ABILITY_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <label className="flex items-center gap-1.5 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={a.proficient ?? false}
+                      onChange={(e) => update('actions', a.id, { proficient: e.target.checked })}
+                      className="accent-oxblood"
+                    />
+                    Add proficiency bonus
+                  </label>
+                  <SmartTextarea
+                    value={a.description ?? ''}
+                    onValueChange={(v) => update('actions', a.id, { description: v })}
+                    placeholder="Description (use \ to reference glossary)"
+                    rows={3}
+                    className="bg-parchment-light border-ink/30"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
