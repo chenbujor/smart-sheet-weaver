@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
   GlossaryTerm, CustomEntry, Library, LibraryCategory,
+  LibraryAction, CharacterAction,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
 import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
@@ -12,12 +13,45 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const seedGlossary = (): GlossaryTerm[] =>
   CONDITIONS.map((c) => ({ id: c.id, name: c.name, description: c.description }));
 
+const seedActions = (): LibraryAction[] => [
+  {
+    id: 'shove',
+    name: 'Shove',
+    description: 'Replace one of the attacks of your Attack action with a Strength (Athletics) check vs. the target\'s Athletics or Acrobatics. On a success, push 5 ft or knock prone.',
+    actionTime: 'action',
+    range: '5 ft',
+    skill: 'athletics',
+    proficient: true,
+  },
+  {
+    id: 'grapple',
+    name: 'Grapple',
+    description: 'Replace one attack with a Strength (Athletics) check vs. the target\'s Athletics or Acrobatics. On a success, the target has the Grappled condition.',
+    actionTime: 'action',
+    range: '5 ft',
+    skill: 'athletics',
+    proficient: true,
+  },
+  {
+    id: 'unarmed-strike',
+    name: 'Unarmed Strike',
+    description: 'Make a melee attack roll against a creature within 5 ft. On a hit, the target takes bludgeoning damage equal to 1 + your Strength modifier.',
+    actionTime: 'action',
+    range: '5 ft',
+    ability: 'str',
+    proficient: true,
+    damageDice: '1',
+    damageType: 'bludgeoning',
+  },
+];
+
 const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
   features: [],
   weapons: [],
   items: [],
+  actions: seedActions(),
   custom: [],
 });
 
@@ -84,6 +118,9 @@ interface AppState {
   addInventory: (id: string, i: Omit<InventoryItem, 'id'>) => void;
   removeInventory: (id: string, iid: string) => void;
   updateInventory: (id: string, iid: string, patch: Partial<InventoryItem>) => void;
+  addAction: (id: string, a: Omit<CharacterAction, 'id'>) => void;
+  removeAction: (id: string, aid: string) => void;
+  updateAction: (id: string, aid: string, patch: Partial<CharacterAction>) => void;
   // rests
   shortRest: (id: string, hitDiceSpent: { rolled: number; count: number }) => void;
   longRest: (id: string) => void;
@@ -93,7 +130,7 @@ interface AppState {
   removeLibraryEntry: (category: LibraryCategory, id: string) => void;
   copyFromLibrary: (
     characterId: string,
-    category: 'spells' | 'features' | 'weapons' | 'items',
+    category: 'spells' | 'features' | 'weapons' | 'items' | 'actions',
     libraryEntryId: string,
   ) => void;
   resetGlossary: () => void;
@@ -374,6 +411,45 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
+      addAction: (id, a) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({ ...cur, actions: [...(cur.actions ?? []), { ...a, id: uid() }] }),
+            },
+          };
+        }),
+
+      removeAction: (id, aid) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({ ...cur, actions: (cur.actions ?? []).filter((a) => a.id !== aid) }),
+            },
+          };
+        }),
+
+      updateAction: (id, aid, patch) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({
+                ...cur,
+                actions: (cur.actions ?? []).map((a) => (a.id === aid ? { ...a, ...patch } : a)),
+              }),
+            },
+          };
+        }),
+
       shortRest: (id, { rolled, count }) =>
         set((s) => {
           const cur = s.characters[id];
@@ -447,6 +523,7 @@ export const useAppStore = create<AppState>()(
                 features: data.library.features ?? s.library.features,
                 weapons: data.library.weapons ?? s.library.weapons,
                 items: data.library.items ?? s.library.items,
+                actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
               }
             : s.library,
@@ -489,6 +566,7 @@ export const useAppStore = create<AppState>()(
           if (category === 'features') next.features = [...cur.features, copy as CharacterFeature];
           if (category === 'weapons') next.weapons = [...cur.weapons, copy as Weapon];
           if (category === 'items') next.inventory = [...cur.inventory, copy as InventoryItem];
+          if (category === 'actions') next.actions = [...(cur.actions ?? []), copy as CharacterAction];
           return { characters: { ...s.characters, [characterId]: touch(next) } };
         }),
 
@@ -497,7 +575,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'dnd2024-vault',
-      version: 2,
+      version: 3,
       migrate: (persisted: any, fromVersion) => {
         if (!persisted) return persisted;
         if (fromVersion < 2) {
@@ -506,6 +584,12 @@ export const useAppStore = create<AppState>()(
           const have = new Set((persisted.library.glossary as GlossaryTerm[]).map((g) => g.id));
           for (const seed of seedGlossary()) {
             if (!have.has(seed.id)) persisted.library.glossary.push(seed);
+          }
+        }
+        if (fromVersion < 3) {
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (!Array.isArray(persisted.library.actions)) {
+            persisted.library.actions = seedActions();
           }
         }
         return persisted;
