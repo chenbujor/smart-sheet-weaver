@@ -118,6 +118,9 @@ interface AppState {
   addInventory: (id: string, i: Omit<InventoryItem, 'id'>) => void;
   removeInventory: (id: string, iid: string) => void;
   updateInventory: (id: string, iid: string, patch: Partial<InventoryItem>) => void;
+  addAction: (id: string, a: Omit<CharacterAction, 'id'>) => void;
+  removeAction: (id: string, aid: string) => void;
+  updateAction: (id: string, aid: string, patch: Partial<CharacterAction>) => void;
   // rests
   shortRest: (id: string, hitDiceSpent: { rolled: number; count: number }) => void;
   longRest: (id: string) => void;
@@ -127,7 +130,7 @@ interface AppState {
   removeLibraryEntry: (category: LibraryCategory, id: string) => void;
   copyFromLibrary: (
     characterId: string,
-    category: 'spells' | 'features' | 'weapons' | 'items',
+    category: 'spells' | 'features' | 'weapons' | 'items' | 'actions',
     libraryEntryId: string,
   ) => void;
   resetGlossary: () => void;
