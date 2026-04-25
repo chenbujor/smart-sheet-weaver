@@ -275,6 +275,154 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
           )}
         </div>
       </section>
+
+      {/* Actions */}
+      <section className="parchment-panel rounded-md p-5 lg:col-span-2">
+        <div className="relative z-10">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-1.5">
+              <Swords className="h-4 w-4" /> Actions
+            </h3>
+            <div className="flex items-center gap-1.5">
+              <LibraryPicker characterId={c.id} category="actions" label="From Library" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  addAction(c.id, {
+                    name: 'New Action',
+                    actionTime: 'action',
+                    ability: 'str',
+                    proficient: true,
+                    description: '',
+                  })
+                }
+                className="border-oxblood text-oxblood-deep hover:bg-oxblood/10"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            </div>
+          </div>
+          <div className="ink-divider my-2" />
+          {actions.length === 0 ? (
+            <p className="text-sm italic text-ink-faded">
+              No actions. Add Shove, Grapple, or homebrew abilities — or pull templates from the Library.
+            </p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {actions.map((a) => {
+                const useSkill = !!a.skill;
+                const bonus = actionBonus(a);
+                return (
+                  <div key={a.id} className="stat-block rounded-sm p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={a.name}
+                        onChange={(e) => updateAction(c.id, a.id, { name: e.target.value })}
+                        className="flex-1 font-display"
+                      />
+                      <select
+                        value={a.actionTime ?? 'action'}
+                        onChange={(e) => updateAction(c.id, a.id, { actionTime: e.target.value as ActionTime })}
+                        className="rounded-sm border border-ink/40 bg-parchment-light px-2 py-1.5 text-xs capitalize"
+                      >
+                        {ACTION_TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button
+                        onClick={() => removeAction(c.id, a.id)}
+                        className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                        aria-label="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
+                      <label className="flex flex-col text-ink-faded">
+                        Roll
+                        <select
+                          value={useSkill ? 'skill' : 'ability'}
+                          onChange={(e) => {
+                            if (e.target.value === 'skill') {
+                              updateAction(c.id, a.id, { skill: a.skill ?? 'athletics', ability: undefined });
+                            } else {
+                              updateAction(c.id, a.id, { ability: a.ability ?? 'str', skill: undefined });
+                            }
+                          }}
+                          className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-1 h-8"
+                        >
+                          <option value="ability">Ability</option>
+                          <option value="skill">Skill</option>
+                        </select>
+                      </label>
+                      {useSkill ? (
+                        <label className="flex flex-col text-ink-faded col-span-2">
+                          Skill (override)
+                          <select
+                            value={a.skill ?? 'athletics'}
+                            onChange={(e) => updateAction(c.id, a.id, { skill: e.target.value })}
+                            className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-1 h-8"
+                          >
+                            {SKILLS.map((s) => (
+                              <option key={s.id} value={s.id}>{s.name} ({s.ability.toUpperCase()})</option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : (
+                        <label className="flex flex-col text-ink-faded col-span-2">
+                          Ability (override)
+                          <select
+                            value={a.ability ?? 'str'}
+                            onChange={(e) => updateAction(c.id, a.id, { ability: e.target.value as AbilityKey })}
+                            className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-1 h-8 uppercase"
+                          >
+                            {ABIL.map((k) => <option key={k} value={k}>{k}</option>)}
+                          </select>
+                        </label>
+                      )}
+                      <label className="flex flex-col text-ink-faded">
+                        Range
+                        <Input
+                          value={a.range ?? ''}
+                          onChange={(e) => updateAction(c.id, a.id, { range: e.target.value })}
+                          className="mt-0.5 h-8"
+                          placeholder="5 ft"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={a.proficient ?? false}
+                          onChange={(e) => updateAction(c.id, a.id, { proficient: e.target.checked })}
+                          className="accent-oxblood"
+                        />
+                        Proficient
+                      </label>
+                      {(a.damageDice || a.damageType) && (
+                        <span className="text-ink-faded">
+                          Dmg: {a.damageDice} {a.damageType}
+                        </span>
+                      )}
+                      {a.saveAbility && (
+                        <span className="text-ink-faded">Save: {a.saveAbility.toUpperCase()}</span>
+                      )}
+                      <div className="ml-auto font-display text-ink">
+                        {bonus.label}: {formatMod(bonus.value)}
+                      </div>
+                    </div>
+                    {a.description && (
+                      <p className="text-xs text-ink-faded whitespace-pre-wrap">
+                        <KeywordText text={a.description} />
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };
