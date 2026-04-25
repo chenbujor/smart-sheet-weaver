@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { abilityMod } from '@/lib/rules';
 import type { AbilityKey } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
+import { LibraryPicker } from '@/components/LibraryPicker';
 
 interface Props { character: Character; derived: Derived }
 
@@ -86,7 +87,10 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
             className="pl-8"
           />
         </div>
-        <AddSpellDialog onAdd={(sp) => addSpell(c.id, sp)} />
+        <div className="flex items-center gap-2">
+          <LibraryPicker characterId={c.id} category="spells" label="From Library" />
+          <AddSpellDialog onAdd={(sp) => addSpell(c.id, sp)} />
+        </div>
       </div>
 
       {grouped.length === 0 ? (
