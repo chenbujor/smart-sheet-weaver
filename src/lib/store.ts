@@ -523,6 +523,7 @@ export const useAppStore = create<AppState>()(
                 features: data.library.features ?? s.library.features,
                 weapons: data.library.weapons ?? s.library.weapons,
                 items: data.library.items ?? s.library.items,
+                actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
               }
             : s.library,
