@@ -47,56 +47,55 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid gap-2 lg:grid-cols-3">
       {/* Left column: vitals */}
-      <div className="space-y-4 lg:col-span-2">
+      <div className="space-y-2 lg:col-span-2">
         {/* HP block */}
-        <section className="parchment-panel rounded-md p-5">
+        <section className="parchment-panel rounded-md p-3">
           <div className="relative z-10">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-2">
-                <Heart className="h-4 w-4" /> Hit Points
+              <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+                <Heart className="h-3.5 w-3.5" /> Hit Points
               </h3>
-              <div className="text-xs text-ink-faded">Hit Die d{(d.hitDiceTotal && c.level) ? '' : ''}</div>
             </div>
-            <div className="ink-divider my-2" />
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="ink-divider my-1.5" />
+            <div className="grid grid-cols-3 gap-2 text-center">
               <div>
-                <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Current</div>
-                <div className="font-display text-4xl text-ink">{c.hpCurrent}</div>
+                <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Current</div>
+                <div className="font-display text-3xl leading-tight text-ink">{c.hpCurrent}</div>
               </div>
               <div>
-                <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Max</div>
-                <div className="font-display text-4xl text-ink">{d.hpMax}</div>
+                <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Max</div>
+                <div className="font-display text-3xl leading-tight text-ink">{d.hpMax}</div>
               </div>
               <div>
-                <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Temp</div>
+                <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Temp</div>
                 <Input
                   type="number"
                   value={c.hpTemp}
                   onChange={(e) => setHp(c.id, c.hpCurrent, Math.max(0, parseInt(e.target.value || '0', 10)))}
-                  className="mx-auto h-10 w-20 text-center font-display text-2xl"
+                  className="mx-auto h-8 w-16 text-center font-display text-xl"
                 />
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-1.5">
               <Input
                 type="number"
                 placeholder="Amount"
                 value={hpDelta}
                 onChange={(e) => setHpDelta(e.target.value)}
-                className="h-9"
+                className="h-8 text-sm"
               />
-              <Button onClick={() => applyDelta(-1)} variant="outline" className="border-oxblood text-oxblood-deep hover:bg-oxblood/10">
+              <Button size="sm" onClick={() => applyDelta(-1)} variant="outline" className="h-8 border-oxblood text-oxblood-deep hover:bg-oxblood/10">
                 Damage
               </Button>
-              <Button onClick={() => applyDelta(1)} className="bg-forest text-primary-foreground hover:bg-forest/80">
+              <Button size="sm" onClick={() => applyDelta(1)} className="h-8 bg-forest text-primary-foreground hover:bg-forest/80">
                 Heal
               </Button>
             </div>
-            <div className="mt-4">
-              <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-wider text-ink-faded">
-                <span>Hit Dice (d{c.level ? '' : ''})</span>
+            <div className="mt-2">
+              <div className="mb-0.5 flex items-center justify-between text-[0.65rem] uppercase tracking-wider text-ink-faded">
+                <span>Hit Dice</span>
                 <span>{d.hitDiceRemaining}/{d.hitDiceTotal}</span>
               </div>
               <Pips
@@ -110,26 +109,26 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         </section>
 
         {/* Saving throws */}
-        <section className="parchment-panel rounded-md p-5">
+        <section className="parchment-panel rounded-md p-3">
           <div className="relative z-10">
-            <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-2">
-              <Shield className="h-4 w-4" /> Saving Throws
+            <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5" /> Saving Throws
             </h3>
             {d.exhaustionPenalty > 0 && (
-              <p className="mt-1 text-xs italic text-oxblood-deep">
+              <p className="mt-0.5 text-[0.65rem] italic text-oxblood-deep">
                 Exhaustion {c.exhaustion}: −{d.exhaustionPenalty} to all D20 Tests
               </p>
             )}
-            <div className="ink-divider my-2" />
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="ink-divider my-1.5" />
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
               {ABILITY_KEYS.map((k) => {
                 const prof = c.proficientSaves.includes(k);
                 const bonus = saveBonus(d.effectiveAbilities, k, prof, d.pb) + (c.bonuses?.saves?.[k] ?? 0) - d.exhaustionPenalty;
                 return (
-                  <div key={k} className="stat-block rounded-sm p-2 flex items-center gap-2">
-                    <span className={cn('inline-block h-2.5 w-2.5 rounded-full border border-ink/60', prof && 'bg-oxblood')} />
-                    <span className="text-xs uppercase tracking-wider text-ink-faded">{k}</span>
-                    <span className="ml-auto font-display text-lg text-ink">{formatMod(bonus)}</span>
+                  <div key={k} className="stat-block rounded-sm p-1.5 flex items-center gap-1.5">
+                    <span className={cn('inline-block h-2 w-2 rounded-full border border-ink/60', prof && 'bg-oxblood')} />
+                    <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">{k}</span>
+                    <span className="ml-auto font-display text-base text-ink">{formatMod(bonus)}</span>
                   </div>
                 );
               })}
@@ -138,17 +137,17 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         </section>
 
         {/* Action economy */}
-        <section className="parchment-panel rounded-md p-5">
+        <section className="parchment-panel rounded-md p-3">
           <div className="relative z-10">
-            <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-2">
-              <Swords className="h-4 w-4" /> Action Economy
+            <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+              <Swords className="h-3.5 w-3.5" /> Action Economy
             </h3>
-            <div className="ink-divider my-2" />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="ink-divider my-1.5" />
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
               {(['Action', 'Bonus Action', 'Reaction', 'Free / Movement'] as const).map((slot) => (
-                <div key={slot} className="stat-block rounded-sm p-3">
-                  <div className="font-display text-sm text-ink">{slot}</div>
-                  <div className="mt-1 text-xs italic text-ink-faded">
+                <div key={slot} className="stat-block rounded-sm p-2">
+                  <div className="font-display text-xs text-ink">{slot}</div>
+                  <div className="mt-0.5 text-[0.7rem] italic text-ink-faded leading-snug">
                     {slot === 'Action' && 'Attack, Cast, Dash, Dodge, Help, Hide, Ready, Search, Study, Utilize, Magic'}
                     {slot === 'Bonus Action' && 'Class/spell features'}
                     {slot === 'Reaction' && 'Opportunity Attack, Shield, Counterspell'}
@@ -161,33 +160,33 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         </section>
 
         {/* Weapons */}
-        <section className="parchment-panel rounded-md p-5">
+        <section className="parchment-panel rounded-md p-3">
           <div className="relative z-10">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-2">
-                <Swords className="h-4 w-4" /> Attacks
+              <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+                <Swords className="h-3.5 w-3.5" /> Attacks
               </h3>
             </div>
-            <div className="ink-divider my-2" />
+            <div className="ink-divider my-1.5" />
             {c.weapons.length === 0 ? (
-              <p className="text-sm italic text-ink-faded">No weapons configured.</p>
+              <p className="text-xs italic text-ink-faded">No weapons configured.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {c.weapons.map((w) => {
                   const mod = abilityMod(c.abilities[w.ability]) + (w.proficient ? d.pb : 0) + (w.bonus ?? 0) - d.exhaustionPenalty;
                   const dmgMod = abilityMod(c.abilities[w.ability]) + (w.bonus ?? 0);
                   const mastery = WEAPON_MASTERIES.find((m) => m.id === w.masteryId);
                   const masteryDc = mastery ? 8 + d.pb + abilityMod(c.abilities[w.ability]) : null;
                   return (
-                    <div key={w.id} className="stat-block rounded-sm p-3">
+                    <div key={w.id} className="stat-block rounded-sm p-2">
                       <div className="flex items-baseline justify-between gap-2">
                         <div>
-                          <div className="font-display text-base text-ink">{w.name}</div>
-                          <div className="text-xs text-ink-faded">
+                          <div className="font-display text-sm text-ink">{w.name}</div>
+                          <div className="text-[0.65rem] text-ink-faded">
                             {w.ability.toUpperCase()} · {w.damageType}
                           </div>
                         </div>
-                        <div className="text-right text-sm">
+                        <div className="text-right text-xs flex gap-3">
                           <div>
                             <span className="text-ink-faded">Atk </span>
                             <span className="font-display text-ink">{formatMod(mod)}</span>
@@ -199,7 +198,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                         </div>
                       </div>
                       {mastery && (
-                        <div className="mt-2 rounded-sm border border-gold/40 bg-gold/10 p-2 text-xs">
+                        <div className="mt-1.5 rounded-sm border border-gold/40 bg-gold/10 p-1.5 text-[0.7rem]">
                           <div className="font-semibold text-ink">
                             Mastery: {mastery.name}
                             {masteryDc !== null && <span className="ml-2 text-ink-faded">DC {masteryDc}</span>}
@@ -217,82 +216,82 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
       </div>
 
       {/* Right column */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Quick stats */}
-        <section className="parchment-panel rounded-md p-5">
-          <div className="relative z-10 grid grid-cols-2 gap-3 text-center">
+        <section className="parchment-panel rounded-md p-3">
+          <div className="relative z-10 grid grid-cols-2 gap-2 text-center">
             <div>
-              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">AC</div>
+              <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">AC</div>
               <Input
                 type="number"
                 value={c.ac ?? 10}
                 onChange={(e) => update(c.id, { ac: parseInt(e.target.value || '10', 10) })}
-                className="mx-auto h-12 w-16 text-center font-display text-2xl"
+                className="mx-auto h-9 w-14 text-center font-display text-xl"
               />
               {(c.bonuses?.ac ?? 0) !== 0 && (
-                <div className="text-[0.65rem] text-oxblood-deep">= {d.effectiveAc}</div>
+                <div className="text-[0.6rem] text-oxblood-deep">= {d.effectiveAc}</div>
               )}
             </div>
             <div>
-              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Initiative</div>
-              <div className="font-display text-3xl text-ink">{formatMod(d.initiative - d.exhaustionPenalty)}</div>
+              <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Initiative</div>
+              <div className="font-display text-2xl text-ink">{formatMod(d.initiative - d.exhaustionPenalty)}</div>
             </div>
             <div>
-              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Speed</div>
-              <div className="font-display text-2xl text-ink">{d.effectiveSpeed - c.exhaustion * 5}<span className="text-sm text-ink-faded"> ft</span></div>
+              <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Speed</div>
+              <div className="font-display text-xl text-ink">{d.effectiveSpeed - c.exhaustion * 5}<span className="text-xs text-ink-faded"> ft</span></div>
             </div>
             <div>
-              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded flex items-center justify-center gap-1"><Eye className="h-3 w-3" />Passive Perception</div>
-              <div className="font-display text-2xl text-ink">{d.passivePerception - d.exhaustionPenalty}</div>
+              <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded flex items-center justify-center gap-1"><Eye className="h-3 w-3" />Pass. Percep.</div>
+              <div className="font-display text-xl text-ink">{d.passivePerception - d.exhaustionPenalty}</div>
             </div>
             <div className="col-span-2">
-              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Proficiency Bonus</div>
-              <div className="font-display text-3xl text-oxblood-deep">+{d.pb}</div>
+              <div className="text-[0.6rem] uppercase tracking-wider text-ink-faded">Proficiency Bonus</div>
+              <div className="font-display text-2xl text-oxblood-deep">+{d.pb}</div>
             </div>
           </div>
         </section>
 
         {/* Concentration */}
-        <section className="parchment-panel rounded-md p-4">
+        <section className="parchment-panel rounded-md p-2.5">
           <div className="relative z-10">
-            <h3 className="font-display text-base text-oxblood-deep flex items-center gap-2">
-              <Sparkles className="h-4 w-4" /> Concentration
+            <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> Concentration
             </h3>
-            <div className="ink-divider my-2" />
+            <div className="ink-divider my-1.5" />
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={c.concentration.active}
                 onChange={(e) => update(c.id, { concentration: { ...c.concentration, active: e.target.checked } })}
-                className="h-4 w-4 accent-oxblood"
+                className="h-3.5 w-3.5 accent-oxblood"
               />
-              <span className="text-sm">Active</span>
+              <span className="text-xs">Active</span>
             </label>
             {c.concentration.active && (
               <Input
                 placeholder="Spell name"
                 value={c.concentration.spellName ?? ''}
                 onChange={(e) => update(c.id, { concentration: { ...c.concentration, spellName: e.target.value } })}
-                className="mt-2 h-9"
+                className="mt-1.5 h-8 text-sm"
               />
             )}
           </div>
         </section>
 
         {/* Exhaustion */}
-        <section className="parchment-panel rounded-md p-4">
+        <section className="parchment-panel rounded-md p-2.5">
           <div className="relative z-10">
-            <h3 className="font-display text-base text-oxblood-deep flex items-center gap-2">
-              <FlameKindling className="h-4 w-4" /> Exhaustion
+            <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+              <FlameKindling className="h-3.5 w-3.5" /> Exhaustion
             </h3>
-            <div className="ink-divider my-2" />
+            <div className="ink-divider my-1.5" />
             <Pips
               total={6}
               used={c.exhaustion}
               onChange={(u) => update(c.id, { exhaustion: u })}
               shape="square"
             />
-            <p className="mt-2 text-xs italic text-ink-faded">
+            <p className="mt-1 text-[0.65rem] italic text-ink-faded">
               Each level: −2 to D20 Tests, −5 ft Speed. Six = death.
             </p>
           </div>
@@ -300,17 +299,17 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
 
         {/* Death saves */}
         {c.hpCurrent === 0 && (
-          <section className="parchment-panel rounded-md p-4">
+          <section className="parchment-panel rounded-md p-2.5">
             <div className="relative z-10">
-              <h3 className="font-display text-base text-oxblood-deep">Death Saves</h3>
-              <div className="ink-divider my-2" />
-              <div className="space-y-2">
+              <h3 className="font-display text-sm text-oxblood-deep">Death Saves</h3>
+              <div className="ink-divider my-1.5" />
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-20 text-sm text-forest">Successes</span>
+                  <span className="w-16 text-xs text-forest">Successes</span>
                   <Pips total={3} used={c.deathSaves.successes} onChange={(u) => update(c.id, { deathSaves: { ...c.deathSaves, successes: u } })} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-20 text-sm text-oxblood-deep">Failures</span>
+                  <span className="w-16 text-xs text-oxblood-deep">Failures</span>
                   <Pips total={3} used={c.deathSaves.failures} onChange={(u) => update(c.id, { deathSaves: { ...c.deathSaves, failures: u } })} />
                 </div>
               </div>
@@ -320,24 +319,24 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
 
         {/* Spell slots */}
         {(d.spellSlots.length > 0 || d.pactSlots) && (
-          <section className="parchment-panel rounded-md p-4">
+          <section className="parchment-panel rounded-md p-2.5">
             <div className="relative z-10">
-              <h3 className="font-display text-base text-oxblood-deep">Spell Slots</h3>
-              <div className="ink-divider my-2" />
-              <div className="space-y-2">
+              <h3 className="font-display text-sm text-oxblood-deep">Spell Slots</h3>
+              <div className="ink-divider my-1.5" />
+              <div className="space-y-1">
                 {d.spellSlots.map((max, i) => {
                   const lvl = i + 1;
                   const used = c.spellSlotsUsed[lvl] ?? 0;
                   return (
-                    <div key={lvl} className="flex items-center gap-3">
-                      <span className="w-10 text-sm font-display text-ink">L{lvl}</span>
+                    <div key={lvl} className="flex items-center gap-2">
+                      <span className="w-8 text-xs font-display text-ink">L{lvl}</span>
                       <Pips total={max} used={used} shape="square" onChange={(u) => setSpellSlotUsed(c.id, lvl, u)} />
                     </div>
                   );
                 })}
                 {d.pactSlots && (
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 text-sm font-display text-oxblood-deep">Pact L{d.pactSlots.level}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 text-xs font-display text-oxblood-deep">P{d.pactSlots.level}</span>
                     <Pips total={d.pactSlots.count} used={c.pactSlotsUsed ?? 0} shape="square" onChange={(u) => setPactSlotUsed(c.id, u)} />
                   </div>
                 )}
@@ -347,24 +346,24 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
         )}
 
         {/* Skills (compact) */}
-        <section className="parchment-panel rounded-md p-4">
+        <section className="parchment-panel rounded-md p-2.5">
           <div className="relative z-10">
-            <h3 className="font-display text-base text-oxblood-deep">Skills</h3>
-            <div className="ink-divider my-2" />
-            <div className="space-y-1 text-sm">
+            <h3 className="font-display text-sm text-oxblood-deep">Skills</h3>
+            <div className="ink-divider my-1.5" />
+            <div className="space-y-0.5 text-xs">
               {SKILLS.map((s) => {
                 const lvl = c.skills[s.id] ?? 'none';
                 const bonus = skillBonus(d.effectiveAbilities, lvl, s.ability, d.pb) + (c.bonuses?.skills?.[s.id] ?? 0) - d.exhaustionPenalty;
                 return (
                   <div key={s.id} className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5">
                       <span className={cn(
                         'inline-block h-2 w-2 rounded-full border border-ink/60',
                         lvl === 'prof' && 'bg-oxblood',
                         lvl === 'expert' && 'bg-gold ring-1 ring-oxblood',
                       )} />
                       {s.name}
-                      <span className="text-[0.65rem] uppercase text-ink-faded">{s.ability}</span>
+                      <span className="text-[0.6rem] uppercase text-ink-faded">{s.ability}</span>
                     </span>
                     <span className="font-display text-ink">{formatMod(bonus)}</span>
                   </div>
@@ -376,13 +375,13 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
       </div>
 
       {/* Embedded Equipment + Features (full width) */}
-      <div className="lg:col-span-3 space-y-4">
+      <div className="lg:col-span-3 space-y-3 mt-2">
         <div>
-          <h2 className="font-display text-xl text-oxblood-deep mb-2">Equipment</h2>
+          <h2 className="font-display text-base text-oxblood-deep mb-1.5">Equipment</h2>
           <EquipmentView character={c} derived={d} />
         </div>
         <div>
-          <h2 className="font-display text-xl text-oxblood-deep mb-2">Features & Bonuses</h2>
+          <h2 className="font-display text-base text-oxblood-deep mb-1.5">Features & Bonuses</h2>
           <FeaturesView character={c} derived={d} />
         </div>
       </div>
