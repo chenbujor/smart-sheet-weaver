@@ -218,6 +218,68 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             )}
           </div>
         </section>
+
+        {/* Actions */}
+        {(c.actions?.length ?? 0) > 0 && (
+          <section className="parchment-panel rounded-md p-3">
+            <div className="relative z-10">
+              <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+                <Swords className="h-3.5 w-3.5" /> Actions
+              </h3>
+              <div className="ink-divider my-1.5" />
+              <div className="space-y-1.5">
+                {(c.actions ?? []).map((a) => {
+                  let bonus = 0;
+                  let rollLabel = '';
+                  if (a.skill) {
+                    const sk = SKILLS.find((s) => s.id === a.skill);
+                    const ab = sk?.ability ?? 'str';
+                    bonus = abilityMod(d.effectiveAbilities[ab]) + ((a.proficient ?? true) ? d.pb : 0);
+                    rollLabel = sk ? sk.name : a.skill;
+                  } else if (a.ability) {
+                    bonus = abilityMod(d.effectiveAbilities[a.ability]) + (a.proficient ? d.pb : 0);
+                    rollLabel = a.ability.toUpperCase();
+                  }
+                  bonus -= d.exhaustionPenalty;
+                  const dmgMod = a.ability ? abilityMod(d.effectiveAbilities[a.ability]) : 0;
+                  return (
+                    <div key={a.id} className="stat-block rounded-sm p-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <div>
+                          <div className="font-display text-sm text-ink">{a.name}</div>
+                          <div className="text-[0.65rem] text-ink-faded capitalize">
+                            {a.actionTime ?? 'action'}{a.range ? ` · ${a.range}` : ''}{rollLabel ? ` · ${rollLabel}` : ''}
+                          </div>
+                        </div>
+                        <div className="text-right text-xs flex gap-3">
+                          {rollLabel && (
+                            <div>
+                              <span className="text-ink-faded">Roll </span>
+                              <span className="font-display text-ink">{formatMod(bonus)}</span>
+                            </div>
+                          )}
+                          {a.damageDice && (
+                            <div>
+                              <span className="text-ink-faded">Dmg </span>
+                              <span className="font-display text-ink">
+                                {a.damageDice}{a.ability ? formatMod(dmgMod) : ''}{a.damageType ? ` ${a.damageType}` : ''}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {a.saveAbility && (
+                        <div className="mt-1 text-[0.7rem] text-ink-faded">
+                          Save: <span className="uppercase font-display text-ink">{a.saveAbility}</span> DC {8 + d.pb + (a.ability ? abilityMod(d.effectiveAbilities[a.ability]) : 0)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Right column */}
