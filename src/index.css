@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IM+Fell+English:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IM+Fell+English:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -43,8 +43,8 @@
     --radius: 0.375rem;
 
     /* Bespoke tokens */
-    --ink: 28 55% 8%;
-    --ink-faded: 28 40% 20%;
+    --ink: 28 60% 6%;
+    --ink-faded: 28 45% 16%;
     --parchment: 38 36% 88%;
     --parchment-light: 40 45% 93%;
     --parchment-dark: 34 30% 76%;
@@ -115,10 +115,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Cormorant Garamond', 'Georgia', serif;
-    font-size: 17px;
-    line-height: 1.5;
+    font-family: 'Lora', 'Georgia', serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background-image:
       radial-gradient(circle at 20% 10%, hsl(34 30% 80% / 0.6) 0, transparent 40%),
       radial-gradient(circle at 80% 80%, hsl(34 30% 76% / 0.5) 0, transparent 45%),
@@ -127,12 +130,13 @@
   }
 
   h1, h2, h3, h4, .font-display {
-    font-family: 'Cinzel', 'Cormorant Garamond', serif;
-    letter-spacing: 0.02em;
+    font-family: 'Cinzel', 'Lora', serif;
+    font-weight: 700;
+    letter-spacing: 0.015em;
   }
 
   .font-script {
-    font-family: 'IM Fell English', 'Cormorant Garamond', serif;
+    font-family: 'IM Fell English', 'Lora', serif;
   }
 }
 
