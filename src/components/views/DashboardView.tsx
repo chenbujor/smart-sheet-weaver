@@ -440,18 +440,6 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
           </div>
         </section>
       </div>
-
-      {/* Embedded Equipment + Features (full width) */}
-      <div className="lg:col-span-3 space-y-3 mt-2">
-        <div>
-          <h2 className="font-display text-base text-oxblood-deep mb-1.5">Equipment</h2>
-          <EquipmentView character={c} derived={d} />
-        </div>
-        <div>
-          <h2 className="font-display text-base text-oxblood-deep mb-1.5">Features & Bonuses</h2>
-          <FeaturesView character={c} derived={d} />
-        </div>
-      </div>
     </div>
   );
 };
