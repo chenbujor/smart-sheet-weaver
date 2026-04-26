@@ -49,30 +49,30 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const atk = d.pb + abilityMod(c.abilities[spellAbility]);
 
   return (
-    <div className="space-y-4">
-      <section className="parchment-panel rounded-md p-5">
-        <div className="relative z-10 grid gap-3 sm:grid-cols-4">
+    <div className="space-y-3">
+      <section className="parchment-panel rounded-md p-3">
+        <div className="relative z-10 grid gap-2 sm:grid-cols-4">
           <div>
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Ability</div>
             <select
               value={spellAbility}
               onChange={(e) => setSpellAbility(e.target.value as AbilityKey)}
-              className="mt-1 w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1.5 font-display text-ink"
+              className="mt-1 w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 font-display text-ink"
             >
               {ABILITY_KEYS.map((k) => <option key={k} value={k}>{k.toUpperCase()}</option>)}
             </select>
           </div>
-          <div className="stat-block rounded-sm p-2 text-center">
+          <div className="stat-block rounded-sm p-1.5 text-center">
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Save DC</div>
-            <div className="font-display text-2xl text-ink">{dc}</div>
+            <div className="font-display text-xl text-ink leading-tight">{dc}</div>
           </div>
-          <div className="stat-block rounded-sm p-2 text-center">
+          <div className="stat-block rounded-sm p-1.5 text-center">
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Attack</div>
-            <div className="font-display text-2xl text-ink">+{atk}</div>
+            <div className="font-display text-xl text-ink leading-tight">+{atk}</div>
           </div>
-          <div className="stat-block rounded-sm p-2 text-center">
+          <div className="stat-block rounded-sm p-1.5 text-center">
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Cantrip Tier</div>
-            <div className="font-display text-2xl text-ink">L{d.cantripTier}</div>
+            <div className="font-display text-xl text-ink leading-tight">L{d.cantripTier}</div>
           </div>
         </div>
       </section>
@@ -84,7 +84,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
             placeholder="Search your spells..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
+            className="pl-8 h-9"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -100,61 +100,58 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
         </div>
       ) : (
         grouped.map(([lvl, spells]) => (
-          <section key={lvl} className="parchment-panel rounded-md p-5">
+          <section key={lvl} className="parchment-panel rounded-md p-3">
             <div className="relative z-10">
-              <h3 className="font-display text-lg text-oxblood-deep">
+              <h3 className="font-display text-base text-oxblood-deep">
                 {lvl === 0 ? 'Cantrips' : `Level ${lvl}`}
+                <span className="ml-2 text-xs text-ink-faded font-sans">{spells.length}</span>
               </h3>
-              <div className="ink-divider my-2" />
-              <div className="space-y-3">
+              <div className="ink-divider my-1.5" />
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {spells.map((sp) => (
-                  <div key={sp.id} className="stat-block rounded-sm p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
+                  <div key={sp.id} className="stat-block rounded-sm p-2 flex flex-col">
+                    <div className="flex items-start justify-between gap-1.5">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             onClick={() => updateSpell(c.id, sp.id, { prepared: !sp.prepared })}
                             disabled={sp.alwaysPrepared}
                             className={cn(
-                              'h-3.5 w-3.5 rounded-sm border-1.5 border-ink/70',
+                              'h-3.5 w-3.5 rounded-sm border-1.5 border-ink/70 flex-shrink-0',
                               (sp.prepared || sp.alwaysPrepared) && 'bg-oxblood border-oxblood',
                               sp.alwaysPrepared && 'cursor-not-allowed opacity-80'
                             )}
                             aria-label="Prepared"
                             title={sp.alwaysPrepared ? 'Always prepared' : 'Toggle prepared'}
                           />
-                          <span className="font-display text-base text-ink">{sp.name}</span>
+                          <span className="font-display text-[0.95rem] text-ink leading-tight">{sp.name}</span>
                           {sp.concentration && <span className="rounded-sm border border-oxblood/50 px-1 text-[0.6rem] uppercase tracking-wider text-oxblood-deep">Conc.</span>}
                           {sp.ritual && <span className="rounded-sm border border-royal/50 px-1 text-[0.6rem] uppercase tracking-wider text-royal">Ritual</span>}
                           {sp.source && <SourceTag source={sp.source} label={sp.sourceLabel} />}
-                          {sp.alwaysPrepared && <span className="text-[0.6rem] uppercase tracking-wider text-forest">Always Prepared</span>}
                         </div>
-                        <div className="mt-1 grid grid-cols-2 gap-x-4 text-xs text-ink-faded sm:grid-cols-4">
-                          <span><b className="text-ink">School:</b> {sp.school}</span>
-                          <span><b className="text-ink">Cast:</b> {sp.castingTime}</span>
-                          <span><b className="text-ink">Range:</b> {sp.range}</span>
-                          <span><b className="text-ink">Duration:</b> {sp.duration}</span>
-                          <span className="col-span-2"><b className="text-ink">Components:</b> {sp.components}</span>
+                        <div className="mt-1 text-[0.72rem] text-ink-faded leading-snug">
+                          <span className="text-ink">{sp.school}</span> · {sp.castingTime} · {sp.range} · {sp.duration}
+                          <span className="block">{sp.components}{sp.alwaysPrepared && <span className="ml-1 text-forest uppercase tracking-wider">· Always Prepared</span>}</span>
                         </div>
-                        <p className="mt-2 text-sm text-ink"><KeywordText text={sp.description} /></p>
-                        {sp.cantripScaling && (
-                          <p className="mt-1 text-xs italic text-oxblood-deep">
-                            Scaling — L5: {sp.cantripScaling[5]} · L11: {sp.cantripScaling[11]} · L17: {sp.cantripScaling[17]}
-                            <span className="ml-2 text-ink-faded">(currently L{d.cantripTier})</span>
-                          </p>
-                        )}
-                        {sp.higherLevels && (
-                          <p className="mt-1 text-sm"><b className="text-ink">At Higher Levels.</b> <span className="text-ink-faded">{sp.higherLevels}</span></p>
-                        )}
                       </div>
                       <button
                         aria-label="Remove"
-                        className="rounded p-1 text-ink/50 hover:bg-destructive hover:text-destructive-foreground"
+                        className="rounded p-0.5 text-ink/50 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
                         onClick={() => removeSpell(c.id, sp.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                    <p className="mt-1.5 text-[0.85rem] text-ink leading-snug"><KeywordText text={sp.description} /></p>
+                    {sp.cantripScaling && (
+                      <p className="mt-1 text-[0.72rem] italic text-oxblood-deep leading-snug">
+                        L5: {sp.cantripScaling[5]} · L11: {sp.cantripScaling[11]} · L17: {sp.cantripScaling[17]}
+                        <span className="ml-1 text-ink-faded">(now L{d.cantripTier})</span>
+                      </p>
+                    )}
+                    {sp.higherLevels && (
+                      <p className="mt-1 text-[0.8rem] leading-snug"><b className="text-ink">Higher Levels.</b> <span className="text-ink-faded">{sp.higherLevels}</span></p>
+                    )}
                   </div>
                 ))}
               </div>
