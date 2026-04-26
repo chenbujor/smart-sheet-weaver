@@ -124,11 +124,17 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                 const prof = c.proficientSaves.includes(k);
                 const bonus = saveBonus(d.effectiveAbilities, k, prof, d.pb) + (c.bonuses?.saves?.[k] ?? 0) - d.exhaustionPenalty;
                 return (
-                  <div key={k} className="stat-block rounded-sm p-1.5 flex items-center gap-1.5">
-                    <span className={cn('inline-block h-2 w-2 rounded-full border border-ink/60', prof && 'bg-oxblood')} />
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => toggleSave(c.id, k)}
+                    title={`Toggle ${ABILITY_NAMES[k]} save proficiency`}
+                    className="stat-block rounded-sm p-1.5 flex items-center gap-1.5 text-left hover:bg-secondary/40 transition-colors"
+                  >
+                    <span className={cn('inline-block h-2 w-2 rounded-full border border-ink/60', prof && 'bg-oxblood border-oxblood')} />
                     <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">{k}</span>
                     <span className="ml-auto font-display text-base text-ink">{formatMod(bonus)}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
