@@ -194,7 +194,11 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                           <span className="font-display text-[0.95rem] text-ink leading-tight">{sp.name}</span>
                           {sp.concentration && <span className="rounded-sm border border-oxblood/50 px-1 text-[0.6rem] uppercase tracking-wider text-oxblood-deep">Conc.</span>}
                           {sp.ritual && <span className="rounded-sm border border-royal/50 px-1 text-[0.6rem] uppercase tracking-wider text-royal">Ritual</span>}
-                          {sp.source && <SourceTag source={sp.source} label={sp.sourceLabel} />}
+                          <SourceEditor
+                            source={sp.source}
+                            label={sp.sourceLabel}
+                            onChange={(patch) => updateSpell(c.id, sp.id, patch)}
+                          />
                         </div>
                         <div className="mt-1 text-[0.72rem] text-ink-faded leading-snug">
                           <span className="text-ink">{sp.school}</span> · {sp.castingTime} · {sp.range} · {sp.duration}
