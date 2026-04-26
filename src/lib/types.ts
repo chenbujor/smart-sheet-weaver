@@ -202,6 +202,7 @@ export interface LibraryAction {
   damageDice?: string;        // optional damage line
   damageType?: string;
   saveAbility?: AbilityKey;   // if the target makes a save, which ability
+  saveAbility2?: AbilityKey;  // optional alternate ability the target may use (e.g. STR or DEX vs grapple)
   notes?: string;
 }
 

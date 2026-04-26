@@ -270,7 +270,15 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                       </div>
                       {a.saveAbility && (
                         <div className="mt-1 text-[0.7rem] text-ink-faded">
-                          Save: <span className="uppercase font-display text-ink">{a.saveAbility}</span> DC {8 + d.pb + (a.ability ? abilityMod(d.effectiveAbilities[a.ability]) : 0)}
+                          Save:{' '}
+                          <span className="uppercase font-display text-ink">{a.saveAbility}</span>
+                          {a.saveAbility2 && (
+                            <>
+                              {' '}or{' '}
+                              <span className="uppercase font-display text-ink">{a.saveAbility2}</span>
+                            </>
+                          )}
+                          {' '}DC {8 + d.pb + (a.ability ? abilityMod(d.effectiveAbilities[a.ability]) : 0)}
                         </div>
                       )}
                     </div>
