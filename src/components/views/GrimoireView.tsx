@@ -11,11 +11,78 @@ import { SourceTag } from '@/components/SourceTag';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { abilityMod } from '@/lib/rules';
-import type { AbilityKey } from '@/lib/types';
+import type { AbilityKey, SourceType, SpellEntry } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { LibraryPicker } from '@/components/LibraryPicker';
+
+const SOURCE_OPTIONS: { value: SourceType; label: string }[] = [
+  { value: 'class', label: 'Class' },
+  { value: 'species', label: 'Race / Species' },
+  { value: 'feat', label: 'Feat' },
+  { value: 'item', label: 'Item' },
+  { value: 'background', label: 'Background' },
+  { value: 'custom', label: 'Special / Custom' },
+];
+
+const SourceEditor = ({
+  source, label, onChange,
+}: {
+  source?: SourceType;
+  label?: string;
+  onChange: (patch: Partial<Pick<SpellEntry, 'source' | 'sourceLabel'>>) => void;
+}) => {
+  const current = source ?? 'custom';
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          title="Edit source"
+        >
+          {source ? (
+            <SourceTag source={source} label={label} />
+          ) : (
+            <span className="rounded-sm border border-dashed border-ink/40 px-1 text-[0.6rem] uppercase tracking-wider text-ink-faded">
+              + Source
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 parchment-card p-3 space-y-2">
+        <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Source type</div>
+        <select
+          value={current}
+          onChange={(e) => onChange({ source: e.target.value as SourceType })}
+          className="w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm text-ink"
+        >
+          {SOURCE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Label (e.g. Wizard, Magic Initiate)</div>
+        <Input
+          value={label ?? ''}
+          onChange={(e) => onChange({ sourceLabel: e.target.value || undefined })}
+          placeholder="Optional custom label"
+          className="h-8"
+        />
+        {source && (
+          <button
+            type="button"
+            className="text-[0.7rem] text-destructive hover:underline"
+            onClick={() => onChange({ source: undefined, sourceLabel: undefined })}
+          >
+            Clear source
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 interface Props { character: Character; derived: Derived }
 
