@@ -774,7 +774,7 @@ const ActionsTab = () => {
                       />
                     </label>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-3 text-xs">
+                  <div className="grid gap-2 sm:grid-cols-2 text-xs">
                     <label className="flex flex-col text-ink-faded">
                       Damage dice (optional)
                       <Input
@@ -793,8 +793,10 @@ const ActionsTab = () => {
                         className="mt-0.5 h-8"
                       />
                     </label>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 text-xs">
                     <label className="flex flex-col text-ink-faded">
-                      Save (optional)
+                      Save ability (optional)
                       <select
                         value={a.saveAbility ?? ''}
                         onChange={(e) => update('actions', a.id, { saveAbility: (e.target.value || undefined) as AbilityKey | undefined })}
@@ -802,6 +804,18 @@ const ActionsTab = () => {
                       >
                         <option value="">— none —</option>
                         {ABILITY_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
+                      </select>
+                    </label>
+                    <label className="flex flex-col text-ink-faded">
+                      Or alternate ability (target's choice)
+                      <select
+                        value={a.saveAbility2 ?? ''}
+                        onChange={(e) => update('actions', a.id, { saveAbility2: (e.target.value || undefined) as AbilityKey | undefined })}
+                        disabled={!a.saveAbility}
+                        className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase disabled:opacity-50"
+                      >
+                        <option value="">— none —</option>
+                        {ABILITY_KEYS.filter((k) => k !== a.saveAbility).map((k) => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </label>
                   </div>

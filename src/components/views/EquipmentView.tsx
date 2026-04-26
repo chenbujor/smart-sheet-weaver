@@ -405,7 +405,10 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                         </span>
                       )}
                       {a.saveAbility && (
-                        <span className="text-ink-faded">Save: {a.saveAbility.toUpperCase()}</span>
+                        <span className="text-ink-faded">
+                          Save: {a.saveAbility.toUpperCase()}
+                          {a.saveAbility2 ? ` or ${a.saveAbility2.toUpperCase()}` : ''}
+                        </span>
                       )}
                       <div className="ml-auto font-display text-ink">
                         {bonus.label}: {formatMod(bonus.value)}
