@@ -10,7 +10,7 @@ import { buildGlossaryMap, lookupTerm, type GlossaryEntry } from '@/lib/glossary
  * until the user clicks the keyword again or clicks outside (anywhere else).
  * Hovering also previews the term, but the click-pin takes precedence.
  */
-const Keyword = ({ token, entry }: { token: string; entry: GlossaryMatch }) => {
+const Keyword = ({ token, entry }: { token: string; entry: GlossaryEntry }) => {
   const [open, setOpen] = useState(false);
   const [hovering, setHovering] = useState(false);
   const visible = open || hovering;
