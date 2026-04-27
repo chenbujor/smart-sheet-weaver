@@ -157,6 +157,7 @@ export interface Character {
     speed?: number;                                       // +X ft speed
     passivePerception?: number;                           // +X passive perception
     maxConcentrations?: number;                           // extra concurrent concentrations (default 1)
+    attunementSlots?: number;                             // extra attunement slots beyond default 3
   };
 
   notes?: string;
