@@ -324,6 +324,11 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                           <Sparkle className="h-3 w-3 text-oxblood-deep" />
                           <span className="font-display text-sm text-ink truncate">{item.name}</span>
                         </div>
+                        {item.description && (
+                          <div className="mt-1 text-[0.7rem] text-ink-faded leading-snug line-clamp-3">
+                            <KeywordText text={item.description} />
+                          </div>
+                        )}
                         {item.notes && (
                           <p className="mt-1 text-[0.7rem] italic text-ink-faded line-clamp-2">{item.notes}</p>
                         )}
