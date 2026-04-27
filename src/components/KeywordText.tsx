@@ -3,7 +3,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { useAppStore } from '@/lib/store';
-import { buildGlossaryMap, lookupTerm, type GlossaryMatch } from '@/lib/glossary';
+import { buildGlossaryMap, lookupTerm, type GlossaryEntry } from '@/lib/glossary';
 
 /**
  * Click a keyword to open its glossary description. The popover stays open
