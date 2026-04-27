@@ -540,11 +540,18 @@ const ItemsTab = () => {
                   </label>
                 </div>
                 <SmartTextarea
+                  value={i.description ?? ''}
+                  onValueChange={(v) => update('items', i.id, { description: v })}
+                  placeholder="Description (use \ to reference glossary)"
+                  rows={3}
+                  className="bg-parchment-light border-ink/30"
+                />
+                <SmartTextarea
                   value={i.notes ?? ''}
                   onValueChange={(v) => update('items', i.id, { notes: v })}
-                  placeholder="Notes / properties (use \ to reference glossary)"
-                  rows={2}
-                  className="bg-parchment-light border-ink/30"
+                  placeholder="Quick notes / properties"
+                  rows={1}
+                  className="bg-parchment-light border-ink/30 text-xs"
                 />
               </div>
             </div>

@@ -82,7 +82,8 @@ export interface InventoryItem {
   name: string;
   qty: number;
   weight?: number;
-  notes?: string;
+  description?: string;       // full description (supports glossary keywords)
+  notes?: string;             // short note / quick reminder
   attunable?: boolean;
   attuned?: boolean;
   equipped?: boolean;

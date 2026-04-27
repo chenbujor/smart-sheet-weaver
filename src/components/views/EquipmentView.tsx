@@ -55,7 +55,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {/* Weapons */}
-      <section className="parchment-panel rounded-md p-5">
+      <section className="parchment-panel rounded-md p-5 lg:col-span-2">
         <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h3 className="font-display text-lg text-oxblood-deep">Weapons & Attacks</h3>
@@ -174,7 +174,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
       </section>
 
       {/* Inventory */}
-      <section className="parchment-panel rounded-md p-5">
+      <section className="parchment-panel rounded-md p-5 lg:col-span-2">
         <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h3 className="font-display text-lg text-oxblood-deep">Inventory</h3>
@@ -197,21 +197,21 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
           {c.inventory.length === 0 ? (
             <p className="text-sm italic text-ink-faded">Your pack is empty. Add gear, treasure, or trinkets.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {c.inventory.map((i) => (
-                <div key={i.id} className="stat-block rounded-sm p-2.5 space-y-2">
-                  <div className="flex items-center gap-2">
+                <div key={i.id} className="stat-block rounded-sm p-2.5 space-y-1.5">
+                  <div className="flex items-center gap-1.5">
                     <Input
                       type="number"
                       min={1}
                       value={i.qty}
                       onChange={(e) => updateInventory(c.id, i.id, { qty: Math.max(1, parseInt(e.target.value || '1', 10)) })}
-                      className="w-14 h-8 text-center font-display"
+                      className="w-12 h-7 px-1 text-center font-display"
                     />
                     <Input
                       value={i.name}
                       onChange={(e) => updateInventory(c.id, i.id, { name: e.target.value })}
-                      className="flex-1 h-8 font-display"
+                      className="flex-1 h-7 font-display text-sm"
                     />
                     <Input
                       type="number"
@@ -219,56 +219,68 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                       placeholder="lb"
                       value={i.weight ?? ''}
                       onChange={(e) => updateInventory(c.id, i.id, { weight: e.target.value ? parseFloat(e.target.value) : undefined })}
-                      className="w-16 h-8 text-center"
+                      className="w-12 h-7 px-1 text-center text-xs"
                     />
                     <button
                       onClick={() => removeInventory(c.id, i.id)}
-                      className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                      className="rounded p-1 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
                       aria-label="Remove"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs">
-                    <label className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem]">
+                    <label className="flex items-center gap-1">
                       <input
                         type="checkbox"
                         checked={i.equipped ?? false}
                         onChange={(e) => updateInventory(c.id, i.id, { equipped: e.target.checked })}
-                        className="h-3.5 w-3.5 accent-oxblood"
+                        className="h-3 w-3 accent-oxblood"
                       />
                       Equipped
                     </label>
-                    <label className="flex items-center gap-1.5">
+                    <label className="flex items-center gap-1">
                       <input
                         type="checkbox"
                         checked={i.attunable ?? false}
                         onChange={(e) => updateInventory(c.id, i.id, { attunable: e.target.checked, attuned: e.target.checked ? i.attuned : false })}
-                        className="h-3.5 w-3.5 accent-oxblood"
+                        className="h-3 w-3 accent-oxblood"
                       />
                       Attunable
                     </label>
                     {i.attunable && (
                       <label className={cn(
-                        'flex items-center gap-1.5 rounded-sm px-1.5 py-0.5',
+                        'flex items-center gap-1 rounded-sm px-1 py-0.5',
                         i.attuned && 'bg-gold/20 text-oxblood-deep'
                       )}>
                         <input
                           type="checkbox"
                           checked={i.attuned ?? false}
                           onChange={(e) => updateInventory(c.id, i.id, { attuned: e.target.checked })}
-                          className="h-3.5 w-3.5 accent-oxblood"
+                          className="h-3 w-3 accent-oxblood"
                         />
-                        <Sparkle className="h-3 w-3" /> Attuned
+                        <Sparkle className="h-2.5 w-2.5" /> Attuned
                       </label>
                     )}
-                    <Input
-                      value={i.notes ?? ''}
-                      onChange={(e) => updateInventory(c.id, i.id, { notes: e.target.value })}
-                      placeholder="Notes…"
-                      className="ml-auto h-7 flex-1 min-w-32 text-xs"
-                    />
                   </div>
+                  <SmartTextarea
+                    value={i.description ?? ''}
+                    onValueChange={(v) => updateInventory(c.id, i.id, { description: v })}
+                    placeholder="Description (use \ to reference glossary)"
+                    rows={2}
+                    className="bg-parchment-light border-ink/30 text-xs min-h-[2.5rem]"
+                  />
+                  {i.description && (
+                    <div className="text-[0.7rem] text-ink-faded leading-snug">
+                      <KeywordText text={i.description} />
+                    </div>
+                  )}
+                  <Input
+                    value={i.notes ?? ''}
+                    onChange={(e) => updateInventory(c.id, i.id, { notes: e.target.value })}
+                    placeholder="Quick note…"
+                    className="h-6 text-[0.7rem] px-1.5"
+                  />
                 </div>
               ))}
             </div>
@@ -312,6 +324,11 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                           <Sparkle className="h-3 w-3 text-oxblood-deep" />
                           <span className="font-display text-sm text-ink truncate">{item.name}</span>
                         </div>
+                        {item.description && (
+                          <div className="mt-1 text-[0.7rem] text-ink-faded leading-snug line-clamp-3">
+                            <KeywordText text={item.description} />
+                          </div>
+                        )}
                         {item.notes && (
                           <p className="mt-1 text-[0.7rem] italic text-ink-faded line-clamp-2">{item.notes}</p>
                         )}
