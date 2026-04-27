@@ -174,7 +174,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
       </section>
 
       {/* Inventory */}
-      <section className="parchment-panel rounded-md p-5">
+      <section className="parchment-panel rounded-md p-5 lg:col-span-2">
         <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h3 className="font-display text-lg text-oxblood-deep">Inventory</h3>
