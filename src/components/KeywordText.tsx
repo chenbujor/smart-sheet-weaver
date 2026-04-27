@@ -1,17 +1,47 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  HoverCard, HoverCardContent, HoverCardTrigger,
-} from '@/components/ui/hover-card';
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
 import { useAppStore } from '@/lib/store';
-import { buildGlossaryMap, lookupTerm } from '@/lib/glossary';
+import { buildGlossaryMap, lookupTerm, type GlossaryMatch } from '@/lib/glossary';
 
 /**
- * Renders text and converts known glossary terms (incl. user-added customs flagged
- * as glossary) into hover-triggered popovers with their full description. Click
- * also opens (via focus) so the original behavior still works.
- *
- * Matches whole-word, case-insensitive, single trailing 's' stripped, and aliases.
+ * Click a keyword to open its glossary description. The popover stays open
+ * until the user clicks the keyword again or clicks outside (anywhere else).
+ * Hovering also previews the term, but the click-pin takes precedence.
  */
+const Keyword = ({ token, entry }: { token: string; entry: GlossaryMatch }) => {
+  const [open, setOpen] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const visible = open || hovering;
+
+  return (
+    <Popover open={visible} onOpenChange={(o) => { if (!o) { setOpen(false); setHovering(false); } }}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="keyword"
+          onClick={(e) => { e.preventDefault(); setOpen((v) => !v); }}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
+        >
+          {token}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="parchment-card max-w-sm w-auto"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+      >
+        <div className="font-display text-base text-oxblood-deep">{entry.name}</div>
+        <div className="ink-divider my-2" />
+        <p className="text-sm text-ink-faded whitespace-pre-wrap">{entry.description}</p>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 export const KeywordText = ({ text }: { text: string }) => {
   const glossary = useAppStore((s) => s.library.glossary);
   const customs = useAppStore((s) => s.library.custom);
@@ -26,18 +56,7 @@ export const KeywordText = ({ text }: { text: string }) => {
         if (!tok) return null;
         const entry = lookupTerm(map, tok);
         if (entry) {
-          return (
-            <HoverCard key={i} openDelay={120} closeDelay={80}>
-              <HoverCardTrigger asChild>
-                <button type="button" className="keyword">{tok}</button>
-              </HoverCardTrigger>
-              <HoverCardContent className="parchment-card max-w-sm w-auto">
-                <div className="font-display text-base text-oxblood-deep">{entry.name}</div>
-                <div className="ink-divider my-2" />
-                <p className="text-sm text-ink-faded whitespace-pre-wrap">{entry.description}</p>
-              </HoverCardContent>
-            </HoverCard>
-          );
+          return <Keyword key={i} token={tok} entry={entry} />;
         }
         return <span key={i}>{tok}</span>;
       })}
