@@ -197,21 +197,21 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
           {c.inventory.length === 0 ? (
             <p className="text-sm italic text-ink-faded">Your pack is empty. Add gear, treasure, or trinkets.</p>
           ) : (
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {c.inventory.map((i) => (
-                <div key={i.id} className="stat-block rounded-sm p-2.5 space-y-1.5">
-                  <div className="flex items-center gap-1.5">
+                <div key={i.id} className="stat-block rounded-sm p-2 space-y-1">
+                  <div className="flex items-center gap-1">
                     <Input
                       type="number"
                       min={1}
                       value={i.qty}
                       onChange={(e) => updateInventory(c.id, i.id, { qty: Math.max(1, parseInt(e.target.value || '1', 10)) })}
-                      className="w-12 h-7 px-1 text-center font-display"
+                      className="w-10 h-6 px-1 text-center font-display text-xs"
                     />
                     <Input
                       value={i.name}
                       onChange={(e) => updateInventory(c.id, i.id, { name: e.target.value })}
-                      className="flex-1 h-7 font-display text-sm"
+                      className="flex-1 h-6 font-display text-sm px-1.5"
                     />
                     <Input
                       type="number"
@@ -219,17 +219,17 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                       placeholder="lb"
                       value={i.weight ?? ''}
                       onChange={(e) => updateInventory(c.id, i.id, { weight: e.target.value ? parseFloat(e.target.value) : undefined })}
-                      className="w-12 h-7 px-1 text-center text-xs"
+                      className="w-10 h-6 px-1 text-center text-[0.7rem]"
                     />
                     <button
                       onClick={() => removeInventory(c.id, i.id)}
-                      className="rounded p-1 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                      className="rounded p-0.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
                       aria-label="Remove"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3 w-3" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem]">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.65rem]">
                     <label className="flex items-center gap-1">
                       <input
                         type="checkbox"
@@ -250,7 +250,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                     </label>
                     {i.attunable && (
                       <label className={cn(
-                        'flex items-center gap-1 rounded-sm px-1 py-0.5',
+                        'flex items-center gap-1 rounded-sm px-1',
                         i.attuned && 'bg-gold/20 text-oxblood-deep'
                       )}>
                         <input
@@ -266,20 +266,9 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                   <SmartTextarea
                     value={i.description ?? ''}
                     onValueChange={(v) => updateInventory(c.id, i.id, { description: v })}
-                    placeholder="Description (use \ to reference glossary)"
+                    placeholder="Description (use \ for glossary)"
                     rows={2}
-                    className="bg-parchment-light border-ink/30 text-xs min-h-[2.5rem]"
-                  />
-                  {i.description && (
-                    <div className="text-[0.7rem] text-ink-faded leading-snug">
-                      <KeywordText text={i.description} />
-                    </div>
-                  )}
-                  <Input
-                    value={i.notes ?? ''}
-                    onChange={(e) => updateInventory(c.id, i.id, { notes: e.target.value })}
-                    placeholder="Quick note…"
-                    className="h-6 text-[0.7rem] px-1.5"
+                    className="bg-parchment-light border-ink/30 text-[0.7rem] leading-snug min-h-[2rem] px-1.5 py-1"
                   />
                 </div>
               ))}
@@ -328,9 +317,6 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                           <div className="mt-1 text-[0.7rem] text-ink-faded leading-snug line-clamp-3">
                             <KeywordText text={item.description} />
                           </div>
-                        )}
-                        {item.notes && (
-                          <p className="mt-1 text-[0.7rem] italic text-ink-faded line-clamp-2">{item.notes}</p>
                         )}
                       </>
                     ) : (
