@@ -276,6 +276,64 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
         </div>
       </section>
 
+      {/* Attuned Items */}
+      {(() => {
+        const attunedItems = c.inventory.filter((i) => i.attuned);
+        const maxAttunement = 3 + (c.bonuses?.attunementSlots ?? 0);
+        const slots = Array.from({ length: Math.max(maxAttunement, attunedItems.length) }, (_, idx) => attunedItems[idx]);
+        return (
+          <section className="parchment-panel rounded-md p-5 lg:col-span-2">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h3 className="font-display text-lg text-oxblood-deep flex items-center gap-1.5">
+                  <Sparkle className="h-4 w-4" /> Attuned Items
+                </h3>
+                <div className={cn(
+                  'text-xs font-display',
+                  attunedItems.length > maxAttunement ? 'text-oxblood-deep' : 'text-ink-faded'
+                )}>
+                  {attunedItems.length} / {maxAttunement} slots
+                </div>
+              </div>
+              <div className="ink-divider my-2" />
+              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                {slots.map((item, idx) => (
+                  <div
+                    key={item?.id ?? `empty-${idx}`}
+                    className={cn(
+                      'stat-block rounded-sm p-2.5 min-h-16 flex flex-col justify-center',
+                      item ? 'bg-gold/15 border-gold/40' : 'border-dashed opacity-60',
+                      idx >= maxAttunement && 'border-oxblood/60 bg-oxblood/10'
+                    )}
+                  >
+                    {item ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <Sparkle className="h-3 w-3 text-oxblood-deep" />
+                          <span className="font-display text-sm text-ink truncate">{item.name}</span>
+                        </div>
+                        {item.notes && (
+                          <p className="mt-1 text-[0.7rem] italic text-ink-faded line-clamp-2">{item.notes}</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center text-xs italic text-ink-faded">
+                        Empty slot {idx + 1}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {attunedItems.length > maxAttunement && (
+                <p className="mt-2 text-xs italic text-oxblood-deep">
+                  Over attunement limit. Increase via Bonuses & Modifiers, or unattune an item.
+                </p>
+              )}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Actions */}
       <section className="parchment-panel rounded-md p-5 lg:col-span-2">
         <div className="relative z-10">
