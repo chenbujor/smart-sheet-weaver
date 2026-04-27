@@ -17,6 +17,7 @@ const SCALAR_FIELDS: { key: keyof Bonuses; label: string; hint?: string }[] = [
   { key: 'spellSaveDc', label: 'Spell Save DC' },
   { key: 'spellAttack', label: 'Spell Attack' },
   { key: 'maxConcentrations', label: 'Extra Concentrations', hint: 'Beyond default 1' },
+  { key: 'attunementSlots', label: 'Extra Attunement Slots', hint: 'Beyond default 3' },
 ];
 
 export const BonusesPanel = ({ character: c }: Props) => {

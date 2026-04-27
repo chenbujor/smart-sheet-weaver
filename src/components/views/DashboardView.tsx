@@ -351,14 +351,14 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
               />
             )}
             <div className="ink-divider my-1.5" />
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex flex-col items-start gap-1 cursor-pointer">
+              <span className="text-xs font-display text-oxblood-deep">Heroic Inspiration</span>
               <input
                 type="checkbox"
                 checked={c.inspiration}
                 onChange={(e) => update(c.id, { inspiration: e.target.checked })}
-                className="h-3.5 w-3.5 accent-gold"
+                className="h-4 w-4 accent-gold"
               />
-              <span className="text-xs font-display text-oxblood-deep">Heroic Inspiration</span>
             </label>
           </div>
         </section>
