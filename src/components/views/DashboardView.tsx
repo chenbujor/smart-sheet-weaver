@@ -326,7 +326,7 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
           </div>
         </section>
 
-        {/* Concentration */}
+        {/* Concentration & Inspiration */}
         <section className="parchment-panel rounded-md p-2.5">
           <div className="relative z-10">
             <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
@@ -350,6 +350,16 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
                 className="mt-1.5 h-8 text-sm"
               />
             )}
+            <div className="ink-divider my-1.5" />
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={c.inspiration}
+                onChange={(e) => update(c.id, { inspiration: e.target.checked })}
+                className="h-3.5 w-3.5 accent-gold"
+              />
+              <span className="text-xs font-display text-oxblood-deep">Heroic Inspiration</span>
+            </label>
           </div>
         </section>
 
