@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
+  HoverCard, HoverCardContent, HoverCardTrigger,
+} from '@/components/ui/hover-card';
 import { useAppStore } from '@/lib/store';
 import { buildGlossaryMap, lookupTerm } from '@/lib/glossary';
 
 /**
  * Renders text and converts known glossary terms (incl. user-added customs flagged
- * as glossary) into clickable popovers with their full description.
+ * as glossary) into hover-triggered popovers with their full description. Click
+ * also opens (via focus) so the original behavior still works.
  *
  * Matches whole-word, case-insensitive, single trailing 's' stripped, and aliases.
  */
@@ -26,16 +27,16 @@ export const KeywordText = ({ text }: { text: string }) => {
         const entry = lookupTerm(map, tok);
         if (entry) {
           return (
-            <Popover key={i}>
-              <PopoverTrigger asChild>
+            <HoverCard key={i} openDelay={120} closeDelay={80}>
+              <HoverCardTrigger asChild>
                 <button type="button" className="keyword">{tok}</button>
-              </PopoverTrigger>
-              <PopoverContent className="parchment-card max-w-sm">
+              </HoverCardTrigger>
+              <HoverCardContent className="parchment-card max-w-sm w-auto">
                 <div className="font-display text-base text-oxblood-deep">{entry.name}</div>
                 <div className="ink-divider my-2" />
                 <p className="text-sm text-ink-faded whitespace-pre-wrap">{entry.description}</p>
-              </PopoverContent>
-            </Popover>
+              </HoverCardContent>
+            </HoverCard>
           );
         }
         return <span key={i}>{tok}</span>;
