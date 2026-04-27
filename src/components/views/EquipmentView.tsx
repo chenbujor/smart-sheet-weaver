@@ -318,9 +318,6 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                             <KeywordText text={item.description} />
                           </div>
                         )}
-                        {item.notes && (
-                          <p className="mt-1 text-[0.7rem] italic text-ink-faded line-clamp-2">{item.notes}</p>
-                        )}
                       </>
                     ) : (
                       <div className="text-center text-xs italic text-ink-faded">
