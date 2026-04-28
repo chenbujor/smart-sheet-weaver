@@ -133,7 +133,7 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
             </div>
             <label className="text-xs text-ink-faded block">
               Description
-              <textarea
+              <LockableTextarea
                 value={f.description}
                 onChange={(e) => updateFeature(c.id, f.id, { description: e.target.value })}
                 rows={3}

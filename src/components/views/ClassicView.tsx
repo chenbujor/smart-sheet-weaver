@@ -168,7 +168,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
         <div className="relative z-10">
           <h3 className="font-display text-sm text-oxblood-deep">Notes</h3>
           <div className="ink-divider my-1.5" />
-          <textarea
+          <LockableTextarea
             value={c.notes ?? ''}
             onChange={(e) => update(c.id, { notes: e.target.value })}
             className="w-full min-h-24 rounded-sm border border-ink/30 bg-parchment-light p-2 font-script text-sm"

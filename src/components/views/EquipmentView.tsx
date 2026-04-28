@@ -263,7 +263,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                       </label>
                     )}
                   </div>
-                  <SmartTextarea
+                  <LockableSmartTextarea
                     value={i.description ?? ''}
                     onValueChange={(v) => updateInventory(c.id, i.id, { description: v })}
                     placeholder="Description (use \ for glossary)"
