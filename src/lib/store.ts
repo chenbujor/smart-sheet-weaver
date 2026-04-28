@@ -1,5 +1,65 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+
+const STORAGE_KEY = 'dnd2024-vault';
+
+// Track the write sequence we last observed/wrote, to detect cross-tab races.
+let lastSeenSeq = 0;
+let storageListenerAttached = false;
+
+const guardedLocalStorage: StateStorage = {
+  getItem: (name) => {
+    if (typeof window === 'undefined') return null;
+    const raw = window.localStorage.getItem(name);
+    if (raw && name === STORAGE_KEY) {
+      try {
+        const parsed = JSON.parse(raw);
+        const seq = Number(parsed?.state?._writeSeq) || 0;
+        if (seq > lastSeenSeq) lastSeenSeq = seq;
+      } catch { /* ignore */ }
+    }
+    return raw;
+  },
+  setItem: (name, value) => {
+    if (typeof window === 'undefined') return;
+    if (name === STORAGE_KEY) {
+      // Check if another tab wrote a newer payload than what we last saw.
+      const existingRaw = window.localStorage.getItem(name);
+      if (existingRaw) {
+        try {
+          const existing = JSON.parse(existingRaw);
+          const existingSeq = Number(existing?.state?._writeSeq) || 0;
+          if (existingSeq > lastSeenSeq) {
+            // Another tab has newer data — don't clobber. Pull it in instead.
+            lastSeenSeq = existingSeq;
+            // Defer rehydrate so we don't recurse inside the current set().
+            queueMicrotask(() => {
+              try { (useAppStore as any).persist?.rehydrate?.(); } catch { /* ignore */ }
+            });
+            return;
+          }
+        } catch { /* ignore parse errors and proceed with write */ }
+      }
+      // Stamp our write with an incremented seq so other tabs notice.
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === 'object') {
+          parsed.state = parsed.state ?? {};
+          const nextSeq = Math.max(lastSeenSeq, Number(parsed.state._writeSeq) || 0) + 1;
+          parsed.state._writeSeq = nextSeq;
+          lastSeenSeq = nextSeq;
+          window.localStorage.setItem(name, JSON.stringify(parsed));
+          return;
+        }
+      } catch { /* fall through to plain write */ }
+    }
+    window.localStorage.setItem(name, value);
+  },
+  removeItem: (name) => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(name);
+  },
+};
 import type {
   Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
   GlossaryTerm, CustomEntry, Library, LibraryCategory,
@@ -574,8 +634,24 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ library: { ...s.library, glossary: seedGlossary() } })),
     }),
     {
-      name: 'dnd2024-vault',
+      name: STORAGE_KEY,
       version: 3,
+      storage: createJSONStorage(() => guardedLocalStorage),
+      onRehydrateStorage: () => () => {
+        if (typeof window === 'undefined' || storageListenerAttached) return;
+        storageListenerAttached = true;
+        window.addEventListener('storage', (e) => {
+          if (e.key !== STORAGE_KEY || !e.newValue) return;
+          try {
+            const parsed = JSON.parse(e.newValue);
+            const seq = Number(parsed?.state?._writeSeq) || 0;
+            if (seq > lastSeenSeq) {
+              lastSeenSeq = seq;
+              (useAppStore as any).persist?.rehydrate?.();
+            }
+          } catch { /* ignore */ }
+        });
+      },
       migrate: (persisted: any, fromVersion) => {
         if (!persisted) return persisted;
         if (fromVersion < 2) {
