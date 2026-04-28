@@ -1,34 +1,22 @@
-# Fix LocalStorage Race in Persisted Store
+# Nested Keyword Popovers
 
-## Root cause
+## Behavior
 
-The app uses zustand `persist` (`src/lib/store.ts`, key `dnd2024-vault`) with default `localStorage`. The Lovable preview commonly has the app mounted in more than one context at the same time (e.g. editor preview iframe + a separately opened preview tab, or HMR remounts). Each instance:
+When a glossary keyword's description contains another glossary keyword (e.g. "Paralyzed" mentions "Incapacitated"), that nested term should also be clickable/hoverable inside the popover. Opening it shows its description in a second popover anchored to the **side** of the parent popover, so both are visible at once.
 
-1. Reads LocalStorage once at startup into its own in-memory copy.
-2. Writes its full state back on every mutation.
+- Self-references are skipped (Paralyzed inside Paralyzed's own description stays plain text).
+- Hover preview and click-to-pin behavior carry over to nested terms.
+- Nesting is capped at depth 3 to prevent runaway chains.
 
-There is no listener for the browser `storage` event, so instance B never sees instance A's writes. Whichever tab the user clicks in last overwrites LocalStorage with its stale snapshot, producing the "alternates between two saved states / two different characters" symptom.
+## Implementation
 
-## Fix (minimal, no rebuild)
+Single file edit: `src/components/KeywordText.tsx`.
 
-Edit only `src/lib/store.ts`. Two small additions inside the `persist(...)` config:
+1. Extract a `renderTokens(text, map, excludeId, depth)` helper that splits text into word/non-word tokens and returns either plain spans or `<Keyword>` components — skipping any token whose entry id matches `excludeId`.
+2. Use this helper both at the top level (`KeywordText`) and inside `Keyword`'s `PopoverContent` to render the description with embedded sub-keywords.
+3. Pass the prebuilt glossary `map` down into nested `Keyword` instances so each child doesn't rebuild it. Top-level `KeywordType` still subscribes to the store; nested instances reuse the passed map.
+4. Add a `depth` prop (default 0). Root popover uses `side="bottom"` (current behavior); nested popovers use `side="right"` with `align="start"` so they appear next to the parent card.
+5. Stop click propagation on the keyword button so clicking a nested keyword doesn't also toggle parent state unintentionally.
+6. Hard-cap recursion at `depth < 3`; beyond that, render description as plain text.
 
-1. Add an `onRehydrateStorage` hook that, on first hydration in the browser, attaches a `window.addEventListener('storage', ...)` listener. When the `storage` event fires for key `dnd2024-vault`, call `useAppStore.persist.rehydrate()` so this tab picks up the other tab's write instead of overwriting it later.
-
-2. Add a lightweight write-guard: before each `setState`-triggered persist write, compare the `state.version`/timestamp of what's currently in LocalStorage to what we're about to write. If LocalStorage already holds a newer payload (i.e. another tab wrote after our last rehydrate), call `rehydrate()` first and merge, instead of clobbering. Implementation: wrap the default storage via `createJSONStorage` and override `setItem` to do this check.
-
-No schema change, no migration bump, no UI change. Existing data in LocalStorage continues to load.
-
-## Technical details
-
-- File: `src/lib/store.ts` only.
-- Imports to add: `createJSONStorage` from `zustand/middleware`.
-- `storage` option: `createJSONStorage(() => guardedLocalStorage)` where `guardedLocalStorage` wraps `window.localStorage` and on `setItem` checks the existing serialized record's nested `state.updatedAt`-equivalent (we'll use the max `updatedAt` across `characters` plus a monotonically incremented `_writeSeq` we add into the persisted payload). If existing seq > our last-known seq, trigger rehydrate and skip the stale write; the next mutation will write cleanly.
-- `onRehydrateStorage`: returns a function that, once on the client, registers a single `storage` listener (guarded by a module-level boolean) calling `useAppStore.persist.rehydrate()` when `e.key === 'dnd2024-vault'`.
-- SSR-safe: all `window` access guarded by `typeof window !== 'undefined'`.
-
-## Out of scope
-
-- No changes to components, types, or routing.
-- No change to the persist `name` or `version`.
-- No new dependencies.
+No changes to `glossary.ts`, types, or any other component.
