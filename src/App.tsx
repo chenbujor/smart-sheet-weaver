@@ -7,7 +7,6 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import CharacterPage from "./pages/CharacterPage.tsx";
 import LibraryPage from "./pages/LibraryPage.tsx";
-import Library from "./pages/Library.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,8 +19,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/character/:id" element={<CharacterPage />} />
-          <Route path="/library" element={<Library />} />
-          <Route path="/libraryPage" element={<LibraryPage />} />
+          <Route path="/library" element={<LibraryPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
