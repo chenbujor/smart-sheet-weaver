@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { FeaturesView } from '@/components/views/FeaturesView';
 import { EquipmentView } from '@/components/views/EquipmentView';
+import { LockableTextarea } from '@/components/LockableTextarea';
 
 interface Props { character: Character; derived: Derived }
 

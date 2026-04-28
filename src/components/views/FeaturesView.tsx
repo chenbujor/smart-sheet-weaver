@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
 import { LibraryPicker } from '@/components/LibraryPicker';
+import { LockableTextarea } from '@/components/LockableTextarea';
 
 interface Props { character: Character; derived: Derived }
 
