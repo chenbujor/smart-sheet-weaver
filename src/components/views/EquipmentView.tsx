@@ -9,6 +9,7 @@ import type { Derived } from '@/lib/rules';
 import { abilityMod, formatMod, SKILLS } from '@/lib/rules';
 import { LibraryPicker } from '@/components/LibraryPicker';
 import { SmartTextarea } from '@/components/SmartText';
+import { LockableSmartTextarea } from '@/components/LockableTextarea';
 import { KeywordText } from '@/components/KeywordText';
 
 interface Props { character: Character; derived: Derived }
@@ -263,7 +264,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                       </label>
                     )}
                   </div>
-                  <SmartTextarea
+                  <LockableSmartTextarea
                     value={i.description ?? ''}
                     onValueChange={(v) => updateInventory(c.id, i.id, { description: v })}
                     placeholder="Description (use \ for glossary)"
