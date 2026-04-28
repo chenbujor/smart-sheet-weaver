@@ -634,8 +634,24 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ library: { ...s.library, glossary: seedGlossary() } })),
     }),
     {
-      name: 'dnd2024-vault',
+      name: STORAGE_KEY,
       version: 3,
+      storage: createJSONStorage(() => guardedLocalStorage),
+      onRehydrateStorage: () => () => {
+        if (typeof window === 'undefined' || storageListenerAttached) return;
+        storageListenerAttached = true;
+        window.addEventListener('storage', (e) => {
+          if (e.key !== STORAGE_KEY || !e.newValue) return;
+          try {
+            const parsed = JSON.parse(e.newValue);
+            const seq = Number(parsed?.state?._writeSeq) || 0;
+            if (seq > lastSeenSeq) {
+              lastSeenSeq = seq;
+              (useAppStore as any).persist?.rehydrate?.();
+            }
+          } catch { /* ignore */ }
+        });
+      },
       migrate: (persisted: any, fromVersion) => {
         if (!persisted) return persisted;
         if (fromVersion < 2) {
