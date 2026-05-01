@@ -605,6 +605,7 @@ export const useAppStore = create<AppState>()(
                 items: data.library.items ?? s.library.items,
                 actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
+                classes: data.library.classes ?? s.library.classes,
               }
             : s.library,
         })),
@@ -652,6 +653,150 @@ export const useAppStore = create<AppState>()(
 
       resetGlossary: () =>
         set((s) => ({ library: { ...s.library, glossary: seedGlossary() } })),
+
+      // ----- Class library ---------------------------------------------
+      addClass: (entry) => {
+        const id = entry?.id || uid();
+        const newClass: ClassEntry = {
+          id,
+          name: entry?.name ?? 'New Class',
+          hitDie: entry?.hitDie ?? 8,
+          caster: entry?.caster ?? 'none',
+          primaryAbility: entry?.primaryAbility ?? ['str'],
+          saves: entry?.saves ?? ['str', 'con'],
+          builtin: false,
+          features: entry?.features ?? [],
+          subclasses: entry?.subclasses ?? [],
+        };
+        set((s) => ({ library: { ...s.library, classes: [...s.library.classes, newClass] } }));
+        return id;
+      },
+
+      updateClass: (id, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+          },
+        })),
+
+      removeClass: (id) =>
+        set((s) => ({
+          library: { ...s.library, classes: s.library.classes.filter((c) => c.id !== id) },
+        })),
+
+      resetClasses: () =>
+        set((s) => {
+          const have = new Set(s.library.classes.map((c) => c.id));
+          const merged = [...s.library.classes];
+          for (const seed of seedClasses()) if (!have.has(seed.id)) merged.push(seed);
+          return { library: { ...s.library, classes: merged } };
+        }),
+
+      addSubclass: (classId, name) => {
+        const subId = uid();
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId
+                ? { ...c, subclasses: [...c.subclasses, { id: subId, name: name ?? 'New Subclass', features: [] }] }
+                : c,
+            ),
+          },
+        }));
+        return subId;
+      },
+
+      updateSubclass: (classId, subId, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId
+                ? { ...c, subclasses: c.subclasses.map((sb) => (sb.id === subId ? { ...sb, ...patch } : sb)) }
+                : c,
+            ),
+          },
+        })),
+
+      removeSubclass: (classId, subId) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId ? { ...c, subclasses: c.subclasses.filter((sb) => sb.id !== subId) } : c,
+            ),
+          },
+        })),
+
+      addClassFeature: (classId, subId, feature) => {
+        const fid = uid();
+        const f: CharacterFeature = {
+          id: fid,
+          name: feature?.name ?? 'New Feature',
+          source: feature?.source ?? 'class',
+          description: feature?.description ?? '',
+          reset: feature?.reset ?? 'none',
+          level: feature?.level ?? 1,
+          ...feature,
+          id: fid,
+        };
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) return { ...c, features: [...c.features, f] };
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId ? { ...sb, features: [...sb.features, f] } : sb,
+                ),
+              };
+            }),
+          },
+        }));
+        return fid;
+      },
+
+      updateClassFeature: (classId, subId, fid, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) {
+                return { ...c, features: c.features.map((f) => (f.id === fid ? { ...f, ...patch } : f)) };
+              }
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId
+                    ? { ...sb, features: sb.features.map((f) => (f.id === fid ? { ...f, ...patch } : f)) }
+                    : sb,
+                ),
+              };
+            }),
+          },
+        })),
+
+      removeClassFeature: (classId, subId, fid) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) return { ...c, features: c.features.filter((f) => f.id !== fid) };
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId ? { ...sb, features: sb.features.filter((f) => f.id !== fid) } : sb,
+                ),
+              };
+            }),
+          },
+        })),
     }),
     {
       name: STORAGE_KEY,
