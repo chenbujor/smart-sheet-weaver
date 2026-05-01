@@ -64,6 +64,7 @@ export interface SpellEntry {
   sourceLabel?: string;
   alwaysPrepared?: boolean;
   prepared?: boolean;
+  spellLists?: string[];      // class names this spell appears on
 }
 
 export interface WeaponMastery {
