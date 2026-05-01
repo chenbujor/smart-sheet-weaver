@@ -72,6 +72,7 @@ const LibraryPage = () => {
 
       <main className="container py-6 animate-fade-in">
         {tab === 'glossary' && <GlossaryTab />}
+        {tab === 'classes' && <ClassesTab />}
         {tab === 'spells' && <SpellsTab />}
         {tab === 'features' && <FeaturesTab />}
         {tab === 'weapons' && <WeaponsTab />}
