@@ -799,7 +799,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => guardedLocalStorage),
       onRehydrateStorage: () => () => {
         if (typeof window === 'undefined' || storageListenerAttached) return;
