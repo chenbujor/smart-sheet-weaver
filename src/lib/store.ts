@@ -203,6 +203,17 @@ interface AppState {
     libraryEntryId: string,
   ) => void;
   resetGlossary: () => void;
+  // class library
+  addClass: (entry?: Partial<ClassEntry>) => string;
+  updateClass: (id: string, patch: Partial<ClassEntry>) => void;
+  removeClass: (id: string) => void;
+  resetClasses: () => void;
+  addSubclass: (classId: string, name?: string) => string;
+  updateSubclass: (classId: string, subId: string, patch: Partial<SubclassEntry>) => void;
+  removeSubclass: (classId: string, subId: string) => void;
+  addClassFeature: (classId: string, subId: string | null, feature?: Partial<CharacterFeature>) => string;
+  updateClassFeature: (classId: string, subId: string | null, fid: string, patch: Partial<CharacterFeature>) => void;
+  removeClassFeature: (classId: string, subId: string | null, fid: string) => void;
   // io
   importCharacters: (data: Character[]) => void;
   importAll: (state: { characters?: Record<string, Character>; library?: Library }) => void;
