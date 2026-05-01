@@ -40,7 +40,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
                 onChange={(e) => update(c.id, { classId: e.target.value })}
                 className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 font-display text-sm h-8"
               >
-                {CLASSES.map((cl) => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
+                {libraryClasses.map((cl) => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
               </select>
               <Input
                 type="number"
