@@ -832,6 +832,17 @@ export const useAppStore = create<AppState>()(
             persisted.library.actions = seedActions();
           }
         }
+        if (fromVersion < 4) {
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (!Array.isArray(persisted.library.classes)) {
+            persisted.library.classes = seedClasses();
+          } else {
+            const have = new Set(persisted.library.classes.map((c: ClassEntry) => c.id));
+            for (const seed of seedClasses()) {
+              if (!have.has(seed.id)) persisted.library.classes.push(seed);
+            }
+          }
+        }
         return persisted;
       },
     }
