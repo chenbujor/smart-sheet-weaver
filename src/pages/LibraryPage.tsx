@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText, Swords } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import type {
   GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, Weapon, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
+  ClassEntry, CasterType,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
@@ -19,6 +20,7 @@ type TabKey = LibraryCategory;
 
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'glossary', label: 'Glossary', icon: BookMarked },
+  { key: 'classes', label: 'Classes', icon: Shield },
   { key: 'spells', label: 'Spells', icon: Wand2 },
   { key: 'features', label: 'Features', icon: Sparkles },
   { key: 'weapons', label: 'Weapons', icon: Sword },
@@ -70,6 +72,7 @@ const LibraryPage = () => {
 
       <main className="container py-6 animate-fade-in">
         {tab === 'glossary' && <GlossaryTab />}
+        {tab === 'classes' && <ClassesTab />}
         {tab === 'spells' && <SpellsTab />}
         {tab === 'features' && <FeaturesTab />}
         {tab === 'weapons' && <WeaponsTab />}
@@ -271,6 +274,10 @@ const SpellsTab = () => {
                         />
                         Concentration
                       </label>
+                      <SpellListsField
+                        value={s.spellLists ?? []}
+                        onChange={(v) => update('spells', s.id, { spellLists: v.length ? v : undefined })}
+                      />
                       <SmartTextarea
                         value={s.description}
                         onValueChange={(v) => update('spells', s.id, { description: v })}
@@ -846,6 +853,313 @@ const ActionsTab = () => {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// SpellListsField — multi-select chips of class names
+// ---------------------------------------------------------------------------
+
+const SpellListsField = ({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) => {
+  const classes = useAppStore((s) => s.library.classes);
+  const allNames = useMemo(() => classes.map((c) => c.name), [classes]);
+  const toggle = (name: string) => {
+    if (value.includes(name)) onChange(value.filter((n) => n !== name));
+    else onChange([...value, name]);
+  };
+  return (
+    <div>
+      <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded mb-1">Spell Lists</div>
+      <div className="flex flex-wrap gap-1">
+        {allNames.length === 0 && (
+          <span className="text-xs italic text-ink-faded">No classes in library — add some in the Classes tab.</span>
+        )}
+        {allNames.map((name) => {
+          const on = value.includes(name);
+          return (
+            <button
+              key={name}
+              type="button"
+              onClick={() => toggle(name)}
+              className={cn(
+                'rounded-full border px-2 py-0.5 text-xs transition-colors',
+                on
+                  ? 'bg-oxblood text-primary-foreground border-oxblood'
+                  : 'border-ink/40 bg-parchment-light text-ink-faded hover:bg-secondary'
+              )}
+            >
+              {name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Classes tab
+// ---------------------------------------------------------------------------
+
+const CASTERS: CasterType[] = ['none', 'full', 'half', 'third', 'pact'];
+const HIT_DICE = [6, 8, 10, 12];
+
+const ClassesTab = () => {
+  const classes = useAppStore((s) => s.library.classes);
+  const addClass = useAppStore((s) => s.addClass);
+  const updateClass = useAppStore((s) => s.updateClass);
+  const removeClass = useAppStore((s) => s.removeClass);
+  const resetClasses = useAppStore((s) => s.resetClasses);
+  const addSubclass = useAppStore((s) => s.addSubclass);
+  const updateSubclass = useAppStore((s) => s.updateSubclass);
+  const removeSubclass = useAppStore((s) => s.removeSubclass);
+  const addClassFeature = useAppStore((s) => s.addClassFeature);
+  const updateClassFeature = useAppStore((s) => s.updateClassFeature);
+  const removeClassFeature = useAppStore((s) => s.removeClassFeature);
+
+  const [selectedId, setSelectedId] = useState<string | null>(classes[0]?.id ?? null);
+  const selected = classes.find((c) => c.id === selectedId) ?? null;
+
+  return (
+    <div className="grid gap-3 md:grid-cols-[260px,1fr]">
+      <aside className="parchment-panel rounded-md p-2 space-y-1 h-fit">
+        <div className="relative z-10 space-y-1">
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              onClick={() => {
+                const id = addClass({ name: 'New Class' });
+                setSelectedId(id);
+              }}
+              className="flex-1 bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
+            >
+              <Plus className="mr-1 h-3.5 w-3.5" /> Class
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => resetClasses()}
+              className="border-ink/40 bg-parchment-light hover:bg-secondary"
+              title="Re-seed missing SRD classes"
+            >
+              ↻
+            </Button>
+          </div>
+          <div className="ink-divider my-1" />
+          {classes.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedId(c.id)}
+              className={cn(
+                'w-full rounded-sm px-2 py-1 text-left font-display text-sm transition-colors flex items-center justify-between',
+                selectedId === c.id ? 'bg-oxblood text-primary-foreground' : 'hover:bg-secondary text-ink'
+              )}
+            >
+              <span className="truncate">{c.name}</span>
+              <span className="text-[0.6rem] uppercase opacity-70">
+                {c.builtin ? 'SRD' : 'Custom'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      {!selected ? (
+        <EmptyState message="Select or create a class." />
+      ) : (
+        <div className="parchment-panel rounded-md p-3 space-y-3">
+          <div className="relative z-10 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <SmartInput
+                value={selected.name}
+                onValueChange={(v) => updateClass(selected.id, { name: v })}
+                disabled={selected.builtin}
+                className="font-display text-lg flex-1 min-w-40"
+              />
+              {!selected.builtin && (
+                <button
+                  onClick={() => {
+                    if (confirm(`Delete class "${selected.name}"?`)) {
+                      removeClass(selected.id);
+                      setSelectedId(classes.find((c) => c.id !== selected.id)?.id ?? null);
+                    }
+                  }}
+                  className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                  aria-label="Delete class"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="grid gap-2 sm:grid-cols-4 text-xs">
+              <label className="flex flex-col text-ink-faded">
+                Hit Die
+                <select
+                  value={selected.hitDie}
+                  onChange={(e) => updateClass(selected.id, { hitDie: parseInt(e.target.value, 10) })}
+                  disabled={selected.builtin}
+                  className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 disabled:opacity-60"
+                >
+                  {HIT_DICE.map((d) => <option key={d} value={d}>d{d}</option>)}
+                </select>
+              </label>
+              <label className="flex flex-col text-ink-faded">
+                Caster
+                <select
+                  value={selected.caster}
+                  onChange={(e) => updateClass(selected.id, { caster: e.target.value as CasterType })}
+                  disabled={selected.builtin}
+                  className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 disabled:opacity-60"
+                >
+                  {CASTERS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </label>
+              <label className="flex flex-col text-ink-faded">
+                Primary Ability
+                <Input
+                  value={selected.primaryAbility.join(',')}
+                  disabled={selected.builtin}
+                  onChange={(e) => updateClass(selected.id, {
+                    primaryAbility: e.target.value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean) as AbilityKey[],
+                  })}
+                  className="mt-0.5 h-8 disabled:opacity-60"
+                />
+              </label>
+              <label className="flex flex-col text-ink-faded">
+                Saves
+                <Input
+                  value={selected.saves.join(',')}
+                  disabled={selected.builtin}
+                  onChange={(e) => updateClass(selected.id, {
+                    saves: e.target.value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean) as AbilityKey[],
+                  })}
+                  className="mt-0.5 h-8 disabled:opacity-60"
+                />
+              </label>
+            </div>
+
+            <ClassFeaturesSection
+              title="Class Features"
+              features={selected.features}
+              onAdd={() => addClassFeature(selected.id, null)}
+              onUpdate={(fid, patch) => updateClassFeature(selected.id, null, fid, patch)}
+              onRemove={(fid) => removeClassFeature(selected.id, null, fid)}
+            />
+
+            <div className="ink-divider my-2" />
+            <div className="flex items-center justify-between">
+              <h4 className="font-display text-base text-oxblood-deep">Subclasses</h4>
+              <Button
+                size="sm"
+                onClick={() => addSubclass(selected.id, 'New Subclass')}
+                className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> Subclass
+              </Button>
+            </div>
+            {selected.subclasses.length === 0 ? (
+              <p className="text-sm italic text-ink-faded">No subclasses yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {selected.subclasses.map((sb) => (
+                  <div key={sb.id} className="stat-block rounded-sm p-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <SmartInput
+                        value={sb.name}
+                        onValueChange={(v) => updateSubclass(selected.id, sb.id, { name: v })}
+                        className="font-display flex-1"
+                      />
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete subclass "${sb.name}"?`)) removeSubclass(selected.id, sb.id);
+                        }}
+                        className="rounded p-1 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <ClassFeaturesSection
+                      title="Subclass Features"
+                      compact
+                      features={sb.features}
+                      onAdd={() => addClassFeature(selected.id, sb.id)}
+                      onUpdate={(fid, patch) => updateClassFeature(selected.id, sb.id, fid, patch)}
+                      onRemove={(fid) => removeClassFeature(selected.id, sb.id, fid)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ClassFeaturesSection = ({
+  title, features, onAdd, onUpdate, onRemove, compact,
+}: {
+  title: string;
+  features: CharacterFeature[];
+  onAdd: () => void;
+  onUpdate: (fid: string, patch: Partial<CharacterFeature>) => void;
+  onRemove: (fid: string) => void;
+  compact?: boolean;
+}) => {
+  const sorted = useMemo(
+    () => [...features].sort((a, b) => (a.level ?? 1) - (b.level ?? 1) || a.name.localeCompare(b.name)),
+    [features]
+  );
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className={cn('font-display text-oxblood-deep', compact ? 'text-sm' : 'text-base')}>{title}</h4>
+        <Button size="sm" onClick={onAdd} variant="outline" className="border-ink/40 bg-parchment-light hover:bg-secondary">
+          <Plus className="mr-1 h-3.5 w-3.5" /> Feature
+        </Button>
+      </div>
+      {sorted.length === 0 ? (
+        <p className="text-xs italic text-ink-faded">No features yet.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {sorted.map((f) => (
+            <div key={f.id} className="rounded-sm border border-ink/20 bg-parchment-light p-2 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={f.level ?? 1}
+                  onChange={(e) => onUpdate(f.id, { level: Math.max(1, Math.min(20, parseInt(e.target.value || '1', 10))) })}
+                  className="w-14 h-8 text-center"
+                  title="Level gained"
+                />
+                <SmartInput
+                  value={f.name}
+                  onValueChange={(v) => onUpdate(f.id, { name: v })}
+                  className="font-display flex-1"
+                />
+                <button
+                  onClick={() => onRemove(f.id)}
+                  className="rounded p-1 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                  aria-label="Delete feature"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <SmartTextarea
+                value={f.description}
+                onValueChange={(v) => onUpdate(f.id, { description: v })}
+                placeholder="Description"
+                rows={2}
+                className="bg-parchment text-sm border-ink/30"
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -63,7 +63,7 @@ const guardedLocalStorage: StateStorage = {
 import type {
   Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
   GlossaryTerm, CustomEntry, Library, LibraryCategory,
-  LibraryAction, CharacterAction,
+  LibraryAction, CharacterAction, ClassEntry, SubclassEntry,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
 import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
@@ -105,6 +105,14 @@ const seedActions = (): LibraryAction[] => [
   },
 ];
 
+const seedClasses = (): ClassEntry[] =>
+  CLASSES.map((c) => ({
+    ...c,
+    builtin: true,
+    features: [],
+    subclasses: [],
+  }));
+
 const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
@@ -113,6 +121,7 @@ const emptyLibrary = (): Library => ({
   items: [],
   actions: seedActions(),
   custom: [],
+  classes: seedClasses(),
 });
 
 export const newCharacter = (name = 'New Adventurer'): Character => {
@@ -194,6 +203,17 @@ interface AppState {
     libraryEntryId: string,
   ) => void;
   resetGlossary: () => void;
+  // class library
+  addClass: (entry?: Partial<ClassEntry>) => string;
+  updateClass: (id: string, patch: Partial<ClassEntry>) => void;
+  removeClass: (id: string) => void;
+  resetClasses: () => void;
+  addSubclass: (classId: string, name?: string) => string;
+  updateSubclass: (classId: string, subId: string, patch: Partial<SubclassEntry>) => void;
+  removeSubclass: (classId: string, subId: string) => void;
+  addClassFeature: (classId: string, subId: string | null, feature?: Partial<CharacterFeature>) => string;
+  updateClassFeature: (classId: string, subId: string | null, fid: string, patch: Partial<CharacterFeature>) => void;
+  removeClassFeature: (classId: string, subId: string | null, fid: string) => void;
   // io
   importCharacters: (data: Character[]) => void;
   importAll: (state: { characters?: Record<string, Character>; library?: Library }) => void;
@@ -585,6 +605,7 @@ export const useAppStore = create<AppState>()(
                 items: data.library.items ?? s.library.items,
                 actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
+                classes: data.library.classes ?? s.library.classes,
               }
             : s.library,
         })),
@@ -632,10 +653,153 @@ export const useAppStore = create<AppState>()(
 
       resetGlossary: () =>
         set((s) => ({ library: { ...s.library, glossary: seedGlossary() } })),
+
+      // ----- Class library ---------------------------------------------
+      addClass: (entry) => {
+        const id = entry?.id || uid();
+        const newClass: ClassEntry = {
+          id,
+          name: entry?.name ?? 'New Class',
+          hitDie: entry?.hitDie ?? 8,
+          caster: entry?.caster ?? 'none',
+          primaryAbility: entry?.primaryAbility ?? ['str'],
+          saves: entry?.saves ?? ['str', 'con'],
+          builtin: false,
+          features: entry?.features ?? [],
+          subclasses: entry?.subclasses ?? [],
+        };
+        set((s) => ({ library: { ...s.library, classes: [...s.library.classes, newClass] } }));
+        return id;
+      },
+
+      updateClass: (id, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+          },
+        })),
+
+      removeClass: (id) =>
+        set((s) => ({
+          library: { ...s.library, classes: s.library.classes.filter((c) => c.id !== id) },
+        })),
+
+      resetClasses: () =>
+        set((s) => {
+          const have = new Set(s.library.classes.map((c) => c.id));
+          const merged = [...s.library.classes];
+          for (const seed of seedClasses()) if (!have.has(seed.id)) merged.push(seed);
+          return { library: { ...s.library, classes: merged } };
+        }),
+
+      addSubclass: (classId, name) => {
+        const subId = uid();
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId
+                ? { ...c, subclasses: [...c.subclasses, { id: subId, name: name ?? 'New Subclass', features: [] }] }
+                : c,
+            ),
+          },
+        }));
+        return subId;
+      },
+
+      updateSubclass: (classId, subId, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId
+                ? { ...c, subclasses: c.subclasses.map((sb) => (sb.id === subId ? { ...sb, ...patch } : sb)) }
+                : c,
+            ),
+          },
+        })),
+
+      removeSubclass: (classId, subId) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) =>
+              c.id === classId ? { ...c, subclasses: c.subclasses.filter((sb) => sb.id !== subId) } : c,
+            ),
+          },
+        })),
+
+      addClassFeature: (classId, subId, feature) => {
+        const fid = uid();
+        const f: CharacterFeature = {
+          name: 'New Feature',
+          source: 'class',
+          description: '',
+          reset: 'none',
+          level: 1,
+          ...feature,
+          id: fid,
+        };
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) return { ...c, features: [...c.features, f] };
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId ? { ...sb, features: [...sb.features, f] } : sb,
+                ),
+              };
+            }),
+          },
+        }));
+        return fid;
+      },
+
+      updateClassFeature: (classId, subId, fid, patch) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) {
+                return { ...c, features: c.features.map((f) => (f.id === fid ? { ...f, ...patch } : f)) };
+              }
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId
+                    ? { ...sb, features: sb.features.map((f) => (f.id === fid ? { ...f, ...patch } : f)) }
+                    : sb,
+                ),
+              };
+            }),
+          },
+        })),
+
+      removeClassFeature: (classId, subId, fid) =>
+        set((s) => ({
+          library: {
+            ...s.library,
+            classes: s.library.classes.map((c) => {
+              if (c.id !== classId) return c;
+              if (subId === null) return { ...c, features: c.features.filter((f) => f.id !== fid) };
+              return {
+                ...c,
+                subclasses: c.subclasses.map((sb) =>
+                  sb.id === subId ? { ...sb, features: sb.features.filter((f) => f.id !== fid) } : sb,
+                ),
+              };
+            }),
+          },
+        })),
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => guardedLocalStorage),
       onRehydrateStorage: () => () => {
         if (typeof window === 'undefined' || storageListenerAttached) return;
@@ -666,6 +830,17 @@ export const useAppStore = create<AppState>()(
           persisted.library = persisted.library ?? emptyLibrary();
           if (!Array.isArray(persisted.library.actions)) {
             persisted.library.actions = seedActions();
+          }
+        }
+        if (fromVersion < 4) {
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (!Array.isArray(persisted.library.classes)) {
+            persisted.library.classes = seedClasses();
+          } else {
+            const have = new Set(persisted.library.classes.map((c: ClassEntry) => c.id));
+            for (const seed of seedClasses()) {
+              if (!have.has(seed.id)) persisted.library.classes.push(seed);
+            }
           }
         }
         return persisted;

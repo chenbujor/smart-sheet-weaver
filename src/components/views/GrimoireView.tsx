@@ -5,7 +5,7 @@ import { CLASSES, SAMPLE_SPELLS } from '@/lib/srd';
 import { useAppStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, BookOpen, Search } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Search, ListFilter } from 'lucide-react';
 import { KeywordText } from '@/components/KeywordText';
 import { SourceTag } from '@/components/SourceTag';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { abilityMod } from '@/lib/rules';
+import { abilityMod, maxPreparedSpells } from '@/lib/rules';
 import type { AbilityKey, SourceType, SpellEntry } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { LibraryPicker } from '@/components/LibraryPicker';
@@ -90,7 +90,10 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const addSpell = useAppStore((s) => s.addSpell);
   const removeSpell = useAppStore((s) => s.removeSpell);
   const updateSpell = useAppStore((s) => s.updateSpell);
-  const cls = CLASSES.find((x) => x.id === c.classId);
+  const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
+  const libraryClasses = useAppStore((s) => s.library.classes);
+  const librarySpells = useAppStore((s) => s.library.spells);
+  const cls = libraryClasses.find((x) => x.id === c.classId) ?? CLASSES.find((x) => x.id === c.classId);
 
   const [spellAbility, setSpellAbility] = useState<AbilityKey>(
     cls?.caster === 'pact' ? 'cha' :
@@ -99,6 +102,10 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   );
 
   const [search, setSearch] = useState('');
+  const [showLists, setShowLists] = useState(false);
+  const [listClass, setListClass] = useState<string>(cls?.name ?? libraryClasses[0]?.name ?? '');
+  const [dropTarget, setDropTarget] = useState<number | 'any' | null>(null);
+
   const grouped = useMemo(() => {
     const list = c.spells.filter((s) =>
       !search || s.name.toLowerCase().includes(search.toLowerCase())
@@ -112,13 +119,30 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
     return [...map.entries()].sort(([a], [b]) => a - b);
   }, [c.spells, search]);
 
+  const filteredListSpells = useMemo(
+    () => librarySpells.filter((s) => (s.spellLists ?? []).includes(listClass)),
+    [librarySpells, listClass]
+  );
+
   const dc = 8 + d.pb + abilityMod(c.abilities[spellAbility]);
   const atk = d.pb + abilityMod(c.abilities[spellAbility]);
+
+  // Prepared count: non-cantrip spells flagged prepared (excluding alwaysPrepared per 2024 rules)
+  const preparedCount = c.spells.filter((s) => s.level > 0 && s.prepared && !s.alwaysPrepared).length;
+  const preparedMax = maxPreparedSpells(c.classId, c.level);
+  const preparedOver = preparedMax !== null && preparedCount > preparedMax;
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDropTarget(null);
+    const spellId = e.dataTransfer.getData('text/spell-id');
+    if (spellId) copyFromLibrary(c.id, 'spells', spellId);
+  };
 
   return (
     <div className="space-y-3">
       <section className="parchment-panel rounded-md p-3">
-        <div className="relative z-10 grid gap-2 sm:grid-cols-4">
+        <div className="relative z-10 grid gap-2 sm:grid-cols-5">
           <div>
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Ability</div>
             <select
@@ -141,6 +165,12 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
             <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Cantrip Tier</div>
             <div className="font-display text-xl text-ink leading-tight">L{d.cantripTier}</div>
           </div>
+          <div className="stat-block rounded-sm p-1.5 text-center">
+            <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Prepared</div>
+            <div className={cn('font-display text-xl leading-tight', preparedOver ? 'text-destructive' : 'text-ink')}>
+              {preparedCount}{preparedMax !== null ? ` / ${preparedMax}` : ''}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -155,26 +185,53 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
           />
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowLists((v) => !v)}
+            className={cn('border-ink/40', showLists ? 'bg-secondary' : 'bg-parchment-light hover:bg-secondary')}
+          >
+            <ListFilter className="mr-1 h-3.5 w-3.5" /> Spell Lists
+          </Button>
           <LibraryPicker characterId={c.id} category="spells" label="From Library" />
           <AddSpellDialog onAdd={(sp) => addSpell(c.id, sp)} />
         </div>
       </div>
 
-      {grouped.length === 0 ? (
-        <div className="parchment-panel rounded-md p-8 text-center">
-          <BookOpen className="mx-auto mb-2 h-10 w-10 text-ink/40" />
-          <p className="text-ink-faded">Your spellbook is empty. Add spells from the SRD library or scribe your own.</p>
-        </div>
-      ) : (
-        grouped.map(([lvl, spells]) => (
-          <section key={lvl} className="parchment-panel rounded-md p-3">
-            <div className="relative z-10">
-              <h3 className="font-display text-base text-oxblood-deep">
-                {lvl === 0 ? 'Cantrips' : `Level ${lvl}`}
-                <span className="ml-2 text-xs text-ink-faded font-sans">{spells.length}</span>
-              </h3>
-              <div className="ink-divider my-1.5" />
-              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+      <div className={cn('grid gap-3', showLists ? 'md:grid-cols-[1fr,300px]' : 'grid-cols-1')}>
+        <div className="space-y-3 min-w-0">
+          {grouped.length === 0 ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDropTarget('any'); }}
+              onDragLeave={() => setDropTarget(null)}
+              onDrop={handleDrop}
+              className={cn(
+                'parchment-panel rounded-md p-8 text-center transition-all',
+                dropTarget === 'any' && 'ring-2 ring-oxblood'
+              )}
+            >
+              <BookOpen className="mx-auto mb-2 h-10 w-10 text-ink/40" />
+              <p className="text-ink-faded">Your spellbook is empty. Add spells from the SRD library, drag from a spell list, or scribe your own.</p>
+            </div>
+          ) : (
+            grouped.map(([lvl, spells]) => (
+              <section
+                key={lvl}
+                onDragOver={(e) => { e.preventDefault(); setDropTarget(lvl); }}
+                onDragLeave={() => setDropTarget((t) => (t === lvl ? null : t))}
+                onDrop={handleDrop}
+                className={cn(
+                  'parchment-panel rounded-md p-3 transition-all',
+                  dropTarget === lvl && 'ring-2 ring-oxblood'
+                )}
+              >
+                <div className="relative z-10">
+                  <h3 className="font-display text-base text-oxblood-deep">
+                    {lvl === 0 ? 'Cantrips' : `Level ${lvl}`}
+                    <span className="ml-2 text-xs text-ink-faded font-sans">{spells.length}</span>
+                  </h3>
+                  <div className="ink-divider my-1.5" />
+                  <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {spells.map((sp) => (
                   <div key={sp.id} className="stat-block rounded-sm p-2 flex flex-col">
                     <div className="flex items-start justify-between gap-1.5">
@@ -230,6 +287,58 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
           </section>
         ))
       )}
+        </div>
+
+        {showLists && (
+          <aside className="parchment-panel rounded-md p-3 h-fit md:sticky md:top-3">
+            <div className="relative z-10 space-y-2">
+              <h3 className="font-display text-sm text-oxblood-deep">Spell Lists</h3>
+              <select
+                value={listClass}
+                onChange={(e) => setListClass(e.target.value)}
+                className="w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm"
+              >
+                {libraryClasses.map((cl) => (
+                  <option key={cl.id} value={cl.name}>{cl.name}</option>
+                ))}
+              </select>
+              <p className="text-[0.65rem] italic text-ink-faded">
+                Drag a spell onto a level section to add it to your grimoire.
+              </p>
+              {filteredListSpells.length === 0 ? (
+                <p className="text-xs italic text-ink-faded text-center py-4">
+                  No spells in your library tagged for {listClass || 'this class'}.
+                </p>
+              ) : (
+                <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+                  {filteredListSpells
+                    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+                    .map((sp) => (
+                      <div
+                        key={sp.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/spell-id', sp.id);
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        onClick={() => copyFromLibrary(c.id, 'spells', sp.id)}
+                        className="cursor-grab active:cursor-grabbing rounded-sm border border-ink/20 bg-parchment-light p-1.5 hover:bg-secondary"
+                        title="Drag to a level, or click to add"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-display text-sm text-ink truncate">{sp.name}</span>
+                          <span className="text-[0.6rem] text-ink-faded flex-shrink-0">
+                            {sp.level === 0 ? 'Cantrip' : `L${sp.level}`}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 };

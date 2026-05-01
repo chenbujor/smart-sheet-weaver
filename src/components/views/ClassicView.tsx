@@ -16,7 +16,8 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
   const setAbility = useAppStore((s) => s.setAbility);
   const toggleSave = useAppStore((s) => s.toggleSaveProficiency);
   const setSkill = useAppStore((s) => s.setSkill);
-  const cls = CLASSES.find((x) => x.id === c.classId);
+  const libraryClasses = useAppStore((s) => s.library.classes);
+  const cls = libraryClasses.find((x) => x.id === c.classId) ?? CLASSES.find((x) => x.id === c.classId);
 
   return (
     <div className="space-y-2">
@@ -39,7 +40,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
                 onChange={(e) => update(c.id, { classId: e.target.value })}
                 className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 font-display text-sm h-8"
               >
-                {CLASSES.map((cl) => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
+                {libraryClasses.map((cl) => <option key={cl.id} value={cl.id}>{cl.name}</option>)}
               </select>
               <Input
                 type="number"

@@ -43,6 +43,7 @@ export interface CharacterFeature {
   used?: number;
   tiers?: ScalingTier[];      // auto-upgrade dice/effects
   alwaysPrepared?: boolean;   // for spells from species/feats
+  level?: number;             // gain level (for class/subclass features)
 }
 
 export interface SpellEntry {
@@ -63,6 +64,7 @@ export interface SpellEntry {
   sourceLabel?: string;
   alwaysPrepared?: boolean;
   prepared?: boolean;
+  spellLists?: string[];      // class names this spell appears on
 }
 
 export interface WeaponMastery {
@@ -214,6 +216,25 @@ export interface CharacterAction extends LibraryAction {
   // overrides come from editing ability/skill directly on the copy
 }
 
+export interface SubclassEntry {
+  id: string;
+  name: string;
+  builtin?: boolean;
+  features: CharacterFeature[];
+}
+
+export interface ClassEntry {
+  id: string;
+  name: string;
+  hitDie: number;
+  caster: CasterType;
+  primaryAbility: AbilityKey[];
+  saves: AbilityKey[];
+  builtin?: boolean;
+  features: CharacterFeature[];
+  subclasses: SubclassEntry[];
+}
+
 export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
@@ -222,6 +243,7 @@ export interface Library {
   items: InventoryItem[];
   actions: LibraryAction[];
   custom: CustomEntry[];
+  classes: ClassEntry[];
 }
 
 export type LibraryCategory = keyof Library;

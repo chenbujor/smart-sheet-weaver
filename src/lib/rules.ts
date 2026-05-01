@@ -76,6 +76,24 @@ export const spellSlotsFor = (caster: CasterType, level: number): number[] => {
 
 export const pactSlotsFor = (level: number) => PACT_SLOTS[Math.max(1, Math.min(20, level))];
 
+// 2024 PHB prepared-spell tables (by class id, indexed by level-1)
+const PREPARED_BY_CLASS: Record<string, number[]> = {
+  wizard:   [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 22, 23, 25],
+  cleric:   [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 22, 23, 25],
+  druid:    [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 22, 23, 25],
+  bard:     [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 22, 23, 25],
+  sorcerer: [2, 4, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 22, 23, 25],
+  warlock:  [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15],
+  paladin:  [0, 2, 3, 4, 5, 6, 6, 7, 9, 9, 10, 10, 11, 11, 12, 12, 14, 14, 15, 15],
+  ranger:   [0, 2, 3, 4, 5, 6, 6, 7, 9, 9, 10, 10, 11, 11, 12, 12, 14, 14, 15, 15],
+};
+
+export const maxPreparedSpells = (classId: string, level: number): number | null => {
+  const t = PREPARED_BY_CLASS[classId];
+  if (!t) return null;
+  return t[Math.max(1, Math.min(20, level)) - 1];
+};
+
 // Save DC = 8 + PB + ability mod
 export const saveDC = (pb: number, abilityScore: number) =>
   8 + pb + abilityMod(abilityScore);
