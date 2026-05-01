@@ -216,6 +216,25 @@ export interface CharacterAction extends LibraryAction {
   // overrides come from editing ability/skill directly on the copy
 }
 
+export interface SubclassEntry {
+  id: string;
+  name: string;
+  builtin?: boolean;
+  features: CharacterFeature[];
+}
+
+export interface ClassEntry {
+  id: string;
+  name: string;
+  hitDie: number;
+  caster: CasterType;
+  primaryAbility: AbilityKey[];
+  saves: AbilityKey[];
+  builtin?: boolean;
+  features: CharacterFeature[];
+  subclasses: SubclassEntry[];
+}
+
 export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
@@ -224,6 +243,7 @@ export interface Library {
   items: InventoryItem[];
   actions: LibraryAction[];
   custom: CustomEntry[];
+  classes: ClassEntry[];
 }
 
 export type LibraryCategory = keyof Library;
