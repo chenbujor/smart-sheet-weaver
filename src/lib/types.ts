@@ -43,6 +43,7 @@ export interface CharacterFeature {
   used?: number;
   tiers?: ScalingTier[];      // auto-upgrade dice/effects
   alwaysPrepared?: boolean;   // for spells from species/feats
+  level?: number;             // gain level (for class/subclass features)
 }
 
 export interface SpellEntry {
