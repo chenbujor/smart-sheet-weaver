@@ -274,6 +274,10 @@ const SpellsTab = () => {
                         />
                         Concentration
                       </label>
+                      <SpellListsField
+                        value={s.spellLists ?? []}
+                        onChange={(v) => update('spells', s.id, { spellLists: v.length ? v : undefined })}
+                      />
                       <SmartTextarea
                         value={s.description}
                         onValueChange={(v) => update('spells', s.id, { description: v })}
