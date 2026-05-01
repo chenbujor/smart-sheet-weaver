@@ -287,6 +287,58 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
           </section>
         ))
       )}
+        </div>
+
+        {showLists && (
+          <aside className="parchment-panel rounded-md p-3 h-fit md:sticky md:top-3">
+            <div className="relative z-10 space-y-2">
+              <h3 className="font-display text-sm text-oxblood-deep">Spell Lists</h3>
+              <select
+                value={listClass}
+                onChange={(e) => setListClass(e.target.value)}
+                className="w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm"
+              >
+                {libraryClasses.map((cl) => (
+                  <option key={cl.id} value={cl.name}>{cl.name}</option>
+                ))}
+              </select>
+              <p className="text-[0.65rem] italic text-ink-faded">
+                Drag a spell onto a level section to add it to your grimoire.
+              </p>
+              {filteredListSpells.length === 0 ? (
+                <p className="text-xs italic text-ink-faded text-center py-4">
+                  No spells in your library tagged for {listClass || 'this class'}.
+                </p>
+              ) : (
+                <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+                  {filteredListSpells
+                    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+                    .map((sp) => (
+                      <div
+                        key={sp.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/spell-id', sp.id);
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        onClick={() => copyFromLibrary(c.id, 'spells', sp.id)}
+                        className="cursor-grab active:cursor-grabbing rounded-sm border border-ink/20 bg-parchment-light p-1.5 hover:bg-secondary"
+                        title="Drag to a level, or click to add"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-display text-sm text-ink truncate">{sp.name}</span>
+                          <span className="text-[0.6rem] text-ink-faded flex-shrink-0">
+                            {sp.level === 0 ? 'Cantrip' : `L${sp.level}`}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 };
