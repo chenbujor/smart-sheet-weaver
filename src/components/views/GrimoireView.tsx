@@ -5,7 +5,7 @@ import { CLASSES, SAMPLE_SPELLS } from '@/lib/srd';
 import { useAppStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, BookOpen, Search } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Search, ListFilter } from 'lucide-react';
 import { KeywordText } from '@/components/KeywordText';
 import { SourceTag } from '@/components/SourceTag';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { abilityMod } from '@/lib/rules';
+import { abilityMod, maxPreparedSpells } from '@/lib/rules';
 import type { AbilityKey, SourceType, SpellEntry } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { LibraryPicker } from '@/components/LibraryPicker';
