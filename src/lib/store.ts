@@ -63,7 +63,7 @@ const guardedLocalStorage: StateStorage = {
 import type {
   Character, AbilityKey, CharacterFeature, SpellEntry, Weapon, InventoryItem,
   GlossaryTerm, CustomEntry, Library, LibraryCategory,
-  LibraryAction, CharacterAction,
+  LibraryAction, CharacterAction, ClassEntry, SubclassEntry,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
 import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
@@ -105,6 +105,14 @@ const seedActions = (): LibraryAction[] => [
   },
 ];
 
+const seedClasses = (): ClassEntry[] =>
+  CLASSES.map((c) => ({
+    ...c,
+    builtin: true,
+    features: [],
+    subclasses: [],
+  }));
+
 const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
@@ -113,6 +121,7 @@ const emptyLibrary = (): Library => ({
   items: [],
   actions: seedActions(),
   custom: [],
+  classes: seedClasses(),
 });
 
 export const newCharacter = (name = 'New Adventurer'): Character => {
