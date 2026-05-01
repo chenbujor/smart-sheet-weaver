@@ -733,12 +733,11 @@ export const useAppStore = create<AppState>()(
       addClassFeature: (classId, subId, feature) => {
         const fid = uid();
         const f: CharacterFeature = {
-          id: fid,
-          name: feature?.name ?? 'New Feature',
-          source: feature?.source ?? 'class',
-          description: feature?.description ?? '',
-          reset: feature?.reset ?? 'none',
-          level: feature?.level ?? 1,
+          name: 'New Feature',
+          source: 'class',
+          description: '',
+          reset: 'none',
+          level: 1,
           ...feature,
           id: fid,
         };
