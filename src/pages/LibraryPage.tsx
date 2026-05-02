@@ -18,19 +18,20 @@ import { SKILLS } from '@/lib/rules';
 
 type TabKey = LibraryCategory;
 
-const TABS: { key: TabKey; label: string; icon: any }[] = [
+type TabKeyExt = Exclude<TabKey, 'weapons'>;
+
+const TABS: { key: TabKeyExt; label: string; icon: any }[] = [
   { key: 'glossary', label: 'Glossary', icon: BookMarked },
   { key: 'classes', label: 'Classes', icon: Shield },
   { key: 'spells', label: 'Spells', icon: Wand2 },
   { key: 'features', label: 'Features', icon: Sparkles },
-  { key: 'weapons', label: 'Weapons', icon: Sword },
   { key: 'items', label: 'Items', icon: Backpack },
   { key: 'actions', label: 'Actions', icon: Swords },
   { key: 'custom', label: 'Custom', icon: ScrollText },
 ];
 
 const LibraryPage = () => {
-  const [tab, setTab] = useState<TabKey>('glossary');
+  const [tab, setTab] = useState<TabKeyExt>('glossary');
 
   return (
     <div className="min-h-screen pb-12">
