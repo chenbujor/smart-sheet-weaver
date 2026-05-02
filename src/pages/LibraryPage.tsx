@@ -466,7 +466,62 @@ const ItemsTab = () => {
                     <input type="checkbox" checked={i.equipped ?? false} onChange={(e) => update('items', i.id, { equipped: e.target.checked })} className="accent-oxblood" />
                     Equipped by default
                   </label>
+                  <label className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={!!i.weapon}
+                      onChange={(e) => update('items', i.id, { weapon: e.target.checked ? { ability: 'str', damageDice: '1d6', damageType: 'slashing', proficient: true } : undefined })}
+                      className="accent-oxblood"
+                    />
+                    This is a weapon
+                  </label>
                 </div>
+                {i.weapon && (
+                  <div className="rounded-sm border border-ink/20 bg-parchment-light/50 p-2 space-y-2">
+                    <div className="text-xs font-display uppercase tracking-wider text-ink-faded">Weapon stats</div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
+                      <label className="flex flex-col text-ink-faded">
+                        Ability
+                        <select
+                          value={i.weapon.ability}
+                          onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, ability: e.target.value as AbilityKey } })}
+                          className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase"
+                        >
+                          {ABIL.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Damage
+                        <Input value={i.weapon.damageDice} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, damageDice: e.target.value } })} className="mt-0.5 h-8" />
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Type
+                        <Input value={i.weapon.damageType} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, damageType: e.target.value } })} className="mt-0.5 h-8" />
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Bonus
+                        <Input type="number" value={i.weapon.bonus ?? 0} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, bonus: parseInt(e.target.value || '0', 10) } })} className="mt-0.5 h-8" />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <label className="flex items-center gap-1.5">
+                        <input type="checkbox" checked={i.weapon.proficient ?? false} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, proficient: e.target.checked } })} className="accent-oxblood" />
+                        Proficient
+                      </label>
+                      <label className="flex items-center gap-1.5 flex-1">
+                        Mastery:
+                        <select
+                          value={i.weapon.masteryId ?? ''}
+                          onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, masteryId: e.target.value || undefined } })}
+                          className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-0.5"
+                        >
+                          <option value="">— none —</option>
+                          {WEAPON_MASTERIES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                )}
                 <SmartTextarea
                   value={i.description ?? ''}
                   onValueChange={(v) => update('items', i.id, { description: v })}
@@ -480,6 +535,10 @@ const ItemsTab = () => {
                   placeholder="Quick notes / properties"
                   rows={1}
                   className="bg-parchment-light border-ink/30 text-xs"
+                />
+                <GrantsEditor
+                  grants={i.grants}
+                  onChange={(grants) => update('items', i.id, { grants })}
                 />
               </div>
             </div>
