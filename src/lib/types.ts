@@ -262,7 +262,8 @@ export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
   features: CharacterFeature[];
-  weapons: Weapon[];
+  /** @deprecated Weapons are now items with `weapon` set. Kept empty after v5 migration. */
+  weapons?: Weapon[];
   items: InventoryItem[];
   actions: LibraryAction[];
   custom: CustomEntry[];
