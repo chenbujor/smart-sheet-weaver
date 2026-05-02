@@ -1,126 +1,146 @@
-## Overview
+## Goals
 
-Three related additions to the codebase:
+1. **Unify Weapons + Items.** Weapons become Items with an optional `weapon` sub-object. Library "Weapons" tab and the character "Weapons & Attacks" panel keep working — both just read the subset of items where `weapon` is set.
+2. **Grants system.** Any `CharacterFeature` (incl. class/subclass features) and any `InventoryItem` can carry a list of "grants" that automatically push:
+   - an **action** into the character's action list,
+   - a **spell** into the character's spell list (with `alwaysPrepared` by default for feature-granted spells),
+   - one or more **bonus values** into the Bonuses & Modifiers (ability scores, saves, skills, AC, HP max, initiative, speed, passive perception, spell save DC, spell attack, max concentrations, attunement slots).
 
-1. **Class Features library tab** — browse SRD classes with subclasses; add custom classes/subclasses with their own feature lists.
-2. **Spells: spell-list tags + drag-and-drop grimoire picker** filtered by chosen class list.
-3. **Grimoire prepared-spell counter** showing `prepared / max`, scaling per class via official 2024 tables.
+Items only grant while **equipped** (and additionally attuned, if `attunable`). Features always grant while present on the character.
 
 ---
 
-## 1. Class & Subclass Library
+## Data model changes (`src/lib/types.ts`)
 
-### Data model (`src/lib/types.ts`)
-Add to `Library`:
+### Unified item
+
 ```ts
-classes: ClassEntry[];
-
-interface ClassEntry {
-  id: string;          // e.g. 'wizard' or uid for custom
-  name: string;
-  hitDie: number;
-  caster: CasterType;
-  primaryAbility: AbilityKey[];
-  saves: AbilityKey[];
-  builtin?: boolean;          // SRD class — name/chassis non-editable
-  features: CharacterFeature[]; // class features (with `level` field)
-  subclasses: SubclassEntry[];
-}
-interface SubclassEntry {
-  id: string;
-  name: string;
-  builtin?: boolean;
-  features: CharacterFeature[];
+interface InventoryItem {
+  // existing fields…
+  weapon?: {
+    ability: AbilityKey;
+    damageDice: string;
+    damageType: string;
+    proficient?: boolean;
+    masteryId?: string;
+    bonus?: number;
+  };
+  grants?: Grant[];
 }
 ```
-Extend `CharacterFeature` with optional `level?: number` (gain level) for class/subclass features.
 
-### Seeding
-On first load (and via a "Re-seed SRD classes" button), populate `library.classes` from the existing `CLASSES` array in `src/lib/srd.ts`, each with empty `features`/`subclasses` (or a few sample subclass shells like Champion/Battle Master, Evocation/Abjuration, etc.). Builtin entries can have features added but the chassis (hitDie/caster/saves) is locked.
+`Weapon` type stays as a deprecated alias (`type Weapon = InventoryItem & { weapon: NonNullable<InventoryItem['weapon']> }`) so existing imports keep compiling during the transition. `Character.weapons` is removed; everything lives in `Character.inventory`. Same for `Library.weapons` → folded into `Library.items`.
 
-### New `ClassesTab` in `src/pages/LibraryPage.tsx`
-Add `'classes'` to `TABS` (icon: `Shield` from lucide). UI:
-- Left column: list of classes with `+ Add Custom Class`.
-- Right column for selected class: editable header (name/hitDie/caster/saves — disabled if `builtin`), then two collapsible sections:
-  - **Class Features** — list of `CharacterFeature` rows with an extra "Level" number input. Add/remove/edit using the same components as `FeaturesTab`.
-  - **Subclasses** — list with `+ Add Subclass`. Each subclass expands to its own feature list.
+### CharacterFeature / SpellEntry
 
-### Store (`src/lib/store.ts`)
-Add nested mutators:
-- `addClass`, `updateClass`, `removeClass`
-- `addSubclass(classId, …)`, `updateSubclass`, `removeSubclass`
-- `addClassFeature(classId, subclassId | null, feature)`, `updateClassFeature`, `removeClassFeature`
+Add `grants?: Grant[]` to `CharacterFeature`. (`SpellEntry` doesn't grant.)
 
-These operate on `library.classes` and follow the existing immutable-update pattern.
+### Grant union
 
-### Wiring on character sheet
-The character class dropdown (currently uses `CLASSES` constant) reads from `library.classes` instead, so custom classes appear. `CLASSES` becomes the seed source only.
-
----
-
-## 2. Spell Lists + Drag-and-Drop Grimoire Picker
-
-### Data model
-Extend `SpellEntry` with `spellLists?: string[]` (array of class names — strings so custom classes work too).
-
-### Library spell editor (`SpellsTab`)
-Add a multi-select chip input below "Concentration": shows all class names from `library.classes`; clicking toggles inclusion. Stored as `spellLists`.
-
-### Grimoire drag-and-drop (`src/components/views/GrimoireView.tsx`)
-- New collapsible side panel "Spell Lists" (toggle button next to "From Library"). Inside:
-  - Class selector (dropdown of all `library.classes` names).
-  - Filtered list of `library.spells` where `spellLists` includes that class.
-  - Each row is `draggable`. On `dragstart` set `dataTransfer` payload `{ spellId }`.
-- Each level group section becomes a drop target (`onDragOver` preventDefault, visual ring on `dragenter`, `onDrop` calls `copyFromLibrary(characterId, 'spells', spellId)`).
-- Also keep click-to-add as a fallback for accessibility.
-
-Use native HTML5 drag-and-drop (no new dependency). The grouped sections already exist in `GrimoireView`; we add a wrapping container with drop handlers per level header.
-
----
-
-## 3. Prepared Spells Counter
-
-### Rules (`src/lib/rules.ts`)
-Add 2024 PHB prepared-spells tables per caster class:
 ```ts
-const PREPARED_BY_CLASS: Record<string, number[]> = {
-  wizard:   [4,5,6,7,9,10,11,12,14,15,16,16,17,18,19,21,22,22,23,25],
-  cleric:   [4,5,6,7,9,10,11,12,14,15,16,16,17,18,19,21,22,22,23,25],
-  druid:    [4,5,6,7,9,10,11,12,14,15,16,16,17,18,19,21,22,22,23,25],
-  bard:     [4,5,6,7,9,10,11,12,14,15,16,16,17,18,19,21,22,22,23,25],
-  sorcerer: [2,4,6,7,9,10,11,12,14,15,16,16,17,18,19,21,22,22,23,25],
-  warlock:  [2,3,4,5,6,7,8,9,10,10,11,11,12,12,13,13,14,14,15,15],
-  paladin:  [0,2,3,4,5,6,6,7,9,9,10,10,11,11,12,12,14,14,15,15],
-  ranger:   [0,2,3,4,5,6,6,7,9,9,10,10,11,11,12,12,14,14,15,15],
-};
-export const maxPreparedSpells = (classId: string, level: number): number | null => {
-  const t = PREPARED_BY_CLASS[classId];
-  return t ? t[Math.max(1, Math.min(20, level)) - 1] : null;
-};
-```
-(Custom classes return `null` → counter shows only current count.)
+type Grant =
+  | { kind: 'action'; libraryActionId: string }                      // copy of LibraryAction
+  | { kind: 'spell';  librarySpellId: string;  alwaysPrepared?: boolean }
+  | { kind: 'bonus';  target: BonusTarget; value: number };
 
-### UI in `GrimoireView`
-In the top stat panel, add a 5th stat block "Prepared":
+type BonusTarget =
+  | { type: 'ability'; key: AbilityKey }
+  | { type: 'save';    key: AbilityKey }
+  | { type: 'skill';   skillId: string }
+  | { type: 'scalar';  key:
+      'hpMax'|'ac'|'initiative'|'speed'|'passivePerception'
+      |'spellSaveDc'|'spellAttack'|'maxConcentrations'|'attunementSlots' };
 ```
-Prepared
-3 / 7
+
+Each grant gets a stable `id` so we can dedupe.
+
+---
+
+## Migration (`src/lib/store.ts`)
+
+Bump persisted version to v5:
+
+- For every character: for each `w` in `character.weapons`, push a new `InventoryItem` `{ name, qty: 1, equipped: true, weapon: { ability, damageDice, damageType, proficient, masteryId, bonus } }` into `inventory` (skip if an inventory item with same id already exists). Then delete `character.weapons`.
+- For `library.weapons`: same conversion into `library.items` with `equipped: true` default. Delete `library.weapons`.
+- Backfill `grants: []` where missing.
+
+`addWeapon` / `removeWeapon` / `updateWeapon` become thin wrappers that call the inventory mutators on items where `weapon` is set, so existing call sites keep working through the transition. New code uses `addInventory` directly with a `weapon` block.
+
+---
+
+## Grant resolution (new `src/lib/grants.ts`)
+
+Pure helper, called from `deriveCharacter` and from the views:
+
+```ts
+export interface ResolvedGrants {
+  actions: CharacterAction[];   // from features/items
+  spells:  SpellEntry[];        // from features/items
+  bonusDelta: Required<Character>['bonuses']; // additive
+}
+
+export const resolveGrants = (c: Character, lib: Library): ResolvedGrants;
 ```
-Count = `c.spells.filter(s => s.prepared || s.alwaysPrepared).length` (cantrips excluded; `alwaysPrepared` doesn't count toward the cap per 2024 rules, so split them: `prepared count = non-cantrip & prepared & !alwaysPrepared`).
-If over the cap, render the count in `text-destructive`.
+
+Rules:
+
+- Walk `c.features` → always active.
+- Walk `c.inventory` → only items where `equipped` is true, and (if `attunable`) `attuned` is true.
+- For each `kind:'action'` / `kind:'spell'`, look up the library entry by id and produce a synthetic copy whose `id` is `granted:${entryId}:${grantId}` and which carries an internal `grantedBy` label for UI ("granted by Magic Initiate").
+- For each `kind:'bonus'`, accumulate into `bonusDelta` (ability/save: per key, skill: per id, scalar: per key).
+
+### Wiring
+
+- `deriveCharacter` (`src/lib/rules.ts`) merges `c.bonuses` with `bonusDelta` before computing derived values.
+- `BonusesPanel` shows the user's manual bonus inputs unchanged, but renders a small read-only "from grants" line under each row so the user sees where extra +Xs come from.
+- `EquipmentView` (Actions section) and `GrimoireView` render manual entries plus the granted ones (granted ones are read-only and tagged with their source; cannot be edited or deleted from the character — must be removed at the source feature/item).
+- Granted spells flagged `alwaysPrepared: true` count toward the same Grimoire counter as today (and don't add to the prepared cap, matching existing 2024 logic).
+
+---
+
+## UI changes
+
+### `src/pages/LibraryPage.tsx`
+
+- Remove the "Weapons" tab. Items tab gets a new collapsible "Weapon stats" section per item with a checkbox **"This is a weapon"**; toggling on reveals the existing weapon fields (ability/damage/type/bonus/proficient/mastery).
+- New shared `<GrantsEditor entry={...} />` component inside the Features tab and the Items tab and inside the per-feature editors of the Classes tab. UI:
+  - Button row: "+ Action grant", "+ Spell grant", "+ Bonus grant".
+  - Action grant: dropdown of `library.actions`.
+  - Spell grant: dropdown of `library.spells`, plus a "Always prepared" checkbox (default on).
+  - Bonus grant: target dropdown (ability/save/skill/scalar) → key dropdown → value number input.
+  - Trash icon per row.
+
+### `src/components/views/EquipmentView.tsx`
+
+- "Weapons & Attacks" panel reads `c.inventory.filter(i => i.weapon)` instead of `c.weapons`. "Add" creates an item with `equipped: true` and a default `weapon` block; "From Library" picker for `weapons` switches to `items` filtered by `i.weapon != null` (handled inside `LibraryPicker` via a new optional `filter` prop).
+- Inventory panel: items with `weapon` show a tiny "⚔" badge so the user knows it's also listed in Weapons.
+- Actions list appends `granted.actions` (read-only rows, badge "from <feature/item name>").
+
+### `src/components/views/GrimoireView.tsx`
+
+- Spell list = `[...c.spells, ...granted.spells]`. Granted spells are read-only and labelled.
+
+### `src/components/BonusesPanel.tsx`
+
+- Below each scalar / per-ability / per-skill input, if a grant contributes, show `+N from grants` in faded text. Does not change how the user edits manual bonuses.
 
 ---
 
 ## Files to change
 
-- `src/lib/types.ts` — add `ClassEntry`, `SubclassEntry`, `Library.classes`, `SpellEntry.spellLists`, optional `CharacterFeature.level`.
-- `src/lib/srd.ts` — no change (still the seed).
-- `src/lib/store.ts` — seed `library.classes`, new class/subclass/class-feature mutators.
-- `src/lib/rules.ts` — add `PREPARED_BY_CLASS` table + `maxPreparedSpells` helper.
-- `src/pages/LibraryPage.tsx` — new "Classes" tab + spell-list multi-select in `SpellsTab`.
-- `src/components/views/GrimoireView.tsx` — drop targets per level, drag-source side panel, prepared counter stat block.
-- Character class picker (wherever it reads `CLASSES`) — switch to `library.classes`.
+- `src/lib/types.ts` — add `Grant`, `BonusTarget`; change `InventoryItem` (add `weapon`, `grants`); add `grants?` to `CharacterFeature`; remove `Library.weapons` & `Character.weapons` (keep `Weapon` alias for back-compat).
+- `src/lib/store.ts` — v5 migration, fold weapons into items, drop `Library.weapons`, keep `addWeapon`/`updateWeapon`/`removeWeapon` as inventory wrappers, add grant CRUD on features/class-features/items.
+- `src/lib/grants.ts` — new resolver.
+- `src/lib/rules.ts` — `deriveCharacter` merges `bonusDelta` into bonuses.
+- `src/pages/LibraryPage.tsx` — remove Weapons tab, embed weapon stats into Items, wire `<GrantsEditor>` into Features tab and Classes tab feature editors.
+- `src/components/LibraryPicker.tsx` — add optional `filter` predicate so the Equipment view can pick weapon-tagged items.
+- `src/components/views/EquipmentView.tsx` — read weapons from inventory; render granted actions as read-only.
+- `src/components/views/GrimoireView.tsx` — render granted spells; counter logic unchanged.
+- `src/components/BonusesPanel.tsx` — show "from grants" hints.
+- `src/components/views/FeaturesView.tsx` — surface a small "Grants" summary under each feature description; no editing here (editing happens in Library).
 
 ## Out of scope
-- Auto-granting class features on level up (still manual via Library Picker).
-- Persisting non-SRD subclasses across imports beyond the existing JSON import/export (works automatically since they live in `library`).
+
+- Conditional grants (e.g. "only when raging"). Always-on while present/equipped/attuned.
+- Granting proficiencies (armor/weapon/tool/language) — current Bonuses & Modifiers model has no slot for those; can be added later as another `BonusTarget` kind.
+- Re-deriving HP retroactively when a +HP grant is added — handled automatically because `hpMax` already reads from the merged bonuses each render.
