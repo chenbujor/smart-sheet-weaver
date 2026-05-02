@@ -173,49 +173,53 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
               </h3>
             </div>
             <div className="ink-divider my-1.5" />
-            {c.weapons.length === 0 ? (
-              <p className="text-xs italic text-ink-faded">No weapons configured.</p>
-            ) : (
-              <div className="space-y-1.5">
-                {c.weapons.map((w) => {
-                  const mod = abilityMod(c.abilities[w.ability]) + (w.proficient ? d.pb : 0) + (w.bonus ?? 0) - d.exhaustionPenalty;
-                  const dmgMod = abilityMod(c.abilities[w.ability]) + (w.bonus ?? 0);
-                  const mastery = WEAPON_MASTERIES.find((m) => m.id === w.masteryId);
-                  const masteryDc = mastery ? 8 + d.pb + abilityMod(c.abilities[w.ability]) : null;
-                  return (
-                    <div key={w.id} className="stat-block rounded-sm p-2">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <div>
-                          <div className="font-display text-sm text-ink">{w.name}</div>
-                          <div className="text-[0.65rem] text-ink-faded">
-                            {w.ability.toUpperCase()} · {w.damageType}
+            {(() => {
+              const weaponItems = c.inventory.filter((i) => i.weapon);
+              return weaponItems.length === 0 ? (
+                <p className="text-xs italic text-ink-faded">No weapons configured.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {weaponItems.map((it) => {
+                    const w = it.weapon!;
+                    const mod = abilityMod(c.abilities[w.ability]) + (w.proficient ? d.pb : 0) + (w.bonus ?? 0) - d.exhaustionPenalty;
+                    const dmgMod = abilityMod(c.abilities[w.ability]) + (w.bonus ?? 0);
+                    const mastery = WEAPON_MASTERIES.find((m) => m.id === w.masteryId);
+                    const masteryDc = mastery ? 8 + d.pb + abilityMod(c.abilities[w.ability]) : null;
+                    return (
+                      <div key={it.id} className="stat-block rounded-sm p-2">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div>
+                            <div className="font-display text-sm text-ink">{it.name}</div>
+                            <div className="text-[0.65rem] text-ink-faded">
+                              {w.ability.toUpperCase()} · {w.damageType}
+                            </div>
+                          </div>
+                          <div className="text-right text-xs flex gap-3">
+                            <div>
+                              <span className="text-ink-faded">Atk </span>
+                              <span className="font-display text-ink">{formatMod(mod)}</span>
+                            </div>
+                            <div>
+                              <span className="text-ink-faded">Dmg </span>
+                              <span className="font-display text-ink">{w.damageDice}{formatMod(dmgMod)}</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right text-xs flex gap-3">
-                          <div>
-                            <span className="text-ink-faded">Atk </span>
-                            <span className="font-display text-ink">{formatMod(mod)}</span>
+                        {mastery && (
+                          <div className="mt-1.5 rounded-sm border border-gold/40 bg-gold/10 p-1.5 text-[0.7rem]">
+                            <div className="font-semibold text-ink">
+                              Mastery: {mastery.name}
+                              {masteryDc !== null && <span className="ml-2 text-ink-faded">DC {masteryDc}</span>}
+                            </div>
+                            <div className="text-ink-faded"><KeywordText text={mastery.description} /></div>
                           </div>
-                          <div>
-                            <span className="text-ink-faded">Dmg </span>
-                            <span className="font-display text-ink">{w.damageDice}{formatMod(dmgMod)}</span>
-                          </div>
-                        </div>
+                        )}
                       </div>
-                      {mastery && (
-                        <div className="mt-1.5 rounded-sm border border-gold/40 bg-gold/10 p-1.5 text-[0.7rem]">
-                          <div className="font-semibold text-ink">
-                            Mastery: {mastery.name}
-                            {masteryDc !== null && <span className="ml-2 text-ink-faded">DC {masteryDc}</span>}
-                          </div>
-                          <div className="text-ink-faded"><KeywordText text={mastery.description} /></div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </section>
 

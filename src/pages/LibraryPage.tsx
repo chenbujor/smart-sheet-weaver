@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
 import { SmartInput, SmartTextarea } from '@/components/SmartText';
 import { KeywordText } from '@/components/KeywordText';
+import { GrantsEditor } from '@/components/GrantsEditor';
 import { cn } from '@/lib/utils';
 import type {
-  GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, Weapon, InventoryItem,
+  GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
-  ClassEntry, CasterType,
+  ClassEntry, CasterType, Grant,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
@@ -18,19 +19,20 @@ import { SKILLS } from '@/lib/rules';
 
 type TabKey = LibraryCategory;
 
-const TABS: { key: TabKey; label: string; icon: any }[] = [
+type TabKeyExt = Exclude<TabKey, 'weapons'>;
+
+const TABS: { key: TabKeyExt; label: string; icon: any }[] = [
   { key: 'glossary', label: 'Glossary', icon: BookMarked },
   { key: 'classes', label: 'Classes', icon: Shield },
   { key: 'spells', label: 'Spells', icon: Wand2 },
   { key: 'features', label: 'Features', icon: Sparkles },
-  { key: 'weapons', label: 'Weapons', icon: Sword },
   { key: 'items', label: 'Items', icon: Backpack },
   { key: 'actions', label: 'Actions', icon: Swords },
   { key: 'custom', label: 'Custom', icon: ScrollText },
 ];
 
 const LibraryPage = () => {
-  const [tab, setTab] = useState<TabKey>('glossary');
+  const [tab, setTab] = useState<TabKeyExt>('glossary');
 
   return (
     <div className="min-h-screen pb-12">
@@ -75,7 +77,7 @@ const LibraryPage = () => {
         {tab === 'classes' && <ClassesTab />}
         {tab === 'spells' && <SpellsTab />}
         {tab === 'features' && <FeaturesTab />}
-        {tab === 'weapons' && <WeaponsTab />}
+        
         {tab === 'items' && <ItemsTab />}
         {tab === 'actions' && <ActionsTab />}
         {tab === 'custom' && <CustomTab />}
@@ -391,6 +393,10 @@ const FeaturesTab = () => {
                   rows={3}
                   className="bg-parchment-light border-ink/30"
                 />
+                <GrantsEditor
+                  grants={f.grants}
+                  onChange={(grants) => update('features', f.id, { grants })}
+                />
               </div>
             </div>
           ))}
@@ -406,93 +412,8 @@ const FeaturesTab = () => {
 
 const ABIL: AbilityKey[] = ABILITY_KEYS;
 
-const WeaponsTab = () => {
-  const list = useAppStore((s) => s.library.weapons);
-  const add = useAppStore((s) => s.addLibraryEntry);
-  const update = useAppStore((s) => s.updateLibraryEntry);
-  const remove = useAppStore((s) => s.removeLibraryEntry);
-  const [q, setQ] = useState('');
+// (Weapons tab removed — weapon stats live inside Items now.)
 
-  const filtered = useMemo(
-    () => list.filter((w) => !q || w.name.toLowerCase().includes(q.toLowerCase())),
-    [list, q],
-  );
-
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchBar value={q} onChange={setQ} placeholder="Search weapons..." />
-        <Button
-          onClick={() =>
-            add('weapons', { name: 'New Weapon', ability: 'str', damageDice: '1d6', damageType: 'slashing', proficient: true } as Omit<Weapon, 'id'>)
-          }
-          className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Add Weapon
-        </Button>
-      </div>
-      {filtered.length === 0 ? (
-        <EmptyState message="No weapon templates yet." />
-      ) : (
-        <div className="grid gap-2 md:grid-cols-2">
-          {filtered.map((w) => (
-            <div key={w.id} className="parchment-panel rounded-md p-3 space-y-2">
-              <div className="relative z-10 space-y-2">
-                <div className="flex items-center gap-2">
-                  <SmartInput value={w.name} onValueChange={(v) => update('weapons', w.id, { name: v })} className="font-display" />
-                  <button onClick={() => remove('weapons', w.id)} className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10" aria-label="Delete">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
-                  <label className="flex flex-col text-ink-faded">
-                    Ability
-                    <select
-                      value={w.ability}
-                      onChange={(e) => update('weapons', w.id, { ability: e.target.value as AbilityKey })}
-                      className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase"
-                    >
-                      {ABIL.map((a) => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col text-ink-faded">
-                    Damage
-                    <Input value={w.damageDice} onChange={(e) => update('weapons', w.id, { damageDice: e.target.value })} className="mt-0.5 h-8" />
-                  </label>
-                  <label className="flex flex-col text-ink-faded">
-                    Type
-                    <Input value={w.damageType} onChange={(e) => update('weapons', w.id, { damageType: e.target.value })} className="mt-0.5 h-8" />
-                  </label>
-                  <label className="flex flex-col text-ink-faded">
-                    Bonus
-                    <Input type="number" value={w.bonus ?? 0} onChange={(e) => update('weapons', w.id, { bonus: parseInt(e.target.value || '0', 10) })} className="mt-0.5 h-8" />
-                  </label>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <label className="flex items-center gap-1.5">
-                    <input type="checkbox" checked={w.proficient ?? false} onChange={(e) => update('weapons', w.id, { proficient: e.target.checked })} className="accent-oxblood" />
-                    Proficient
-                  </label>
-                  <label className="flex items-center gap-1.5 flex-1">
-                    Mastery:
-                    <select
-                      value={w.masteryId ?? ''}
-                      onChange={(e) => update('weapons', w.id, { masteryId: e.target.value || undefined })}
-                      className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-0.5"
-                    >
-                      <option value="">— none —</option>
-                      {WEAPON_MASTERIES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    </select>
-                  </label>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 // ---------------------------------------------------------------------------
 // Items tab
@@ -545,7 +466,62 @@ const ItemsTab = () => {
                     <input type="checkbox" checked={i.equipped ?? false} onChange={(e) => update('items', i.id, { equipped: e.target.checked })} className="accent-oxblood" />
                     Equipped by default
                   </label>
+                  <label className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={!!i.weapon}
+                      onChange={(e) => update('items', i.id, { weapon: e.target.checked ? { ability: 'str', damageDice: '1d6', damageType: 'slashing', proficient: true } : undefined })}
+                      className="accent-oxblood"
+                    />
+                    This is a weapon
+                  </label>
                 </div>
+                {i.weapon && (
+                  <div className="rounded-sm border border-ink/20 bg-parchment-light/50 p-2 space-y-2">
+                    <div className="text-xs font-display uppercase tracking-wider text-ink-faded">Weapon stats</div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
+                      <label className="flex flex-col text-ink-faded">
+                        Ability
+                        <select
+                          value={i.weapon.ability}
+                          onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, ability: e.target.value as AbilityKey } })}
+                          className="mt-0.5 rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 uppercase"
+                        >
+                          {ABIL.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Damage
+                        <Input value={i.weapon.damageDice} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, damageDice: e.target.value } })} className="mt-0.5 h-8" />
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Type
+                        <Input value={i.weapon.damageType} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, damageType: e.target.value } })} className="mt-0.5 h-8" />
+                      </label>
+                      <label className="flex flex-col text-ink-faded">
+                        Bonus
+                        <Input type="number" value={i.weapon.bonus ?? 0} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, bonus: parseInt(e.target.value || '0', 10) } })} className="mt-0.5 h-8" />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <label className="flex items-center gap-1.5">
+                        <input type="checkbox" checked={i.weapon.proficient ?? false} onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, proficient: e.target.checked } })} className="accent-oxblood" />
+                        Proficient
+                      </label>
+                      <label className="flex items-center gap-1.5 flex-1">
+                        Mastery:
+                        <select
+                          value={i.weapon.masteryId ?? ''}
+                          onChange={(e) => update('items', i.id, { weapon: { ...i.weapon!, masteryId: e.target.value || undefined } })}
+                          className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-0.5"
+                        >
+                          <option value="">— none —</option>
+                          {WEAPON_MASTERIES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                )}
                 <SmartTextarea
                   value={i.description ?? ''}
                   onValueChange={(v) => update('items', i.id, { description: v })}
@@ -559,6 +535,10 @@ const ItemsTab = () => {
                   placeholder="Quick notes / properties"
                   rows={1}
                   className="bg-parchment-light border-ink/30 text-xs"
+                />
+                <GrantsEditor
+                  grants={i.grants}
+                  onChange={(grants) => update('items', i.id, { grants })}
                 />
               </div>
             </div>

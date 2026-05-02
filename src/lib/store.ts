@@ -181,9 +181,9 @@ interface AppState {
   addSpell: (id: string, s: Omit<SpellEntry, 'id'>) => void;
   removeSpell: (id: string, sid: string) => void;
   updateSpell: (id: string, sid: string, patch: Partial<SpellEntry>) => void;
-  addWeapon: (id: string, w: Omit<Weapon, 'id'>) => void;
+  addWeapon: (id: string, w: { name?: string; ability?: AbilityKey; damageDice?: string; damageType?: string; proficient?: boolean; masteryId?: string; bonus?: number; notes?: string }) => void;
   removeWeapon: (id: string, wid: string) => void;
-  updateWeapon: (id: string, wid: string, patch: Partial<Weapon>) => void;
+  updateWeapon: (id: string, wid: string, patch: { name?: string; notes?: string; ability?: AbilityKey; damageDice?: string; damageType?: string; proficient?: boolean; masteryId?: string; bonus?: number }) => void;
   addInventory: (id: string, i: Omit<InventoryItem, 'id'>) => void;
   removeInventory: (id: string, iid: string) => void;
   updateInventory: (id: string, iid: string, patch: Partial<InventoryItem>) => void;
@@ -413,14 +413,33 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
-      addWeapon: (id, w) =>
+      // Weapons are now inventory items with a `weapon` block. These wrappers
+      // keep older callsites working: addWeapon(c, { ability, damageDice, ... })
+      // pushes a new equipped inventory item with the weapon stats attached.
+      addWeapon: (id, w: any) =>
         set((s) => {
           const cur = s.characters[id];
           if (!cur) return s;
+          const { name, notes, ...stats } = w;
+          const item: InventoryItem = {
+            id: uid(),
+            name: name ?? 'New Weapon',
+            qty: 1,
+            equipped: true,
+            notes,
+            weapon: {
+              ability: stats.ability ?? 'str',
+              damageDice: stats.damageDice ?? '1d6',
+              damageType: stats.damageType ?? 'slashing',
+              proficient: stats.proficient ?? true,
+              masteryId: stats.masteryId,
+              bonus: stats.bonus,
+            },
+          };
           return {
             characters: {
               ...s.characters,
-              [id]: touch({ ...cur, weapons: [...cur.weapons, { ...w, id: uid() }] }),
+              [id]: touch({ ...cur, inventory: [...cur.inventory, item] }),
             },
           };
         }),
@@ -432,21 +451,33 @@ export const useAppStore = create<AppState>()(
           return {
             characters: {
               ...s.characters,
-              [id]: touch({ ...cur, weapons: cur.weapons.filter((w) => w.id !== wid) }),
+              [id]: touch({ ...cur, inventory: cur.inventory.filter((i) => i.id !== wid) }),
             },
           };
         }),
 
-      updateWeapon: (id, wid, patch) =>
+      updateWeapon: (id, wid, patch: any) =>
         set((s) => {
           const cur = s.characters[id];
           if (!cur) return s;
+          // Split patch: top-level item fields vs weapon-stats fields
+          const { name, notes, ...rest } = patch;
+          const itemPatch: Partial<InventoryItem> = {};
+          if (name !== undefined) itemPatch.name = name;
+          if (notes !== undefined) itemPatch.notes = notes;
           return {
             characters: {
               ...s.characters,
               [id]: touch({
                 ...cur,
-                weapons: cur.weapons.map((w) => (w.id === wid ? { ...w, ...patch } : w)),
+                inventory: cur.inventory.map((i) => {
+                  if (i.id !== wid) return i;
+                  return {
+                    ...i,
+                    ...itemPatch,
+                    weapon: { ...(i.weapon ?? { ability: 'str', damageDice: '1d6', damageType: 'slashing' }), ...rest },
+                  };
+                }),
               }),
             },
           };

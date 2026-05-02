@@ -44,6 +44,7 @@ export interface CharacterFeature {
   tiers?: ScalingTier[];      // auto-upgrade dice/effects
   alwaysPrepared?: boolean;   // for spells from species/feats
   level?: number;             // gain level (for class/subclass features)
+  grants?: Grant[];           // automatic effects (actions/spells/bonuses) when this feature is on the character
 }
 
 export interface SpellEntry {
@@ -79,6 +80,15 @@ export interface ConditionDef {
   description: string;
 }
 
+export interface WeaponStats {
+  ability: AbilityKey;        // attack ability (str or dex)
+  damageDice: string;         // "1d8"
+  damageType: string;
+  proficient?: boolean;
+  masteryId?: string;         // ref to WeaponMastery
+  bonus?: number;             // magic +1 etc.
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -89,19 +99,31 @@ export interface InventoryItem {
   attunable?: boolean;
   attuned?: boolean;
   equipped?: boolean;
+  weapon?: WeaponStats;       // when set, this item is also a weapon
+  grants?: Grant[];           // automatic effects when equipped (and attuned if attunable)
 }
 
-export interface Weapon {
-  id: string;
-  name: string;
-  ability: AbilityKey;        // attack ability (str or dex)
-  damageDice: string;         // "1d8"
-  damageType: string;
-  proficient?: boolean;
-  masteryId?: string;         // ref to WeaponMastery
-  bonus?: number;             // magic +1 etc.
-  notes?: string;
-}
+// Back-compat alias — older code may still import Weapon
+export type Weapon = InventoryItem & { weapon: WeaponStats };
+
+// =====================================================================
+// Grants — features and items can grant actions, spells, or bonuses
+// =====================================================================
+
+export type ScalarBonusKey =
+  | 'hpMax' | 'ac' | 'initiative' | 'speed' | 'passivePerception'
+  | 'spellSaveDc' | 'spellAttack' | 'maxConcentrations' | 'attunementSlots';
+
+export type BonusTarget =
+  | { type: 'ability'; key: AbilityKey }
+  | { type: 'save';    key: AbilityKey }
+  | { type: 'skill';   skillId: string }
+  | { type: 'scalar';  key: ScalarBonusKey };
+
+export type Grant =
+  | { id: string; kind: 'action'; libraryActionId: string }
+  | { id: string; kind: 'spell';  librarySpellId: string; alwaysPrepared?: boolean }
+  | { id: string; kind: 'bonus';  target: BonusTarget; value: number };
 
 export interface Character {
   id: string;
@@ -136,7 +158,8 @@ export interface Character {
   features: CharacterFeature[];
   spells: SpellEntry[];
   inventory: InventoryItem[];
-  weapons: Weapon[];
+  /** @deprecated Weapons are now items with `weapon` set. Kept for migration; always empty after v5. */
+  weapons?: Weapon[];
   actions?: CharacterAction[];   // combat actions (Shove, Grapple, custom)
 
   // Proficiencies (free text lists, comma-separable)
@@ -239,7 +262,8 @@ export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
   features: CharacterFeature[];
-  weapons: Weapon[];
+  /** @deprecated Weapons are now items with `weapon` set. Kept empty after v5 migration. */
+  weapons?: Weapon[];
   items: InventoryItem[];
   actions: LibraryAction[];
   custom: CustomEntry[];
