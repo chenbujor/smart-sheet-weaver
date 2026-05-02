@@ -1,4 +1,5 @@
-import type { AbilityKey, Abilities, CasterType, Character, ClassDef } from './types';
+import type { AbilityKey, Abilities, CasterType, Character, ClassDef, Library } from './types';
+import { resolveGrants, mergeBonuses } from './grants';
 
 export const abilityMod = (score: number) => Math.floor((score - 10) / 2);
 
@@ -188,14 +189,20 @@ export const saveBonus = (
 ) => abilityMod(abilities[ability]) + (proficient ? pb : 0);
 
 // Apply ability bonuses to a base Abilities object (returns new copy)
-export const effectiveAbilities = (c: Character): Abilities => {
-  const ab = { ...c.abilities };
-  const bonuses = c.bonuses?.abilities ?? {};
+export const effectiveAbilitiesWith = (
+  abilities: Abilities,
+  abilityBonuses?: Partial<Record<AbilityKey, number>>,
+): Abilities => {
+  const ab = { ...abilities };
+  const bonuses = abilityBonuses ?? {};
   (Object.keys(bonuses) as AbilityKey[]).forEach((k) => {
     ab[k] = (ab[k] ?? 10) + (bonuses[k] ?? 0);
   });
   return ab;
 };
+
+export const effectiveAbilities = (c: Character): Abilities =>
+  effectiveAbilitiesWith(c.abilities, c.bonuses?.abilities);
 
 // Derived snapshot used everywhere
 export interface Derived {
@@ -215,12 +222,22 @@ export interface Derived {
   effectiveSpeed: number;
   effectiveAc: number;
   maxConcentrations: number;
+  // Merged bonuses (manual + grants), used by panels to display & dedupe
+  effectiveBonuses: NonNullable<Character['bonuses']>;
+  grantContributions: ReturnType<typeof resolveGrants>['contributions'];
 }
 
-export const deriveCharacter = (c: Character, cls: ClassDef | undefined): Derived => {
+export const deriveCharacter = (
+  c: Character,
+  cls: ClassDef | undefined,
+  library?: Library,
+): Derived => {
   const pb = proficiencyBonus(c.level);
-  const eff = effectiveAbilities(c);
-  const b = c.bonuses ?? {};
+  const resolved = library
+    ? resolveGrants(c, library)
+    : { actions: [], spells: [], bonusDelta: {}, contributions: { abilities: {}, saves: {}, skills: {}, scalar: {} } };
+  const b = mergeBonuses(c.bonuses, resolved.bonusDelta);
+  const eff = effectiveAbilitiesWith(c.abilities, b.abilities);
   const baseHp = hpMax(cls, c.level, eff, c.hpMaxOverride);
   const max = baseHp + (b.hpMax ?? 0);
   const slots = cls ? spellSlotsFor(cls.caster, c.level) : [];
@@ -252,5 +269,7 @@ export const deriveCharacter = (c: Character, cls: ClassDef | undefined): Derive
     effectiveSpeed: c.speed + (b.speed ?? 0),
     effectiveAc: (c.ac ?? 10) + (b.ac ?? 0),
     maxConcentrations: 1 + (b.maxConcentrations ?? 0),
+    effectiveBonuses: b,
+    grantContributions: resolved.contributions,
   };
 };
