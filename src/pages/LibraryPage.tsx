@@ -921,7 +921,22 @@ const ClassesTab = () => {
   const removeClassFeature = useAppStore((s) => s.removeClassFeature);
 
   const [selectedId, setSelectedId] = useState<string | null>(classes[0]?.id ?? null);
-  const selected = classes.find((c) => c.id === selectedId) ?? null;
+  const rawSelected = classes.find((c) => c.id === selectedId) ?? null;
+  // Defensive: older persisted classes may be missing newer fields.
+  const selected = rawSelected
+    ? {
+        ...rawSelected,
+        primaryAbility: rawSelected.primaryAbility ?? [],
+        saves: rawSelected.saves ?? [],
+        features: rawSelected.features ?? [],
+        subclasses: (rawSelected.subclasses ?? []).map((sb) => ({
+          ...sb,
+          features: sb.features ?? [],
+        })),
+        hitDie: rawSelected.hitDie ?? 8,
+        caster: rawSelected.caster ?? 'none',
+      }
+    : null;
 
   return (
     <div className="grid gap-3 md:grid-cols-[260px,1fr]">
