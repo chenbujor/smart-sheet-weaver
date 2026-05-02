@@ -393,6 +393,10 @@ const FeaturesTab = () => {
                   rows={3}
                   className="bg-parchment-light border-ink/30"
                 />
+                <GrantsEditor
+                  grants={f.grants}
+                  onChange={(grants) => update('features', f.id, { grants })}
+                />
               </div>
             </div>
           ))}
