@@ -81,96 +81,109 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
             </div>
           </div>
           <div className="ink-divider my-2" />
-          {c.weapons.length === 0 ? (
-            <p className="text-sm italic text-ink-faded">No weapons. Add one to track attacks.</p>
-          ) : (
-            <div className="space-y-3">
-              {c.weapons.map((w) => {
-                const atk = abilityMod(c.abilities[w.ability]) + (w.proficient ? d.pb : 0) + (w.bonus ?? 0);
-                const dmg = abilityMod(c.abilities[w.ability]) + (w.bonus ?? 0);
-                return (
-                  <div key={w.id} className="stat-block rounded-sm p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={w.name}
-                        onChange={(e) => updateWeapon(c.id, w.id, { name: e.target.value })}
-                        className="flex-1 font-display"
-                      />
-                      <button
-                        onClick={() => removeWeapon(c.id, w.id)}
-                        className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
-                        aria-label="Remove"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <label className="text-xs text-ink-faded">
-                        Ability
-                        <select
-                          value={w.ability}
-                          onChange={(e) => updateWeapon(c.id, w.id, { ability: e.target.value as AbilityKey })}
-                          className="mt-0.5 block w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm uppercase"
+          {(() => {
+            const weaponItems = c.inventory.filter((i) => i.weapon);
+            return weaponItems.length === 0 ? (
+              <p className="text-sm italic text-ink-faded">No weapons. Add one to track attacks.</p>
+            ) : (
+              <div className="space-y-3">
+                {weaponItems.map((it) => {
+                  const w = it.weapon!;
+                  const atk = abilityMod(c.abilities[w.ability]) + (w.proficient ? d.pb : 0) + (w.bonus ?? 0);
+                  const dmg = abilityMod(c.abilities[w.ability]) + (w.bonus ?? 0);
+                  return (
+                    <div key={it.id} className="stat-block rounded-sm p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={it.name}
+                          onChange={(e) => updateInventory(c.id, it.id, { name: e.target.value })}
+                          className="flex-1 font-display"
+                        />
+                        <button
+                          onClick={() => removeInventory(c.id, it.id)}
+                          className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                          aria-label="Remove"
                         >
-                          {ABIL.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                      </label>
-                      <label className="text-xs text-ink-faded">
-                        Damage
-                        <Input
-                          value={w.damageDice}
-                          onChange={(e) => updateWeapon(c.id, w.id, { damageDice: e.target.value })}
-                          className="mt-0.5 h-8"
-                        />
-                      </label>
-                      <label className="text-xs text-ink-faded">
-                        Type
-                        <Input
-                          value={w.damageType}
-                          onChange={(e) => updateWeapon(c.id, w.id, { damageType: e.target.value })}
-                          className="mt-0.5 h-8"
-                        />
-                      </label>
-                      <label className="text-xs text-ink-faded">
-                        Bonus
-                        <Input
-                          type="number"
-                          value={w.bonus ?? 0}
-                          onChange={(e) => updateWeapon(c.id, w.id, { bonus: parseInt(e.target.value || '0', 10) })}
-                          className="mt-0.5 h-8"
-                        />
-                      </label>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          checked={w.proficient ?? false}
-                          onChange={(e) => updateWeapon(c.id, w.id, { proficient: e.target.checked })}
-                          className="h-3.5 w-3.5 accent-oxblood"
-                        />
-                        Proficient
-                      </label>
-                      <label className="flex items-center gap-1.5 flex-1">
-                        Mastery:
-                        <select
-                          value={w.masteryId ?? ''}
-                          onChange={(e) => updateWeapon(c.id, w.id, { masteryId: e.target.value || undefined })}
-                          className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-0.5"
-                        >
-                          <option value="">— none —</option>
-                          {WEAPON_MASTERIES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                        </select>
-                      </label>
-                      <div className="ml-auto font-display text-ink">
-                        Atk {formatMod(atk)} · {w.damageDice}{formatMod(dmg)}
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        <label className="text-xs text-ink-faded">
+                          Ability
+                          <select
+                            value={w.ability}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, ability: e.target.value as AbilityKey } })}
+                            className="mt-0.5 block w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm uppercase"
+                          >
+                            {ABIL.map((a) => <option key={a} value={a}>{a}</option>)}
+                          </select>
+                        </label>
+                        <label className="text-xs text-ink-faded">
+                          Damage
+                          <Input
+                            value={w.damageDice}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, damageDice: e.target.value } })}
+                            className="mt-0.5 h-8"
+                          />
+                        </label>
+                        <label className="text-xs text-ink-faded">
+                          Type
+                          <Input
+                            value={w.damageType}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, damageType: e.target.value } })}
+                            className="mt-0.5 h-8"
+                          />
+                        </label>
+                        <label className="text-xs text-ink-faded">
+                          Bonus
+                          <Input
+                            type="number"
+                            value={w.bonus ?? 0}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, bonus: parseInt(e.target.value || '0', 10) } })}
+                            className="mt-0.5 h-8"
+                          />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs">
+                        <label className="flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            checked={w.proficient ?? false}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, proficient: e.target.checked } })}
+                            className="h-3.5 w-3.5 accent-oxblood"
+                          />
+                          Proficient
+                        </label>
+                        <label className="flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            checked={it.equipped ?? false}
+                            onChange={(e) => updateInventory(c.id, it.id, { equipped: e.target.checked })}
+                            className="h-3.5 w-3.5 accent-oxblood"
+                          />
+                          Equipped
+                        </label>
+                        <label className="flex items-center gap-1.5 flex-1">
+                          Mastery:
+                          <select
+                            value={w.masteryId ?? ''}
+                            onChange={(e) => updateInventory(c.id, it.id, { weapon: { ...w, masteryId: e.target.value || undefined } })}
+                            className="flex-1 rounded-sm border border-ink/40 bg-parchment-light px-1.5 py-0.5"
+                          >
+                            <option value="">— none —</option>
+                            {WEAPON_MASTERIES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                          </select>
+                        </label>
+                        <div className="ml-auto font-display text-ink">
+                          Atk {formatMod(atk)} · {w.damageDice}{formatMod(dmg)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </section>
 
