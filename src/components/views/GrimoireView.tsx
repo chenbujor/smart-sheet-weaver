@@ -128,7 +128,9 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const atk = d.pb + abilityMod(c.abilities[spellAbility]);
 
   // Prepared count: non-cantrip spells flagged prepared (excluding alwaysPrepared per 2024 rules)
-  const preparedCount = c.spells.filter((s) => s.level > 0 && s.prepared && !s.alwaysPrepared).length;
+  const preparedCount = c.spells.filter(
+    (s) => s.level > 0 && !s.alwaysPrepared && (s.prepared || s.source === 'class')
+  ).length;
   const preparedMax = maxPreparedSpells(c.classId, c.level);
   const preparedOver = preparedMax !== null && preparedCount > preparedMax;
 

@@ -843,6 +843,19 @@ export const useAppStore = create<AppState>()(
             }
           }
         }
+        // Always backfill class shape so older persisted entries don't crash UI
+        if (Array.isArray(persisted.library?.classes)) {
+          persisted.library.classes = persisted.library.classes.map((c: any) => ({
+            ...c,
+            primaryAbility: c.primaryAbility ?? [],
+            saves: c.saves ?? [],
+            features: c.features ?? [],
+            subclasses: (c.subclasses ?? []).map((sb: any) => ({
+              ...sb,
+              features: sb.features ?? [],
+            })),
+          }));
+        }
         return persisted;
       },
     }
