@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Sword, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
 import { SmartInput, SmartTextarea } from '@/components/SmartText';
 import { KeywordText } from '@/components/KeywordText';
+import { GrantsEditor } from '@/components/GrantsEditor';
 import { cn } from '@/lib/utils';
 import type {
-  GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, Weapon, InventoryItem,
+  GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
-  ClassEntry, CasterType,
+  ClassEntry, CasterType, Grant,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
