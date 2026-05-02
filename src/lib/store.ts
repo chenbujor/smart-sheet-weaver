@@ -181,9 +181,9 @@ interface AppState {
   addSpell: (id: string, s: Omit<SpellEntry, 'id'>) => void;
   removeSpell: (id: string, sid: string) => void;
   updateSpell: (id: string, sid: string, patch: Partial<SpellEntry>) => void;
-  addWeapon: (id: string, w: Omit<Weapon, 'id'>) => void;
+  addWeapon: (id: string, w: { name?: string; ability?: AbilityKey; damageDice?: string; damageType?: string; proficient?: boolean; masteryId?: string; bonus?: number; notes?: string }) => void;
   removeWeapon: (id: string, wid: string) => void;
-  updateWeapon: (id: string, wid: string, patch: Partial<Weapon>) => void;
+  updateWeapon: (id: string, wid: string, patch: { name?: string; notes?: string; ability?: AbilityKey; damageDice?: string; damageType?: string; proficient?: boolean; masteryId?: string; bonus?: number }) => void;
   addInventory: (id: string, i: Omit<InventoryItem, 'id'>) => void;
   removeInventory: (id: string, iid: string) => void;
   updateInventory: (id: string, iid: string, patch: Partial<InventoryItem>) => void;
