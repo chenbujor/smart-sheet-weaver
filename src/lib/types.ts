@@ -158,7 +158,8 @@ export interface Character {
   features: CharacterFeature[];
   spells: SpellEntry[];
   inventory: InventoryItem[];
-  weapons: Weapon[];
+  /** @deprecated Weapons are now items with `weapon` set. Kept for migration; always empty after v5. */
+  weapons?: Weapon[];
   actions?: CharacterAction[];   // combat actions (Shove, Grapple, custom)
 
   // Proficiencies (free text lists, comma-separable)
