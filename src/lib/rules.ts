@@ -273,5 +273,7 @@ export const deriveCharacter = (
     maxConcentrations: 1 + (b.maxConcentrations ?? 0),
     effectiveBonuses: b,
     grantContributions: resolved.contributions,
+    grantedActions: resolved.actions,
+    grantedSpells: resolved.spells,
   };
 };
