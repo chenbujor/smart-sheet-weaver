@@ -1153,6 +1153,10 @@ const ClassFeaturesSection = ({
                 rows={2}
                 className="bg-parchment text-sm border-ink/30"
               />
+              <GrantsEditor
+                grants={f.grants}
+                onChange={(grants) => onUpdate(f.id, { grants })}
+              />
             </div>
           ))}
         </div>

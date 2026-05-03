@@ -107,7 +107,11 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const [dropTarget, setDropTarget] = useState<number | 'any' | null>(null);
 
   const grouped = useMemo(() => {
-    const list = c.spells.filter((s) =>
+    const combined = [
+      ...c.spells,
+      ...d.grantedSpells.map((g) => ({ ...g, __granted: true } as SpellEntry & { __granted?: boolean; grantedBy?: string })),
+    ];
+    const list = combined.filter((s) =>
       !search || s.name.toLowerCase().includes(search.toLowerCase())
     );
     const map = new Map<number, typeof list>();
@@ -117,7 +121,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
       map.set(s.level, arr);
     });
     return [...map.entries()].sort(([a], [b]) => a - b);
-  }, [c.spells, search]);
+  }, [c.spells, d.grantedSpells, search]);
 
   const filteredListSpells = useMemo(
     () => librarySpells.filter((s) => (s.spellLists ?? []).includes(listClass)),
@@ -234,18 +238,21 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                   </h3>
                   <div className="ink-divider my-1.5" />
                   <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                {spells.map((sp) => (
-                  <div key={sp.id} className="stat-block rounded-sm p-2 flex flex-col">
+                {spells.map((sp) => {
+                  const granted = (sp as any).__granted as boolean | undefined;
+                  const grantedBy = (sp as any).grantedBy as string | undefined;
+                  return (
+                  <div key={sp.id} className={cn("stat-block rounded-sm p-2 flex flex-col", granted && "border-royal/50 bg-royal/5")}>
                     <div className="flex items-start justify-between gap-1.5">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
-                            onClick={() => updateSpell(c.id, sp.id, { prepared: !sp.prepared })}
-                            disabled={sp.alwaysPrepared}
+                            onClick={() => !granted && updateSpell(c.id, sp.id, { prepared: !sp.prepared })}
+                            disabled={sp.alwaysPrepared || granted}
                             className={cn(
                               'h-3.5 w-3.5 rounded-sm border-1.5 border-ink/70 flex-shrink-0',
                               (sp.prepared || sp.alwaysPrepared) && 'bg-oxblood border-oxblood',
-                              sp.alwaysPrepared && 'cursor-not-allowed opacity-80'
+                              (sp.alwaysPrepared || granted) && 'cursor-not-allowed opacity-80'
                             )}
                             aria-label="Prepared"
                             title={sp.alwaysPrepared ? 'Always prepared' : 'Toggle prepared'}
@@ -253,24 +260,32 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                           <span className="font-display text-[0.95rem] text-ink leading-tight">{sp.name}</span>
                           {sp.concentration && <span className="rounded-sm border border-oxblood/50 px-1 text-[0.6rem] uppercase tracking-wider text-oxblood-deep">Conc.</span>}
                           {sp.ritual && <span className="rounded-sm border border-royal/50 px-1 text-[0.6rem] uppercase tracking-wider text-royal">Ritual</span>}
-                          <SourceEditor
-                            source={sp.source}
-                            label={sp.sourceLabel}
-                            onChange={(patch) => updateSpell(c.id, sp.id, patch)}
-                          />
+                          {granted ? (
+                            <span className="rounded-sm border border-royal/50 px-1 text-[0.6rem] uppercase tracking-wider text-royal" title={grantedBy}>
+                              from {grantedBy}
+                            </span>
+                          ) : (
+                            <SourceEditor
+                              source={sp.source}
+                              label={sp.sourceLabel}
+                              onChange={(patch) => updateSpell(c.id, sp.id, patch)}
+                            />
+                          )}
                         </div>
                         <div className="mt-1 text-[0.72rem] text-ink-faded leading-snug">
                           <span className="text-ink">{sp.school}</span> · {sp.castingTime} · {sp.range} · {sp.duration}
                           <span className="block">{sp.components}{sp.alwaysPrepared && <span className="ml-1 text-forest uppercase tracking-wider">· Always Prepared</span>}</span>
                         </div>
                       </div>
-                      <button
-                        aria-label="Remove"
-                        className="rounded p-0.5 text-ink/50 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
-                        onClick={() => removeSpell(c.id, sp.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {!granted && (
+                        <button
+                          aria-label="Remove"
+                          className="rounded p-0.5 text-ink/50 hover:bg-destructive hover:text-destructive-foreground flex-shrink-0"
+                          onClick={() => removeSpell(c.id, sp.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                     <p className="mt-1.5 text-[0.85rem] text-ink leading-snug"><KeywordText text={sp.description} /></p>
                     {sp.cantripScaling && (
@@ -283,7 +298,8 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                       <p className="mt-1 text-[0.8rem] leading-snug"><b className="text-ink">Higher Levels.</b> <span className="text-ink-faded">{sp.higherLevels}</span></p>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>

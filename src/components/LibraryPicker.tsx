@@ -28,7 +28,13 @@ const CATEGORY_LABELS: Record<Category, string> = {
 export const LibraryPicker = ({ characterId, category, trigger, label }: Props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const entries = useAppStore((s) => s.library[category]) as Array<any>;
+  // 'weapons' isn't a separate library category anymore — pick from items where weapon is set.
+  const sourceCategory: Exclude<Category, 'weapons'> = category === 'weapons' ? 'items' : category;
+  const allEntries = useAppStore((s) => s.library[sourceCategory]) as Array<any>;
+  const entries = useMemo(
+    () => (category === 'weapons' ? allEntries.filter((e) => e?.weapon) : allEntries),
+    [allEntries, category],
+  );
   const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
 
   const filtered = useMemo(() => {
@@ -40,7 +46,7 @@ export const LibraryPicker = ({ characterId, category, trigger, label }: Props) 
   const meta = (e: any): string => {
     if (category === 'spells') return e.level === 0 ? `Cantrip · ${e.school ?? ''}` : `L${e.level} · ${e.school ?? ''}`;
     if (category === 'features') return [e.sourceLabel, e.reset && e.reset !== 'none' ? `${e.reset} rest` : null].filter(Boolean).join(' · ');
-    if (category === 'weapons') return [e.damageDice, e.damageType].filter(Boolean).join(' ');
+    if (category === 'weapons') return [e.weapon?.damageDice, e.weapon?.damageType].filter(Boolean).join(' ');
     if (category === 'items') return e.qty ? `qty ${e.qty}` : '';
     if (category === 'actions') return [e.actionTime, e.skill ? `(${e.skill})` : e.ability?.toUpperCase()].filter(Boolean).join(' · ');
     return '';

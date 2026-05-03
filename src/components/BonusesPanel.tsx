@@ -2,9 +2,9 @@ import type { Character, AbilityKey } from '@/lib/types';
 import { ABILITY_KEYS, ABILITY_NAMES } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
-import { SKILLS } from '@/lib/rules';
+import { SKILLS, type Derived } from '@/lib/rules';
 
-interface Props { character: Character }
+interface Props { character: Character; derived?: Derived }
 
 type Bonuses = NonNullable<Character['bonuses']>;
 
@@ -20,9 +20,10 @@ const SCALAR_FIELDS: { key: keyof Bonuses; label: string; hint?: string }[] = [
   { key: 'attunementSlots', label: 'Extra Attunement Slots', hint: 'Beyond default 3' },
 ];
 
-export const BonusesPanel = ({ character: c }: Props) => {
+export const BonusesPanel = ({ character: c, derived }: Props) => {
   const update = useAppStore((s) => s.updateCharacter);
   const b = c.bonuses ?? {};
+  const contrib = derived?.grantContributions;
 
   const setBonus = (patch: Partial<Bonuses>) => update(c.id, { bonuses: { ...b, ...patch } });
 
@@ -37,6 +38,9 @@ export const BonusesPanel = ({ character: c }: Props) => {
     if (v) next[id] = v; else delete next[id];
     setBonus({ skills: next });
   };
+
+  const formatGrant = (n: number | undefined) =>
+    n ? <span className="text-[0.6rem] italic text-royal">{n > 0 ? '+' : ''}{n} from grants</span> : null;
 
   const numInput = (val: number | undefined, on: (n: number) => void) => (
     <Input
@@ -67,6 +71,7 @@ export const BonusesPanel = ({ character: c }: Props) => {
               <label key={k} className="flex flex-col items-center gap-1 text-xs">
                 <span className="uppercase tracking-wider text-ink-faded">{k}</span>
                 {numInput(b.abilities?.[k], (v) => setAbility(k, v))}
+                {formatGrant(contrib?.abilities[k])}
               </label>
             ))}
           </div>
@@ -82,6 +87,7 @@ export const BonusesPanel = ({ character: c }: Props) => {
               <label key={k} className="flex flex-col items-center gap-1 text-xs" title={ABILITY_NAMES[k]}>
                 <span className="uppercase tracking-wider text-ink-faded">{k}</span>
                 {numInput(b.saves?.[k], (v) => setSave(k, v))}
+                {formatGrant(contrib?.saves[k])}
               </label>
             ))}
           </div>
@@ -95,6 +101,7 @@ export const BonusesPanel = ({ character: c }: Props) => {
               <label key={f.key} className="flex flex-col gap-1 text-xs">
                 <span className="text-ink-faded">{f.label}</span>
                 {numInput(b[f.key] as number | undefined, (v) => setBonus({ [f.key]: v || undefined } as Partial<Bonuses>))}
+                {formatGrant(contrib?.scalar[f.key as string])}
                 {f.hint && <span className="text-[0.6rem] italic text-ink-faded">{f.hint}</span>}
               </label>
             ))}
@@ -114,6 +121,7 @@ export const BonusesPanel = ({ character: c }: Props) => {
               <label key={s.id} className="flex items-center gap-2 text-xs">
                 <span className="flex-1 truncate">{s.name}</span>
                 {numInput(b.skills?.[s.id], (v) => setSkill(s.id, v))}
+                {formatGrant(contrib?.skills[s.id])}
               </label>
             ))}
           </div>

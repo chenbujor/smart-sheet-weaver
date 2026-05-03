@@ -30,6 +30,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
 
   const totalWeight = c.inventory.reduce((sum, i) => sum + (i.weight ?? 0) * i.qty, 0);
   const actions = c.actions ?? [];
+  const grantedActions = d.grantedActions ?? [];
 
   // Resolve the bonus added to the d20 for this action.
   // Skill: ability mod of skill's native ability + (PB if proficient)
@@ -497,6 +498,36 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                   </div>
                 );
               })}
+            </div>
+          )}
+          {grantedActions.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Granted Actions</div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {grantedActions.map((a) => {
+                  const bonus = actionBonus(a as CharacterAction);
+                  return (
+                    <div key={a.id} className="stat-block rounded-sm p-2 border-royal/40 bg-royal/5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-sm text-ink flex-1">{a.name}</span>
+                        <span className="rounded-sm border border-royal/50 px-1 text-[0.6rem] uppercase tracking-wider text-royal">
+                          from {a.grantedBy}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[0.7rem] text-ink-faded flex items-center gap-2">
+                        <span className="capitalize">{a.actionTime ?? 'action'}</span>
+                        {a.range && <span>· {a.range}</span>}
+                        <span className="ml-auto font-display text-ink">{bonus.label}: {formatMod(bonus.value)}</span>
+                      </div>
+                      {a.description && (
+                        <p className="mt-1 text-xs text-ink-faded whitespace-pre-wrap">
+                          <KeywordText text={a.description} />
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

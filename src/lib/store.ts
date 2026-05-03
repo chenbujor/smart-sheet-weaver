@@ -117,7 +117,6 @@ const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
   features: [],
-  weapons: [],
   items: [],
   actions: seedActions(),
   custom: [],
@@ -152,7 +151,6 @@ export const newCharacter = (name = 'New Adventurer'): Character => {
     features: [],
     spells: [],
     inventory: [],
-    weapons: [],
     notes: '',
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -632,7 +630,6 @@ export const useAppStore = create<AppState>()(
                 glossary: data.library.glossary ?? s.library.glossary,
                 spells: data.library.spells ?? s.library.spells,
                 features: data.library.features ?? s.library.features,
-                weapons: data.library.weapons ?? s.library.weapons,
                 items: data.library.items ?? s.library.items,
                 actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
@@ -670,14 +667,18 @@ export const useAppStore = create<AppState>()(
         set((s) => {
           const cur = s.characters[characterId];
           if (!cur) return s;
-          const tmpl = (s.library[category] as any[]).find((e) => e.id === libraryEntryId);
+          // 'weapons' category: pick from library.items where item has weapon stats
+          const sourceCat: LibraryCategory = category === 'weapons' ? 'items' : (category as LibraryCategory);
+          const tmpl = (s.library[sourceCat] as any[]).find((e) => e.id === libraryEntryId);
           if (!tmpl) return s;
           const copy = { ...tmpl, id: uid() };
           const next = { ...cur } as Character;
           if (category === 'spells') next.spells = [...cur.spells, copy as SpellEntry];
           if (category === 'features') next.features = [...cur.features, copy as CharacterFeature];
-          if (category === 'weapons') next.weapons = [...cur.weapons, copy as Weapon];
-          if (category === 'items') next.inventory = [...cur.inventory, copy as InventoryItem];
+          if (category === 'weapons' || category === 'items') {
+            const item = category === 'weapons' ? { ...copy, equipped: true } : copy;
+            next.inventory = [...cur.inventory, item as InventoryItem];
+          }
           if (category === 'actions') next.actions = [...(cur.actions ?? []), copy as CharacterAction];
           return { characters: { ...s.characters, [characterId]: touch(next) } };
         }),
@@ -830,7 +831,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => guardedLocalStorage),
       onRehydrateStorage: () => () => {
         if (typeof window === 'undefined' || storageListenerAttached) return;
@@ -871,6 +872,48 @@ export const useAppStore = create<AppState>()(
             const have = new Set(persisted.library.classes.map((c: ClassEntry) => c.id));
             for (const seed of seedClasses()) {
               if (!have.has(seed.id)) persisted.library.classes.push(seed);
+            }
+          }
+        }
+        if (fromVersion < 5) {
+          // Fold weapons into inventory items with `weapon` block
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (Array.isArray(persisted.library.weapons) && persisted.library.weapons.length) {
+            persisted.library.items = persisted.library.items ?? [];
+            for (const w of persisted.library.weapons) {
+              const { ability, damageDice, damageType, proficient, masteryId, bonus, name, notes, ...rest } = w as any;
+              persisted.library.items.push({
+                ...rest,
+                id: w.id,
+                name: name ?? 'Weapon',
+                qty: 1,
+                equipped: true,
+                notes,
+                weapon: { ability: ability ?? 'str', damageDice: damageDice ?? '1d6', damageType: damageType ?? 'slashing', proficient, masteryId, bonus },
+              });
+            }
+          }
+          delete persisted.library.weapons;
+          if (persisted.characters && typeof persisted.characters === 'object') {
+            for (const cid of Object.keys(persisted.characters)) {
+              const ch = persisted.characters[cid];
+              if (!ch) continue;
+              ch.inventory = ch.inventory ?? [];
+              if (Array.isArray(ch.weapons)) {
+                for (const w of ch.weapons) {
+                  const { ability, damageDice, damageType, proficient, masteryId, bonus, name, notes, ...rest } = w as any;
+                  ch.inventory.push({
+                    ...rest,
+                    id: w.id,
+                    name: name ?? 'Weapon',
+                    qty: 1,
+                    equipped: true,
+                    notes,
+                    weapon: { ability: ability ?? 'str', damageDice: damageDice ?? '1d6', damageType: damageType ?? 'slashing', proficient, masteryId, bonus },
+                  });
+                }
+              }
+              delete ch.weapons;
             }
           }
         }
