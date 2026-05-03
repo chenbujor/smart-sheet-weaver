@@ -71,6 +71,7 @@ export const BonusesPanel = ({ character: c, derived }: Props) => {
               <label key={k} className="flex flex-col items-center gap-1 text-xs">
                 <span className="uppercase tracking-wider text-ink-faded">{k}</span>
                 {numInput(b.abilities?.[k], (v) => setAbility(k, v))}
+                {formatGrant(contrib?.abilities[k])}
               </label>
             ))}
           </div>
@@ -86,6 +87,7 @@ export const BonusesPanel = ({ character: c, derived }: Props) => {
               <label key={k} className="flex flex-col items-center gap-1 text-xs" title={ABILITY_NAMES[k]}>
                 <span className="uppercase tracking-wider text-ink-faded">{k}</span>
                 {numInput(b.saves?.[k], (v) => setSave(k, v))}
+                {formatGrant(contrib?.saves[k])}
               </label>
             ))}
           </div>
@@ -99,6 +101,7 @@ export const BonusesPanel = ({ character: c, derived }: Props) => {
               <label key={f.key} className="flex flex-col gap-1 text-xs">
                 <span className="text-ink-faded">{f.label}</span>
                 {numInput(b[f.key] as number | undefined, (v) => setBonus({ [f.key]: v || undefined } as Partial<Bonuses>))}
+                {formatGrant(contrib?.scalar[f.key as string])}
                 {f.hint && <span className="text-[0.6rem] italic text-ink-faded">{f.hint}</span>}
               </label>
             ))}
@@ -118,6 +121,7 @@ export const BonusesPanel = ({ character: c, derived }: Props) => {
               <label key={s.id} className="flex items-center gap-2 text-xs">
                 <span className="flex-1 truncate">{s.name}</span>
                 {numInput(b.skills?.[s.id], (v) => setSkill(s.id, v))}
+                {formatGrant(contrib?.skills[s.id])}
               </label>
             ))}
           </div>
