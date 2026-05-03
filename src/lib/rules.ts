@@ -225,6 +225,8 @@ export interface Derived {
   // Merged bonuses (manual + grants), used by panels to display & dedupe
   effectiveBonuses: NonNullable<Character['bonuses']>;
   grantContributions: ReturnType<typeof resolveGrants>['contributions'];
+  grantedActions: ReturnType<typeof resolveGrants>['actions'];
+  grantedSpells: ReturnType<typeof resolveGrants>['spells'];
 }
 
 export const deriveCharacter = (
