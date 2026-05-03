@@ -831,7 +831,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => guardedLocalStorage),
       onRehydrateStorage: () => () => {
         if (typeof window === 'undefined' || storageListenerAttached) return;
