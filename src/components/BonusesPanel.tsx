@@ -2,9 +2,9 @@ import type { Character, AbilityKey } from '@/lib/types';
 import { ABILITY_KEYS, ABILITY_NAMES } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
-import { SKILLS } from '@/lib/rules';
+import { SKILLS, type Derived } from '@/lib/rules';
 
-interface Props { character: Character }
+interface Props { character: Character; derived?: Derived }
 
 type Bonuses = NonNullable<Character['bonuses']>;
 
