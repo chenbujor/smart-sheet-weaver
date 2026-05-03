@@ -630,7 +630,6 @@ export const useAppStore = create<AppState>()(
                 glossary: data.library.glossary ?? s.library.glossary,
                 spells: data.library.spells ?? s.library.spells,
                 features: data.library.features ?? s.library.features,
-                weapons: data.library.weapons ?? s.library.weapons,
                 items: data.library.items ?? s.library.items,
                 actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
@@ -668,14 +667,18 @@ export const useAppStore = create<AppState>()(
         set((s) => {
           const cur = s.characters[characterId];
           if (!cur) return s;
-          const tmpl = (s.library[category] as any[]).find((e) => e.id === libraryEntryId);
+          // 'weapons' category: pick from library.items where item has weapon stats
+          const sourceCat: LibraryCategory = category === 'weapons' ? 'items' : (category as LibraryCategory);
+          const tmpl = (s.library[sourceCat] as any[]).find((e) => e.id === libraryEntryId);
           if (!tmpl) return s;
           const copy = { ...tmpl, id: uid() };
           const next = { ...cur } as Character;
           if (category === 'spells') next.spells = [...cur.spells, copy as SpellEntry];
           if (category === 'features') next.features = [...cur.features, copy as CharacterFeature];
-          if (category === 'weapons') next.weapons = [...cur.weapons, copy as Weapon];
-          if (category === 'items') next.inventory = [...cur.inventory, copy as InventoryItem];
+          if (category === 'weapons' || category === 'items') {
+            const item = category === 'weapons' ? { ...copy, equipped: true } : copy;
+            next.inventory = [...cur.inventory, item as InventoryItem];
+          }
           if (category === 'actions') next.actions = [...(cur.actions ?? []), copy as CharacterAction];
           return { characters: { ...s.characters, [characterId]: touch(next) } };
         }),
