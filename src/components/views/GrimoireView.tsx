@@ -107,7 +107,11 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const [dropTarget, setDropTarget] = useState<number | 'any' | null>(null);
 
   const grouped = useMemo(() => {
-    const list = c.spells.filter((s) =>
+    const combined = [
+      ...c.spells,
+      ...d.grantedSpells.map((g) => ({ ...g, __granted: true } as SpellEntry & { __granted?: boolean; grantedBy?: string })),
+    ];
+    const list = combined.filter((s) =>
       !search || s.name.toLowerCase().includes(search.toLowerCase())
     );
     const map = new Map<number, typeof list>();
@@ -117,7 +121,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
       map.set(s.level, arr);
     });
     return [...map.entries()].sort(([a], [b]) => a - b);
-  }, [c.spells, search]);
+  }, [c.spells, d.grantedSpells, search]);
 
   const filteredListSpells = useMemo(
     () => librarySpells.filter((s) => (s.spellLists ?? []).includes(listClass)),
