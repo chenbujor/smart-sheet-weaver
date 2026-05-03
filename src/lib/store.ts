@@ -117,7 +117,6 @@ const emptyLibrary = (): Library => ({
   glossary: seedGlossary(),
   spells: [],
   features: [],
-  weapons: [],
   items: [],
   actions: seedActions(),
   custom: [],
