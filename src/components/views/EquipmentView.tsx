@@ -30,6 +30,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
 
   const totalWeight = c.inventory.reduce((sum, i) => sum + (i.weight ?? 0) * i.qty, 0);
   const actions = c.actions ?? [];
+  const grantedActions = d.grantedActions ?? [];
 
   // Resolve the bonus added to the d20 for this action.
   // Skill: ability mod of skill's native ability + (PB if proficient)
