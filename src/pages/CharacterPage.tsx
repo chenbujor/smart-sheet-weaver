@@ -32,7 +32,8 @@ const CharacterPage = () => {
   }
 
   const cls = CLASSES.find((c) => c.id === character.classId);
-  const derived = deriveCharacter(character, cls);
+  const library = useAppStore((s) => s.library);
+  const derived = deriveCharacter(character, cls, library);
 
   const tabs: { key: ViewKey; label: string }[] = [
     { key: 'dashboard', label: 'Dashboard' },
