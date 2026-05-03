@@ -151,7 +151,6 @@ export const newCharacter = (name = 'New Adventurer'): Character => {
     features: [],
     spells: [],
     inventory: [],
-    weapons: [],
     notes: '',
     createdAt: Date.now(),
     updatedAt: Date.now(),
