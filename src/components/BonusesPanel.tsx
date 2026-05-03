@@ -20,9 +20,10 @@ const SCALAR_FIELDS: { key: keyof Bonuses; label: string; hint?: string }[] = [
   { key: 'attunementSlots', label: 'Extra Attunement Slots', hint: 'Beyond default 3' },
 ];
 
-export const BonusesPanel = ({ character: c }: Props) => {
+export const BonusesPanel = ({ character: c, derived }: Props) => {
   const update = useAppStore((s) => s.updateCharacter);
   const b = c.bonuses ?? {};
+  const contrib = derived?.grantContributions;
 
   const setBonus = (patch: Partial<Bonuses>) => update(c.id, { bonuses: { ...b, ...patch } });
 
@@ -37,6 +38,9 @@ export const BonusesPanel = ({ character: c }: Props) => {
     if (v) next[id] = v; else delete next[id];
     setBonus({ skills: next });
   };
+
+  const formatGrant = (n: number | undefined) =>
+    n ? <span className="text-[0.6rem] italic text-royal">{n > 0 ? '+' : ''}{n} from grants</span> : null;
 
   const numInput = (val: number | undefined, on: (n: number) => void) => (
     <Input
