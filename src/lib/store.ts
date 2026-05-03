@@ -875,6 +875,48 @@ export const useAppStore = create<AppState>()(
             }
           }
         }
+        if (fromVersion < 5) {
+          // Fold weapons into inventory items with `weapon` block
+          persisted.library = persisted.library ?? emptyLibrary();
+          if (Array.isArray(persisted.library.weapons) && persisted.library.weapons.length) {
+            persisted.library.items = persisted.library.items ?? [];
+            for (const w of persisted.library.weapons) {
+              const { ability, damageDice, damageType, proficient, masteryId, bonus, name, notes, ...rest } = w as any;
+              persisted.library.items.push({
+                ...rest,
+                id: w.id,
+                name: name ?? 'Weapon',
+                qty: 1,
+                equipped: true,
+                notes,
+                weapon: { ability: ability ?? 'str', damageDice: damageDice ?? '1d6', damageType: damageType ?? 'slashing', proficient, masteryId, bonus },
+              });
+            }
+          }
+          delete persisted.library.weapons;
+          if (persisted.characters && typeof persisted.characters === 'object') {
+            for (const cid of Object.keys(persisted.characters)) {
+              const ch = persisted.characters[cid];
+              if (!ch) continue;
+              ch.inventory = ch.inventory ?? [];
+              if (Array.isArray(ch.weapons)) {
+                for (const w of ch.weapons) {
+                  const { ability, damageDice, damageType, proficient, masteryId, bonus, name, notes, ...rest } = w as any;
+                  ch.inventory.push({
+                    ...rest,
+                    id: w.id,
+                    name: name ?? 'Weapon',
+                    qty: 1,
+                    equipped: true,
+                    notes,
+                    weapon: { ability: ability ?? 'str', damageDice: damageDice ?? '1d6', damageType: damageType ?? 'slashing', proficient, masteryId, bonus },
+                  });
+                }
+              }
+              delete ch.weapons;
+            }
+          }
+        }
         // Always backfill class shape so older persisted entries don't crash UI
         if (Array.isArray(persisted.library?.classes)) {
           persisted.library.classes = persisted.library.classes.map((c: any) => ({
