@@ -28,7 +28,6 @@ interface Props {
 }
 
 export const GrantsEditor = ({ grants, onChange }: Props) => {
-  const libraryActions = useAppStore((s) => s.library.actions);
   const librarySpells = useAppStore((s) => s.library.spells);
   const list = grants ?? [];
 
@@ -37,8 +36,6 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
   const remove = (id: string) => onChange(list.filter((g) => g.id !== id));
 
   const addAction = () =>
-    onChange([...list, { id: uid(), kind: 'action', libraryActionId: libraryActions[0]?.id ?? '' }]);
-  const addInlineAction = () =>
     onChange([
       ...list,
       {
@@ -59,11 +56,8 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
           Grants {list.length > 0 && <span className="text-ink">({list.length})</span>}
         </span>
         <div className="flex flex-wrap gap-1">
-          <Button size="sm" variant="outline" onClick={addAction} className="h-7 text-xs" disabled={!libraryActions.length}>
+          <Button size="sm" variant="outline" onClick={addAction} className="h-7 text-xs">
             <Swords className="h-3 w-3 mr-1" /> Action
-          </Button>
-          <Button size="sm" variant="outline" onClick={addInlineAction} className="h-7 text-xs">
-            <Zap className="h-3 w-3 mr-1" /> Inline Action
           </Button>
           <Button size="sm" variant="outline" onClick={addSpell} className="h-7 text-xs" disabled={!librarySpells.length}>
             <Wand2 className="h-3 w-3 mr-1" /> Spell
