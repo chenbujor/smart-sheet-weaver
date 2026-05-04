@@ -233,3 +233,136 @@ const BonusGrantRow = ({
     </>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Inline action editor — author an action that's specific to this grant source
+// ---------------------------------------------------------------------------
+
+const ACTION_TIMES: { v: ActionTime; label: string }[] = [
+  { v: 'action', label: 'Action' },
+  { v: 'bonus', label: 'Bonus' },
+  { v: 'reaction', label: 'Reaction' },
+  { v: 'free', label: 'Free' },
+  { v: 'special', label: 'Special' },
+];
+
+const InlineActionEditor = ({
+  action,
+  onChange,
+}: {
+  action: Omit<LibraryAction, 'id'>;
+  onChange: (a: Omit<LibraryAction, 'id'>) => void;
+}) => {
+  const set = (patch: Partial<Omit<LibraryAction, 'id'>>) => onChange({ ...action, ...patch });
+  const useSkill = !!action.skill;
+
+  return (
+    <div className="space-y-1.5 rounded-sm border border-ink/15 bg-parchment/60 p-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Time
+          <select
+            value={action.actionTime ?? 'action'}
+            onChange={(e) => set({ actionTime: e.target.value as ActionTime })}
+            className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1"
+          >
+            {ACTION_TIMES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Range
+          <Input
+            value={action.range ?? ''}
+            onChange={(e) => set({ range: e.target.value })}
+            className="mt-0.5 h-6 px-1.5"
+            placeholder="5 ft"
+          />
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Damage
+          <Input
+            value={action.damageDice ?? ''}
+            onChange={(e) => set({ damageDice: e.target.value || undefined })}
+            className="mt-0.5 h-6 px-1.5"
+            placeholder="1d8"
+          />
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Damage type
+          <Input
+            value={action.damageType ?? ''}
+            onChange={(e) => set({ damageType: e.target.value || undefined })}
+            className="mt-0.5 h-6 px-1.5"
+            placeholder="fire"
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 items-end">
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Roll with
+          <select
+            value={useSkill ? 'skill' : 'ability'}
+            onChange={(e) => {
+              if (e.target.value === 'skill') set({ skill: 'athletics', ability: undefined });
+              else set({ skill: undefined, ability: action.ability ?? 'str' });
+            }}
+            className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1"
+          >
+            <option value="ability">Ability</option>
+            <option value="skill">Skill</option>
+          </select>
+        </label>
+        {!useSkill ? (
+          <label className="flex flex-col text-[0.65rem] text-ink-faded">
+            Ability
+            <select
+              value={action.ability ?? ''}
+              onChange={(e) => set({ ability: (e.target.value || undefined) as AbilityKey | undefined })}
+              className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1 uppercase"
+            >
+              <option value="">—</option>
+              {ABILITY_KEYS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </label>
+        ) : (
+          <label className="flex flex-col text-[0.65rem] text-ink-faded">
+            Skill
+            <select
+              value={action.skill ?? 'athletics'}
+              onChange={(e) => set({ skill: e.target.value })}
+              className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1"
+            >
+              {SKILLS.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+        )}
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Save vs
+          <select
+            value={action.saveAbility ?? ''}
+            onChange={(e) => set({ saveAbility: (e.target.value || undefined) as AbilityKey | undefined })}
+            className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1 uppercase"
+          >
+            <option value="">—</option>
+            {ABILITY_KEYS.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded h-6">
+          <input
+            type="checkbox"
+            checked={action.proficient ?? false}
+            onChange={(e) => set({ proficient: e.target.checked })}
+            className="accent-oxblood"
+          />
+          Proficient
+        </label>
+      </div>
+      <Input
+        value={action.description ?? ''}
+        onChange={(e) => set({ description: e.target.value || undefined })}
+        className="h-7 px-2 text-xs"
+        placeholder="Description / notes"
+      />
+    </div>
+  );
+};
