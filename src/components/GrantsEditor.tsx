@@ -4,7 +4,7 @@
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Wand2, Swords, Sparkles, Zap } from 'lucide-react';
+import { Plus, Trash2, Wand2, Swords, Sparkles } from 'lucide-react';
 import { ABILITY_KEYS, type Grant, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime } from '@/lib/types';
 import { SKILLS } from '@/lib/rules';
 
@@ -28,7 +28,6 @@ interface Props {
 }
 
 export const GrantsEditor = ({ grants, onChange }: Props) => {
-  const libraryActions = useAppStore((s) => s.library.actions);
   const librarySpells = useAppStore((s) => s.library.spells);
   const list = grants ?? [];
 
@@ -37,8 +36,6 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
   const remove = (id: string) => onChange(list.filter((g) => g.id !== id));
 
   const addAction = () =>
-    onChange([...list, { id: uid(), kind: 'action', libraryActionId: libraryActions[0]?.id ?? '' }]);
-  const addInlineAction = () =>
     onChange([
       ...list,
       {
@@ -59,11 +56,8 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
           Grants {list.length > 0 && <span className="text-ink">({list.length})</span>}
         </span>
         <div className="flex flex-wrap gap-1">
-          <Button size="sm" variant="outline" onClick={addAction} className="h-7 text-xs" disabled={!libraryActions.length}>
+          <Button size="sm" variant="outline" onClick={addAction} className="h-7 text-xs">
             <Swords className="h-3 w-3 mr-1" /> Action
-          </Button>
-          <Button size="sm" variant="outline" onClick={addInlineAction} className="h-7 text-xs">
-            <Zap className="h-3 w-3 mr-1" /> Inline Action
           </Button>
           <Button size="sm" variant="outline" onClick={addSpell} className="h-7 text-xs" disabled={!librarySpells.length}>
             <Wand2 className="h-3 w-3 mr-1" /> Spell
@@ -84,8 +78,8 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
               return (
                 <div key={g.id} className="rounded-sm bg-parchment-light p-1.5 text-xs space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-3 w-3 text-ink-faded flex-shrink-0" />
-                    <span className="text-ink-faded">Inline Action</span>
+                    <Swords className="h-3 w-3 text-ink-faded flex-shrink-0" />
+                    <span className="text-ink-faded">Action</span>
                     <Input
                       value={g.action.name}
                       onChange={(e) => update(g.id, { action: { ...g.action, name: e.target.value } } as Partial<Grant>)}
@@ -109,19 +103,6 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
             }
             return (
               <div key={g.id} className="flex items-center gap-2 rounded-sm bg-parchment-light p-1.5 text-xs">
-                {g.kind === 'action' && (
-                  <>
-                    <Swords className="h-3 w-3 text-ink-faded flex-shrink-0" />
-                    <span className="text-ink-faded">Action</span>
-                    <select
-                      value={g.libraryActionId}
-                      onChange={(e) => update(g.id, { libraryActionId: e.target.value } as Partial<Grant>)}
-                      className="flex-1 rounded-sm border border-ink/30 bg-parchment px-1 py-0.5"
-                    >
-                      {libraryActions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                    </select>
-                  </>
-                )}
                 {g.kind === 'spell' && (
                   <>
                     <Wand2 className="h-3 w-3 text-ink-faded flex-shrink-0" />
