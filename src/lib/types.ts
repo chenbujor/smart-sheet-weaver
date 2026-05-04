@@ -122,6 +122,7 @@ export type BonusTarget =
 
 export type Grant =
   | { id: string; kind: 'action'; libraryActionId: string }
+  | { id: string; kind: 'inline-action'; action: Omit<LibraryAction, 'id'> }
   | { id: string; kind: 'spell';  librarySpellId: string; alwaysPrepared?: boolean }
   | { id: string; kind: 'bonus';  target: BonusTarget; value: number };
 

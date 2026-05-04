@@ -48,6 +48,12 @@ const applyGrants = (
         id: `granted:${source.id}:${g.id}`,
         grantedBy: source.name,
       } as any);
+    } else if (g.kind === 'inline-action') {
+      out.actions.push({
+        ...g.action,
+        id: `granted:${source.id}:${g.id}`,
+        grantedBy: source.name,
+      } as any);
     } else if (g.kind === 'spell') {
       const tmpl = lib.spells.find((s) => s.id === g.librarySpellId);
       if (!tmpl) continue;
