@@ -38,6 +38,15 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
 
   const addAction = () =>
     onChange([...list, { id: uid(), kind: 'action', libraryActionId: libraryActions[0]?.id ?? '' }]);
+  const addInlineAction = () =>
+    onChange([
+      ...list,
+      {
+        id: uid(),
+        kind: 'inline-action',
+        action: { name: 'New Action', actionTime: 'action' } as Omit<LibraryAction, 'id'>,
+      },
+    ]);
   const addSpell = () =>
     onChange([...list, { id: uid(), kind: 'spell', librarySpellId: librarySpells[0]?.id ?? '', alwaysPrepared: true }]);
   const addBonus = () =>
@@ -49,9 +58,12 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
         <span className="text-xs font-display uppercase tracking-wider text-ink-faded">
           Grants {list.length > 0 && <span className="text-ink">({list.length})</span>}
         </span>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           <Button size="sm" variant="outline" onClick={addAction} className="h-7 text-xs" disabled={!libraryActions.length}>
             <Swords className="h-3 w-3 mr-1" /> Action
+          </Button>
+          <Button size="sm" variant="outline" onClick={addInlineAction} className="h-7 text-xs">
+            <Zap className="h-3 w-3 mr-1" /> Inline Action
           </Button>
           <Button size="sm" variant="outline" onClick={addSpell} className="h-7 text-xs" disabled={!librarySpells.length}>
             <Wand2 className="h-3 w-3 mr-1" /> Spell
