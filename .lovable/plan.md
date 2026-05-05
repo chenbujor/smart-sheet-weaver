@@ -1,59 +1,37 @@
 ## Goal
 
-In the Library → Items editor (and same for character-sheet inventory items, optional), let the user author an action that's specific to that item — define it inline instead of having to first create it in the "Actions" library tab and then grant it.
-
-The authored action should still flow through the existing grants pipeline so that, when the item is equipped (and attuned if needed), the action shows up in the character's Actions list, tagged with the item as its source.
+Collapse the spellbook header's two buttons — "From Library" (LibraryPicker) and "Add Spell" (which currently has its own SRD/Custom tabs) — into a single **"Add Spell"** button that opens one dialog covering both flows. The obsolete SRD list goes away in the process.
 
 ## UX
 
-Inside each item card in the Library Items tab, the existing "Grants" row gets a fourth button:
+One button: `[+ Add Spell]` opens a dialog with two tabs:
 
 ```
-[+ Action]   [+ Spell]   [+ Bonus]   [+ Inline Action]
+[ From Library ]   [ Custom / Homebrew ]
 ```
 
-- **+ Action** keeps current behaviour: dropdown of existing library actions.
-- **+ Inline Action** (new): expands into a compact editor right in the grants list with the same fields as a Library Action — name, action time, range, ability/skill, proficient, damage dice/type, save ability, notes. No reference to the library actions list.
+- **From Library** (default): same search + list UI as today's `LibraryPicker` — searches the user's `library.spells`, click to add via `copyFromLibrary`.
+- **Custom / Homebrew**: the existing custom-spell form from `AddSpellDialog`.
 
-Inline actions live on the item itself; they don't pollute the global Actions library.
+The SRD tab is removed entirely.
 
-## Data model (`src/lib/types.ts`)
+## Changes
 
-Extend the `Grant` union with one new variant:
+**`src/components/views/GrimoireView.tsx`**
+- Remove the `<LibraryPicker .../>` from the spellbook header (line 202).
+- Rewrite `AddSpellDialog`:
+  - Replace `tab` state values `'srd' | 'custom'` with `'library' | 'custom'`.
+  - Remove SRD branch and the `SAMPLE_SPELLS` import.
+  - Add a "library" branch that mirrors `LibraryPicker`'s body: search input + filtered list of `useAppStore(s => s.library.spells)`. On click, call `copyFromLibrary(c.id, 'spells', sp.id)` and close.
+  - Pass `characterId` (or `copyFromLibrary` + `characterId`) into `AddSpellDialog` so it can perform the library copy itself.
+- Update the empty-spellbook hint (line 220): drop "from the SRD library" — leave: "Your spellbook is empty. Add a spell, drag from a spell list, or scribe your own."
 
-```ts
-type Grant =
-  | { id: string; kind: 'action';        libraryActionId: string }
-  | { id: string; kind: 'inline-action'; action: Omit<LibraryAction, 'id'> }   // NEW
-  | { id: string; kind: 'spell';         librarySpellId: string; alwaysPrepared?: boolean }
-  | { id: string; kind: 'bonus';         target: BonusTarget; value: number };
-```
-
-No migration needed (new optional kind).
-
-## Grants resolver (`src/lib/grants.ts`)
-
-In `applyGrants`, add a branch for `kind === 'inline-action'` that pushes a `CharacterAction` synthesized from `g.action` (same shape as the library-lookup branch), with `id: granted:${source.id}:${g.id}` and `grantedBy: source.name`.
-
-## GrantsEditor (`src/components/GrantsEditor.tsx`)
-
-- Add an `addInlineAction` button.
-- Render a new row component `InlineActionGrantRow` for `kind === 'inline-action'` with inline fields (name, action time select, range, ability/skill toggle + dropdown, proficient checkbox, damage dice + type, save ability, notes).
-- Reuse existing styling (`bg-parchment-light`, small inputs).
-- All edits patch through the same `update(id, patch)` flow already in the file.
-
-## Where it shows up
-
-No changes needed in `EquipmentView` / `DashboardView` — they already render `granted.actions` from `resolveGrants` and label them with `grantedBy`. Inline-action grants will appear identically, sourced from the item's name.
-
-## Files to change
-
-- `src/lib/types.ts` — add `inline-action` variant to `Grant`.
-- `src/lib/grants.ts` — handle `inline-action` in `applyGrants`.
-- `src/components/GrantsEditor.tsx` — new "+ Inline Action" button + `InlineActionGrantRow` editor.
+**Imports cleanup**
+- Drop `SAMPLE_SPELLS` from the `@/lib/srd` import (keep `CLASSES`).
+- Drop the `LibraryPicker` import.
 
 ## Out of scope
 
-- Editing inline actions from the character sheet (still done in Library, like current grants).
-- Promoting an inline action to a full library entry (could be a follow-up: a "Save to library" button on the inline editor).
-- Conditional or charged actions — same always-on rules as other grants.
+- `SAMPLE_SPELLS` stays defined in `src/lib/srd.ts` (still used by store seed logic).
+- `LibraryPicker` itself is not deleted — still used by other views (Equipment, Features, etc.).
+- No change to `copyFromLibrary` store action.
