@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Character } from '@/lib/types';
 import type { Derived } from '@/lib/rules';
-import { CLASSES, SAMPLE_SPELLS } from '@/lib/srd';
+import { CLASSES } from '@/lib/srd';
 import { useAppStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
