@@ -361,15 +361,23 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   );
 };
 
-const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').SpellEntry, 'id'>) => void }) => {
+const AddSpellDialog = ({ characterId, onAdd }: { characterId: string; onAdd: (s: Omit<import('@/lib/types').SpellEntry, 'id'>) => void }) => {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<'srd' | 'custom'>('srd');
+  const [tab, setTab] = useState<'library' | 'custom'>('library');
   const [search, setSearch] = useState('');
+  const librarySpells = useAppStore((s) => s.library.spells);
+  const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
   const [custom, setCustom] = useState({
     name: '', level: 0, school: 'Evocation', castingTime: 'Action',
     range: '60 ft', components: 'V, S', duration: 'Instantaneous',
     description: '', higherLevels: '', concentration: false,
   });
+
+  const filteredLibrary = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return librarySpells;
+    return librarySpells.filter((s) => (s.name ?? '').toLowerCase().includes(q));
+  }, [librarySpells, search]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -383,20 +391,25 @@ const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').Spell
           <DialogTitle className="font-display text-oxblood-deep">Add Spell</DialogTitle>
         </DialogHeader>
         <div className="flex gap-2">
-          <Button size="sm" variant={tab === 'srd' ? 'default' : 'outline'} onClick={() => setTab('srd')}>SRD Library</Button>
+          <Button size="sm" variant={tab === 'library' ? 'default' : 'outline'} onClick={() => setTab('library')}>From Library</Button>
           <Button size="sm" variant={tab === 'custom' ? 'default' : 'outline'} onClick={() => setTab('custom')}>Custom / Homebrew</Button>
         </div>
-        {tab === 'srd' && (
+        {tab === 'library' && (
           <div>
-            <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-2" />
-            <div className="space-y-1 max-h-96 overflow-y-auto">
-              {SAMPLE_SPELLS
-                .filter((s) => !search || s.name.toLowerCase().includes(search.toLowerCase()))
-                .map((s) => (
+            <Input placeholder="Search your library..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-2" autoFocus />
+            {librarySpells.length === 0 ? (
+              <p className="text-sm italic text-ink-faded text-center py-8">
+                Your library has no spells yet. Add some from the Library page.
+              </p>
+            ) : filteredLibrary.length === 0 ? (
+              <p className="text-sm italic text-ink-faded text-center py-8">No matches.</p>
+            ) : (
+              <div className="space-y-1 max-h-96 overflow-y-auto">
+                {filteredLibrary.map((s) => (
                   <button
                     key={s.id}
                     className="w-full rounded-sm border border-ink/20 bg-parchment-light p-2 text-left hover:bg-secondary"
-                    onClick={() => { const { id: _id, ...rest } = s; onAdd({ ...rest, source: 'class' }); setOpen(false); }}
+                    onClick={() => { copyFromLibrary(characterId, 'spells', s.id); setOpen(false); }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-display text-ink">{s.name}</span>
@@ -404,7 +417,8 @@ const AddSpellDialog = ({ onAdd }: { onAdd: (s: Omit<import('@/lib/types').Spell
                     </div>
                   </button>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
         {tab === 'custom' && (
