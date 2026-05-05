@@ -91,8 +91,8 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const removeSpell = useAppStore((s) => s.removeSpell);
   const updateSpell = useAppStore((s) => s.updateSpell);
   const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
-  const libraryClasses = useAppStore((s) => s.library.classes);
-  const librarySpells = useAppStore((s) => s.library.spells);
+  const libraryClasses = useAppStore((s) => s.library.classes) ?? [];
+  const librarySpells = useAppStore((s) => s.library.spells) ?? [];
   const cls = libraryClasses.find((x) => x.id === c.classId) ?? CLASSES.find((x) => x.id === c.classId);
 
   const [spellAbility, setSpellAbility] = useState<AbilityKey>(
