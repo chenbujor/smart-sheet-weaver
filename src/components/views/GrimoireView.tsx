@@ -217,7 +217,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
               )}
             >
               <BookOpen className="mx-auto mb-2 h-10 w-10 text-ink/40" />
-              <p className="text-ink-faded">Your spellbook is empty. Add spells from the SRD library, drag from a spell list, or scribe your own.</p>
+              <p className="text-ink-faded">Your spellbook is empty. Add a spell, drag from a spell list, or scribe your own.</p>
             </div>
           ) : (
             grouped.map(([lvl, spells]) => (
