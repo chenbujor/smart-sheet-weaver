@@ -199,8 +199,8 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
           >
             <ListFilter className="mr-1 h-3.5 w-3.5" /> Spell Lists
           </Button>
-          <LibraryPicker characterId={c.id} category="spells" label="From Library" />
-          <AddSpellDialog onAdd={(sp) => addSpell(c.id, sp)} />
+          <AddSpellDialog characterId={c.id} onAdd={(sp) => addSpell(c.id, sp)} />
+
         </div>
       </div>
 
