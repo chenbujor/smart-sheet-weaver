@@ -16,7 +16,7 @@ export const ClassicView = ({ character: c, derived: d }: Props) => {
   const setAbility = useAppStore((s) => s.setAbility);
   const toggleSave = useAppStore((s) => s.toggleSaveProficiency);
   const setSkill = useAppStore((s) => s.setSkill);
-  const libraryClasses = useAppStore((s) => s.library.classes);
+  const libraryClasses = useAppStore((s) => s.library.classes) ?? [];
   const cls = libraryClasses.find((x) => x.id === c.classId) ?? CLASSES.find((x) => x.id === c.classId);
 
   return (
