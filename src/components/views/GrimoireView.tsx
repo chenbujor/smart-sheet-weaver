@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { abilityMod, maxPreparedSpells } from '@/lib/rules';
 import type { AbilityKey, SourceType, SpellEntry } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
-import { LibraryPicker } from '@/components/LibraryPicker';
+
 
 const SOURCE_OPTIONS: { value: SourceType; label: string }[] = [
   { value: 'class', label: 'Class' },
