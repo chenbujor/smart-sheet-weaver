@@ -41,6 +41,10 @@ export interface CharacterFeature {
   usesFormula?: string;
   reset?: ResetType;
   used?: number;
+  // Amount restored when the matching rest event fires.
+  // Empty/undefined or "all" = restore to full (max).
+  // Accepts numbers ("1"), formula vars (PB, LEVEL, STR…), or dice ("1d4").
+  rechargeFormula?: string;
   tiers?: ScalingTier[];      // auto-upgrade dice/effects
   alwaysPrepared?: boolean;   // for spells from species/feats
   level?: number;             // gain level (for class/subclass features)
@@ -101,6 +105,11 @@ export interface InventoryItem {
   equipped?: boolean;
   weapon?: WeaponStats;       // when set, this item is also a weapon
   grants?: Grant[];           // automatic effects when equipped (and attuned if attunable)
+  // Charges (mirrors CharacterFeature)
+  usesFormula?: string;
+  reset?: ResetType;
+  used?: number;
+  rechargeFormula?: string;
 }
 
 // Back-compat alias — older code may still import Weapon

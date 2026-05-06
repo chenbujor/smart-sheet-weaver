@@ -375,7 +375,7 @@ const FeaturesTab = () => {
                   <Input
                     value={f.usesFormula ?? ''}
                     onChange={(e) => update('features', f.id, { usesFormula: e.target.value })}
-                    placeholder="Uses formula (PB, LEVEL, CHA…)"
+                    placeholder="Uses (3, PB, 1+CHA)"
                     className="font-mono text-sm"
                   />
                   <select
@@ -386,6 +386,14 @@ const FeaturesTab = () => {
                     {RESETS.map((r) => <option key={r} value={r}>{r} rest</option>)}
                   </select>
                 </div>
+                {f.reset && f.reset !== 'none' && (
+                  <Input
+                    value={f.rechargeFormula ?? ''}
+                    onChange={(e) => update('features', f.id, { rechargeFormula: e.target.value })}
+                    placeholder="Recharge amount (blank = all; e.g. 1, 1d4, PB)"
+                    className="font-mono text-sm"
+                  />
+                )}
                 <SmartTextarea
                   value={f.description}
                   onValueChange={(v) => update('features', f.id, { description: v })}
@@ -536,6 +544,41 @@ const ItemsTab = () => {
                   rows={1}
                   className="bg-parchment-light border-ink/30 text-xs"
                 />
+                <div className="rounded-sm border border-ink/20 bg-parchment-light/50 p-2 space-y-2">
+                  <div className="text-xs font-display uppercase tracking-wider text-ink-faded">Charges</div>
+                  <div className="grid gap-2 sm:grid-cols-3 text-xs">
+                    <label className="flex flex-col text-ink-faded">
+                      Max (uses formula)
+                      <Input
+                        value={i.usesFormula ?? ''}
+                        onChange={(e) => update('items', i.id, { usesFormula: e.target.value || undefined })}
+                        placeholder="3, PB, 1 + CHA"
+                        className="mt-0.5 h-8 font-mono"
+                      />
+                    </label>
+                    <label className="flex flex-col text-ink-faded">
+                      Reset
+                      <select
+                        value={i.reset ?? 'none'}
+                        onChange={(e) => update('items', i.id, { reset: e.target.value as ResetType })}
+                        className="mt-0.5 h-8 rounded-sm border border-ink/40 bg-parchment-light px-2"
+                      >
+                        {RESETS.map((r) => <option key={r} value={r}>{r} rest</option>)}
+                      </select>
+                    </label>
+                    {i.reset && i.reset !== 'none' && (
+                      <label className="flex flex-col text-ink-faded">
+                        Recharge amount
+                        <Input
+                          value={i.rechargeFormula ?? ''}
+                          onChange={(e) => update('items', i.id, { rechargeFormula: e.target.value || undefined })}
+                          placeholder="all, 1, 1d4"
+                          className="mt-0.5 h-8 font-mono"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
                 <GrantsEditor
                   grants={i.grants}
                   onChange={(grants) => update('items', i.id, { grants })}

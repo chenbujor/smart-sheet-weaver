@@ -66,7 +66,7 @@ import type {
   LibraryAction, CharacterAction, ClassEntry, SubclassEntry,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
-import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
+import { hpMax, spellSlotsFor, pactSlotsFor, evalFormula, computeRecharge } from './rules';
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -172,6 +172,7 @@ interface AppState {
   setSpellSlotUsed: (id: string, slotLevel: number, used: number) => void;
   setPactSlotUsed: (id: string, used: number) => void;
   setFeatureUsed: (id: string, featureId: string, used: number) => void;
+  setItemUsed: (id: string, itemId: string, used: number) => void;
   // features / spells / inventory
   addFeature: (id: string, f: Omit<CharacterFeature, 'id'>) => void;
   removeFeature: (id: string, fid: string) => void;
@@ -328,6 +329,21 @@ export const useAppStore = create<AppState>()(
               [id]: touch({
                 ...cur,
                 features: cur.features.map((f) => (f.id === featureId ? { ...f, used: Math.max(0, used) } : f)),
+              }),
+            },
+          };
+        }),
+
+      setItemUsed: (id, itemId, used) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({
+                ...cur,
+                inventory: cur.inventory.map((i) => (i.id === itemId ? { ...i, used: Math.max(0, used) } : i)),
               }),
             },
           };
@@ -563,6 +579,15 @@ export const useAppStore = create<AppState>()(
         set((s) => {
           const cur = s.characters[id];
           if (!cur) return s;
+          const ctx = { pb: 2 + Math.floor((Math.max(1, cur.level) - 1) / 4), level: cur.level, abilities: cur.abilities };
+          const rechargeOn = (entity: { usesFormula?: string; reset?: string; used?: number; rechargeFormula?: string }, event: 'short' | 'long') => {
+            if (entity.reset !== event && !(event === 'long' && entity.reset === 'short')) return entity;
+            const max = entity.usesFormula ? evalFormula(entity.usesFormula, ctx) : 0;
+            if (max <= 0) return { ...entity, used: 0 };
+            const restore = computeRecharge(entity.rechargeFormula, max, ctx);
+            const used = Math.max(0, Math.min(max, (entity.used ?? 0) - restore));
+            return { ...entity, used };
+          };
           const newHpCurrent = Math.min(
             (cur.hpMaxOverride ?? Number.MAX_SAFE_INTEGER),
             cur.hpCurrent + rolled
@@ -574,9 +599,8 @@ export const useAppStore = create<AppState>()(
                 ...cur,
                 hpCurrent: newHpCurrent,
                 hitDiceUsed: Math.min(cur.level, cur.hitDiceUsed + count),
-                features: cur.features.map((f) =>
-                  f.reset === 'short' || f.reset === 'long' ? f : f
-                ).map((f) => (f.reset === 'short' ? { ...f, used: 0 } : f)),
+                features: cur.features.map((f) => rechargeOn(f, 'short') as typeof f),
+                inventory: cur.inventory.map((i) => rechargeOn(i, 'short') as typeof i),
                 pactSlotsUsed: 0,
               }),
             },
@@ -589,8 +613,16 @@ export const useAppStore = create<AppState>()(
           if (!cur) return s;
           const cls = CLASSES.find((c) => c.id === cur.classId);
           const max = hpMax(cls, cur.level, cur.abilities, cur.hpMaxOverride);
-          // recover half hit dice (min 1)
           const recover = Math.max(1, Math.floor(cur.level / 2));
+          const ctx = { pb: 2 + Math.floor((Math.max(1, cur.level) - 1) / 4), level: cur.level, abilities: cur.abilities };
+          const rechargeOnLong = (entity: { usesFormula?: string; reset?: string; used?: number; rechargeFormula?: string }) => {
+            if (entity.reset !== 'short' && entity.reset !== 'long') return entity;
+            const m = entity.usesFormula ? evalFormula(entity.usesFormula, ctx) : 0;
+            if (m <= 0) return { ...entity, used: 0 };
+            const restore = computeRecharge(entity.rechargeFormula, m, ctx);
+            const used = Math.max(0, Math.min(m, (entity.used ?? 0) - restore));
+            return { ...entity, used };
+          };
           return {
             characters: {
               ...s.characters,
@@ -602,9 +634,8 @@ export const useAppStore = create<AppState>()(
                 spellSlotsUsed: {},
                 pactSlotsUsed: 0,
                 exhaustion: Math.max(0, cur.exhaustion - 1),
-                features: cur.features.map((f) =>
-                  f.reset === 'short' || f.reset === 'long' ? { ...f, used: 0 } : f
-                ),
+                features: cur.features.map((f) => rechargeOnLong(f) as typeof f),
+                inventory: cur.inventory.map((i) => rechargeOnLong(i) as typeof i),
                 concentration: { active: false },
                 deathSaves: { successes: 0, failures: 0 },
               }),

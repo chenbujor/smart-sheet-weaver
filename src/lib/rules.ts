@@ -135,7 +135,47 @@ export const evalFormula = (
   }
 };
 
-// Pick the active scaling tier value
+// Roll a dice expression like "1d4", "2d6+1", "1d8 - 1". Returns 0 on parse error.
+export const rollDice = (expr: string): number => {
+  if (!expr?.trim()) return 0;
+  const s = expr.replace(/\s+/g, '').toLowerCase();
+  // sum of (NdM) terms and integer constants
+  const re = /([+-]?)(\d*)d(\d+)|([+-]?\d+)/g;
+  let total = 0;
+  let m: RegExpExecArray | null;
+  let matched = false;
+  while ((m = re.exec(s))) {
+    matched = true;
+    if (m[3]) {
+      const sign = m[1] === '-' ? -1 : 1;
+      const n = m[2] ? parseInt(m[2], 10) : 1;
+      const sides = parseInt(m[3], 10);
+      let sum = 0;
+      for (let i = 0; i < n; i++) sum += 1 + Math.floor(Math.random() * sides);
+      total += sign * sum;
+    } else if (m[4]) {
+      total += parseInt(m[4], 10);
+    }
+  }
+  return matched ? Math.max(0, total) : 0;
+};
+
+// Compute how many charges to restore from a recharge formula.
+// Empty/undefined or "all" => max. Otherwise tries evalFormula, then rollDice.
+export const computeRecharge = (
+  rechargeFormula: string | undefined,
+  max: number,
+  ctx: { pb: number; level: number; abilities: Abilities },
+): number => {
+  const f = (rechargeFormula ?? '').trim();
+  if (!f || f.toLowerCase() === 'all' || f.toLowerCase() === 'max') return max;
+  // Try formula eval (handles digits, PB, LEVEL, ability mods)
+  const upper = f.toUpperCase();
+  if (/^[\dPBLEVELSTRDXCONIWHA+\-*/().\s]+$/.test(upper) && !/D\d/i.test(f)) {
+    return evalFormula(f, ctx);
+  }
+  return rollDice(f);
+};
 export const activeTierValue = (tiers: { level: number; value: string }[] | undefined, level: number) => {
   if (!tiers || !tiers.length) return undefined;
   const sorted = [...tiers].sort((a, b) => a.level - b.level);
