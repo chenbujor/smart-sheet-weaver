@@ -1,4 +1,4 @@
-import type { Character, AbilityKey, CharacterAction, ActionTime } from '@/lib/types';
+import type { Character, AbilityKey, CharacterAction, ActionTime, ResetType } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { WEAPON_MASTERIES } from '@/lib/srd';
 import { Input } from '@/components/ui/input';
@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Sparkle, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Derived } from '@/lib/rules';
-import { abilityMod, formatMod, SKILLS } from '@/lib/rules';
+import { abilityMod, formatMod, SKILLS, evalFormula } from '@/lib/rules';
 import { LibraryPicker } from '@/components/LibraryPicker';
 import { SmartTextarea } from '@/components/SmartText';
 import { LockableSmartTextarea } from '@/components/LockableTextarea';
 import { KeywordText } from '@/components/KeywordText';
+import { Pips } from '@/components/Pips';
 
 interface Props { character: Character; derived: Derived }
 
 const ABIL: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 const ACTION_TIMES: ActionTime[] = ['action', 'bonus', 'reaction', 'free', 'special'];
+const RESETS: ResetType[] = ['none', 'short', 'long', 'dawn'];
 
 export const EquipmentView = ({ character: c, derived: d }: Props) => {
   const addWeapon = useAppStore((s) => s.addWeapon);
@@ -24,6 +26,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
   const addInventory = useAppStore((s) => s.addInventory);
   const removeInventory = useAppStore((s) => s.removeInventory);
   const updateInventory = useAppStore((s) => s.updateInventory);
+  const setItemUsed = useAppStore((s) => s.setItemUsed);
   const addAction = useAppStore((s) => s.addAction);
   const removeAction = useAppStore((s) => s.removeAction);
   const updateAction = useAppStore((s) => s.updateAction);
