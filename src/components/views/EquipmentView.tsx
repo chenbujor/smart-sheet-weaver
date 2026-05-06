@@ -281,6 +281,51 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                       </label>
                     )}
                   </div>
+                  {(() => {
+                    const max = i.usesFormula
+                      ? evalFormula(i.usesFormula, { pb: d.pb, level: c.level, abilities: c.abilities })
+                      : 0;
+                    return max > 0 ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Pips total={max} used={Math.min(max, i.used ?? 0)} onChange={(u) => setItemUsed(c.id, i.id, u)} />
+                        {i.reset && i.reset !== 'none' && (
+                          <span className="text-[0.6rem] uppercase tracking-wider text-ink-faded">{i.reset} rest</span>
+                        )}
+                      </div>
+                    ) : null;
+                  })()}
+                  <div className="grid grid-cols-3 gap-1 text-[0.6rem] text-ink-faded">
+                    <label className="flex flex-col">
+                      Charges
+                      <Input
+                        value={i.usesFormula ?? ''}
+                        onChange={(e) => updateInventory(c.id, i.id, { usesFormula: e.target.value || undefined })}
+                        placeholder="3, PB"
+                        className="mt-0.5 h-6 px-1 font-mono text-[0.65rem]"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      Reset
+                      <select
+                        value={i.reset ?? 'none'}
+                        onChange={(e) => updateInventory(c.id, i.id, { reset: e.target.value as ResetType })}
+                        className="mt-0.5 h-6 rounded-sm border border-ink/40 bg-parchment-light px-1 text-[0.65rem]"
+                      >
+                        {RESETS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </label>
+                    {i.reset && i.reset !== 'none' && (
+                      <label className="flex flex-col">
+                        Recharge
+                        <Input
+                          value={i.rechargeFormula ?? ''}
+                          onChange={(e) => updateInventory(c.id, i.id, { rechargeFormula: e.target.value || undefined })}
+                          placeholder="all, 1d4"
+                          className="mt-0.5 h-6 px-1 font-mono text-[0.65rem]"
+                        />
+                      </label>
+                    )}
+                  </div>
                   <LockableSmartTextarea
                     value={i.description ?? ''}
                     onValueChange={(v) => updateInventory(c.id, i.id, { description: v })}
