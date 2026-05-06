@@ -117,7 +117,7 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
                 <Input
                   value={f.usesFormula ?? ''}
                   onChange={(e) => updateFeature(c.id, f.id, { usesFormula: e.target.value })}
-                  placeholder="e.g. PB or 1 + CHA"
+                  placeholder="e.g. 3, PB, 1 + CHA"
                   className="mt-0.5 h-8 font-mono text-sm"
                 />
               </label>
@@ -131,6 +131,17 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
                   {RESETS.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </label>
+              {f.reset && f.reset !== 'none' && (
+                <label className="text-xs text-ink-faded sm:col-span-2">
+                  Recharge amount <span className="italic">(blank = all; e.g. 1, 1d4, PB)</span>
+                  <Input
+                    value={f.rechargeFormula ?? ''}
+                    onChange={(e) => updateFeature(c.id, f.id, { rechargeFormula: e.target.value })}
+                    placeholder="all"
+                    className="mt-0.5 h-8 font-mono text-sm"
+                  />
+                </label>
+              )}
             </div>
             <label className="text-xs text-ink-faded block">
               Description
