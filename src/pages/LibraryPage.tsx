@@ -375,7 +375,7 @@ const FeaturesTab = () => {
                   <Input
                     value={f.usesFormula ?? ''}
                     onChange={(e) => update('features', f.id, { usesFormula: e.target.value })}
-                    placeholder="Uses formula (PB, LEVEL, CHA…)"
+                    placeholder="Uses (3, PB, 1+CHA)"
                     className="font-mono text-sm"
                   />
                   <select
@@ -386,6 +386,14 @@ const FeaturesTab = () => {
                     {RESETS.map((r) => <option key={r} value={r}>{r} rest</option>)}
                   </select>
                 </div>
+                {f.reset && f.reset !== 'none' && (
+                  <Input
+                    value={f.rechargeFormula ?? ''}
+                    onChange={(e) => update('features', f.id, { rechargeFormula: e.target.value })}
+                    placeholder="Recharge amount (blank = all; e.g. 1, 1d4, PB)"
+                    className="font-mono text-sm"
+                  />
+                )}
                 <SmartTextarea
                   value={f.description}
                   onValueChange={(v) => update('features', f.id, { description: v })}
