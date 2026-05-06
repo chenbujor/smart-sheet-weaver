@@ -66,7 +66,7 @@ import type {
   LibraryAction, CharacterAction, ClassEntry, SubclassEntry,
 } from './types';
 import { CLASSES, CONDITIONS, SAMPLE_SPELLS } from './srd';
-import { hpMax, spellSlotsFor, pactSlotsFor } from './rules';
+import { hpMax, spellSlotsFor, pactSlotsFor, evalFormula, computeRecharge } from './rules';
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -172,6 +172,7 @@ interface AppState {
   setSpellSlotUsed: (id: string, slotLevel: number, used: number) => void;
   setPactSlotUsed: (id: string, used: number) => void;
   setFeatureUsed: (id: string, featureId: string, used: number) => void;
+  setItemUsed: (id: string, itemId: string, used: number) => void;
   // features / spells / inventory
   addFeature: (id: string, f: Omit<CharacterFeature, 'id'>) => void;
   removeFeature: (id: string, fid: string) => void;
