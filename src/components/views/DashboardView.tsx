@@ -27,6 +27,25 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
   const toggleSave = useAppStore((s) => s.toggleSaveProficiency);
 
   const [hpDelta, setHpDelta] = useState('');
+  const [newTimerName, setNewTimerName] = useState('');
+  const [newTimerRounds, setNewTimerRounds] = useState('');
+
+  const timers = c.roundTimers ?? [];
+  const updateTimers = (next: typeof timers) => update(c.id, { roundTimers: next });
+  const addTimer = () => {
+    const rounds = parseInt(newTimerRounds, 10);
+    const name = newTimerName.trim();
+    if (!name || isNaN(rounds) || rounds <= 0) return;
+    updateTimers([...timers, { id: crypto.randomUUID(), name, remaining: rounds }]);
+    setNewTimerName('');
+    setNewTimerRounds('');
+  };
+  const adjustTimer = (id: string, delta: number) =>
+    updateTimers(timers.map((t) => (t.id === id ? { ...t, remaining: Math.max(0, t.remaining + delta) } : t)));
+  const removeTimer = (id: string) => updateTimers(timers.filter((t) => t.id !== id));
+  const tickAll = () =>
+    updateTimers(timers.map((t) => ({ ...t, remaining: Math.max(0, t.remaining - 1) })));
+
   const applyDelta = (sign: 1 | -1) => {
     const n = parseInt(hpDelta, 10);
     if (isNaN(n)) return;
