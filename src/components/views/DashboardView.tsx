@@ -3,7 +3,7 @@ import { abilityMod, formatMod, saveBonus, SKILLS, skillBonus, type Derived } fr
 import { Pips } from '@/components/Pips';
 import { useAppStore } from '@/lib/store';
 import type { Character } from '@/lib/types';
-import { Heart, Shield, Footprints, Eye, Swords, Sparkles, FlameKindling } from 'lucide-react';
+import { Heart, Shield, Footprints, Eye, Swords, Sparkles, FlameKindling, Timer, Plus, Minus, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
