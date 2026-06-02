@@ -3,7 +3,7 @@ import { abilityMod, formatMod, saveBonus, SKILLS, skillBonus, type Derived } fr
 import { Pips } from '@/components/Pips';
 import { useAppStore } from '@/lib/store';
 import type { Character } from '@/lib/types';
-import { Heart, Shield, Footprints, Eye, Swords, Sparkles, FlameKindling } from 'lucide-react';
+import { Heart, Shield, Footprints, Eye, Swords, Sparkles, FlameKindling, Timer, Plus, Minus, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -27,6 +27,25 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
   const toggleSave = useAppStore((s) => s.toggleSaveProficiency);
 
   const [hpDelta, setHpDelta] = useState('');
+  const [newTimerName, setNewTimerName] = useState('');
+  const [newTimerRounds, setNewTimerRounds] = useState('');
+
+  const timers = c.roundTimers ?? [];
+  const updateTimers = (next: typeof timers) => update(c.id, { roundTimers: next });
+  const addTimer = () => {
+    const rounds = parseInt(newTimerRounds, 10);
+    const name = newTimerName.trim();
+    if (!name || isNaN(rounds) || rounds <= 0) return;
+    updateTimers([...timers, { id: crypto.randomUUID(), name, remaining: rounds }]);
+    setNewTimerName('');
+    setNewTimerRounds('');
+  };
+  const adjustTimer = (id: string, delta: number) =>
+    updateTimers(timers.map((t) => (t.id === id ? { ...t, remaining: Math.max(0, t.remaining + delta) } : t)));
+  const removeTimer = (id: string) => updateTimers(timers.filter((t) => t.id !== id));
+  const tickAll = () =>
+    updateTimers(timers.map((t) => ({ ...t, remaining: Math.max(0, t.remaining - 1) })));
+
   const applyDelta = (sign: 1 | -1) => {
     const n = parseInt(hpDelta, 10);
     if (isNaN(n)) return;
@@ -366,6 +385,99 @@ export const DashboardView = ({ character: c, derived: d }: Props) => {
             </label>
           </div>
         </section>
+
+        {/* Round Timers */}
+        <section className="parchment-panel rounded-md p-2.5">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-sm text-oxblood-deep flex items-center gap-1.5">
+                <Timer className="h-3.5 w-3.5" /> Round Timers
+              </h3>
+              {timers.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={tickAll}
+                  className="h-6 px-2 text-[0.65rem] border-oxblood text-oxblood-deep hover:bg-oxblood/10"
+                >
+                  −1 Round
+                </Button>
+              )}
+            </div>
+            <div className="ink-divider my-1.5" />
+            {timers.length === 0 ? (
+              <p className="text-[0.7rem] italic text-ink-faded">No active effects.</p>
+            ) : (
+              <ul className="space-y-1">
+                {timers.map((t) => (
+                  <li
+                    key={t.id}
+                    className={cn(
+                      'stat-block flex items-center gap-1.5 rounded-sm p-1.5',
+                      t.remaining === 0 && 'opacity-60',
+                    )}
+                  >
+                    <span className="flex-1 truncate text-xs text-ink" title={t.name}>
+                      {t.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => adjustTimer(t.id, -1)}
+                      className="rounded-sm border border-ink/30 p-0.5 hover:bg-secondary/40"
+                      title="Decrement"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-[2ch] text-center font-display text-sm text-ink">
+                      {t.remaining}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => adjustTimer(t.id, 1)}
+                      className="rounded-sm border border-ink/30 p-0.5 hover:bg-secondary/40"
+                      title="Increment"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeTimer(t.id)}
+                      className="rounded-sm border border-oxblood/40 p-0.5 text-oxblood-deep hover:bg-oxblood/10"
+                      title="Remove"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <Input
+                placeholder="Effect"
+                value={newTimerName}
+                onChange={(e) => setNewTimerName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTimer()}
+                className="h-8 flex-1 text-sm"
+              />
+              <Input
+                type="number"
+                placeholder="Rds"
+                value={newTimerRounds}
+                onChange={(e) => setNewTimerRounds(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTimer()}
+                className="h-8 w-14 text-center text-sm"
+              />
+              <Button
+                size="sm"
+                onClick={addTimer}
+                className="h-8 bg-forest text-primary-foreground hover:bg-forest/80"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </section>
+
 
         {/* Exhaustion */}
         <section className="parchment-panel rounded-md p-2.5">
