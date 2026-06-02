@@ -197,9 +197,17 @@ export interface Character {
   };
 
   notes?: string;
+  roundTimers?: RoundTimer[];
   createdAt: number;
   updatedAt: number;
 }
+
+export interface RoundTimer {
+  id: string;
+  name: string;
+  remaining: number;
+}
+
 
 // =====================================================================
 // Shared Library — reusable templates + glossary, persisted globally
