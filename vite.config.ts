@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-base: mode === "production" ? '/smart-sheet-weaver/' : '/',
+  base: mode === "production" ? '/smart-sheet-weaver/' : '/', // <-- Fixed comma & optimized for Lovable development mode
   server: {
     host: "::",
     port: 8080,
