@@ -57,7 +57,7 @@ export interface SpellEntry {
   id: string;
   name: string;
   level: number;              // 0 = cantrip
-  school: string;
+  school: SpellSchool;
   castingTime: string;
   range: string;
   components: string;
