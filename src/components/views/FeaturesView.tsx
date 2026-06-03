@@ -7,7 +7,7 @@ import { Pips } from '@/components/Pips';
 import { SourceTag } from '@/components/SourceTag';
 import { KeywordText } from '@/components/KeywordText';
 import { evalFormula, activeTierValue, type Derived } from '@/lib/rules';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
 import { LibraryPicker } from '@/components/LibraryPicker';
@@ -32,8 +32,59 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
   const removeFeature = useAppStore((s) => s.removeFeature);
   const updateFeature = useAppStore((s) => s.updateFeature);
   const setFeatureUsed = useAppStore((s) => s.setFeatureUsed);
+  const libraryClasses = useAppStore((s) => s.library.classes);
 
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // ---- Auto-sync class features from the class library based on level ----
+  useEffect(() => {
+    const cls = libraryClasses.find((cl) => cl.id === c.classId);
+    const expected = (cls?.features ?? []).filter((f) => (f.level ?? 1) <= c.level);
+    const expectedRefs = new Set(expected.map((f) => `class:${c.classId}:${f.id}`));
+
+    const existing = c.features;
+    const keptNonAuto = existing.filter((f) => !f.auto);
+    const existingAutoByRef = new Map(
+      existing.filter((f) => f.auto && f.sourceRef).map((f) => [f.sourceRef!, f]),
+    );
+
+    // Build the new auto list: refresh from library, preserve `used`.
+    const autoNext = expected.map((libF) => {
+      const ref = `class:${c.classId}:${libF.id}`;
+      const prev = existingAutoByRef.get(ref);
+      return {
+        ...libF,
+        id: prev?.id ?? `auto-${ref}`,
+        source: 'class' as const,
+        sourceLabel: libF.sourceLabel ?? cls?.name,
+        used: prev?.used ?? 0,
+        auto: true,
+        sourceRef: ref,
+      };
+    });
+
+    // Detect changes (avoid infinite loop when nothing differs).
+    const prevAutos = existing.filter((f) => f.auto);
+    const sameCount = prevAutos.length === autoNext.length;
+    const sameRefs = sameCount && prevAutos.every((p) => expectedRefs.has(p.sourceRef ?? ''));
+    const sameContent =
+      sameRefs &&
+      autoNext.every((a) => {
+        const p = existingAutoByRef.get(a.sourceRef!);
+        return (
+          p &&
+          p.name === a.name &&
+          p.description === a.description &&
+          p.usesFormula === a.usesFormula &&
+          p.reset === a.reset &&
+          p.rechargeFormula === a.rechargeFormula &&
+          p.level === a.level
+        );
+      });
+    if (sameContent) return;
+
+    update(c.id, { features: [...autoNext, ...keptNonAuto] });
+  }, [c.id, c.classId, c.level, libraryClasses, c.features, update]);
 
   const profs = c.proficiencies ?? {};
   const setProfs = (patch: Partial<NonNullable<Character['proficiencies']>>) =>
@@ -64,6 +115,14 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-display text-base text-ink">{f.name}</span>
               <SourceTag source={f.source} label={f.sourceLabel} />
+              {f.auto && (
+                <span
+                  className="text-[0.6rem] uppercase tracking-wider rounded-sm border border-oxblood/40 bg-oxblood/10 px-1 py-0.5 text-oxblood-deep"
+                  title={`Auto-granted at level ${f.level ?? 1}`}
+                >
+                  Auto · L{f.level ?? 1}
+                </span>
+              )}
               {f.reset && f.reset !== 'none' && (
                 <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">
                   {f.reset} rest
@@ -84,16 +143,25 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
               </div>
             )}
           </div>
-          <button
-            onClick={() => removeFeature(c.id, f.id)}
-            className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
-            aria-label="Remove feature"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {!f.auto && (
+            <button
+              onClick={() => removeFeature(c.id, f.id)}
+              className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+              aria-label="Remove feature"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
-        {open && (
+        {open && f.auto && (
+          <div className="border-t border-ink/15 p-3 text-xs italic text-ink-faded bg-parchment-light/40">
+            This feature is granted automatically by your class at level {f.level ?? 1}. Edit it in
+            the class library to change its description or usage.
+          </div>
+        )}
+
+        {open && !f.auto && (
           <div className="border-t border-ink/15 p-3 space-y-2 bg-parchment-light/40">
             <div className="grid gap-2 sm:grid-cols-2">
               <label className="text-xs text-ink-faded">
