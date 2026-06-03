@@ -115,6 +115,14 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-display text-base text-ink">{f.name}</span>
               <SourceTag source={f.source} label={f.sourceLabel} />
+              {f.auto && (
+                <span
+                  className="text-[0.6rem] uppercase tracking-wider rounded-sm border border-oxblood/40 bg-oxblood/10 px-1 py-0.5 text-oxblood-deep"
+                  title={`Auto-granted at level ${f.level ?? 1}`}
+                >
+                  Auto · L{f.level ?? 1}
+                </span>
+              )}
               {f.reset && f.reset !== 'none' && (
                 <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">
                   {f.reset} rest
@@ -135,16 +143,25 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
               </div>
             )}
           </div>
-          <button
-            onClick={() => removeFeature(c.id, f.id)}
-            className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
-            aria-label="Remove feature"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {!f.auto && (
+            <button
+              onClick={() => removeFeature(c.id, f.id)}
+              className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+              aria-label="Remove feature"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
-        {open && (
+        {open && f.auto && (
+          <div className="border-t border-ink/15 p-3 text-xs italic text-ink-faded bg-parchment-light/40">
+            This feature is granted automatically by your class at level {f.level ?? 1}. Edit it in
+            the class library to change its description or usage.
+          </div>
+        )}
+
+        {open && !f.auto && (
           <div className="border-t border-ink/15 p-3 space-y-2 bg-parchment-light/40">
             <div className="grid gap-2 sm:grid-cols-2">
               <label className="text-xs text-ink-faded">
