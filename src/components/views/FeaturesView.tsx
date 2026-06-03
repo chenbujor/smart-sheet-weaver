@@ -32,8 +32,59 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
   const removeFeature = useAppStore((s) => s.removeFeature);
   const updateFeature = useAppStore((s) => s.updateFeature);
   const setFeatureUsed = useAppStore((s) => s.setFeatureUsed);
+  const libraryClasses = useAppStore((s) => s.library.classes);
 
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // ---- Auto-sync class features from the class library based on level ----
+  useEffect(() => {
+    const cls = libraryClasses.find((cl) => cl.id === c.classId);
+    const expected = (cls?.features ?? []).filter((f) => (f.level ?? 1) <= c.level);
+    const expectedRefs = new Set(expected.map((f) => `class:${c.classId}:${f.id}`));
+
+    const existing = c.features;
+    const keptNonAuto = existing.filter((f) => !f.auto);
+    const existingAutoByRef = new Map(
+      existing.filter((f) => f.auto && f.sourceRef).map((f) => [f.sourceRef!, f]),
+    );
+
+    // Build the new auto list: refresh from library, preserve `used`.
+    const autoNext = expected.map((libF) => {
+      const ref = `class:${c.classId}:${libF.id}`;
+      const prev = existingAutoByRef.get(ref);
+      return {
+        ...libF,
+        id: prev?.id ?? `auto-${ref}`,
+        source: 'class' as const,
+        sourceLabel: libF.sourceLabel ?? cls?.name,
+        used: prev?.used ?? 0,
+        auto: true,
+        sourceRef: ref,
+      };
+    });
+
+    // Detect changes (avoid infinite loop when nothing differs).
+    const prevAutos = existing.filter((f) => f.auto);
+    const sameCount = prevAutos.length === autoNext.length;
+    const sameRefs = sameCount && prevAutos.every((p) => expectedRefs.has(p.sourceRef ?? ''));
+    const sameContent =
+      sameRefs &&
+      autoNext.every((a) => {
+        const p = existingAutoByRef.get(a.sourceRef!);
+        return (
+          p &&
+          p.name === a.name &&
+          p.description === a.description &&
+          p.usesFormula === a.usesFormula &&
+          p.reset === a.reset &&
+          p.rechargeFormula === a.rechargeFormula &&
+          p.level === a.level
+        );
+      });
+    if (sameContent) return;
+
+    update(c.id, { features: [...autoNext, ...keptNonAuto] });
+  }, [c.id, c.classId, c.level, libraryClasses, c.features, update]);
 
   const profs = c.proficiencies ?? {};
   const setProfs = (patch: Partial<NonNullable<Character['proficiencies']>>) =>
