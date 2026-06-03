@@ -10,6 +10,8 @@ export const ABILITY_NAMES: Record<AbilityKey, string> = {
 export type CasterType = 'full' | 'half' | 'third' | 'pact' | 'none';
 export type ResetType = 'short' | 'long' | 'none' | 'dawn';
 export type SourceType = 'class' | 'species' | 'feat' | 'item' | 'custom' | 'background';
+export type SpellSchool = 'Abjuration' | 'Conjuration' | 'Divination' | 'Enchantment' | 'Evocation' | 'Illusion' | 'Necromancy' | 'Transmutation';
+export const SPELL_SCHOOLS: SpellSchool[] = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
 
 export interface ClassDef {
   id: string;
@@ -55,7 +57,7 @@ export interface SpellEntry {
   id: string;
   name: string;
   level: number;              // 0 = cantrip
-  school: string;
+  school: SpellSchool;
   castingTime: string;
   range: string;
   components: string;

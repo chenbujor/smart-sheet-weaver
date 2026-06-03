@@ -261,7 +261,15 @@ const SpellsTab = () => {
                           onChange={(e) => update('spells', s.id, { level: parseInt(e.target.value || '0', 10) })}
                           placeholder="Level"
                         />
-                        <SmartInput value={s.school} onValueChange={(v) => update('spells', s.id, { school: v })} placeholder="School" />
+                        <select
+                          value={s.school}
+                          onChange={(e) => update('spells', s.id, { school: e.target.value as import('@/lib/types').SpellSchool })}
+                          className="w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-1.5 text-sm text-ink"
+                        >
+                          {['Abjuration','Conjuration','Divination','Enchantment','Evocation','Illusion','Necromancy','Transmutation'].map((sch) => (
+                            <option key={sch} value={sch}>{sch}</option>
+                          ))}
+                        </select>
                         <SmartInput value={s.castingTime} onValueChange={(v) => update('spells', s.id, { castingTime: v })} placeholder="Casting Time" />
                         <SmartInput value={s.range} onValueChange={(v) => update('spells', s.id, { range: v })} placeholder="Range" />
                         <SmartInput value={s.components} onValueChange={(v) => update('spells', s.id, { components: v })} placeholder="Components" />
