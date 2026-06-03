@@ -367,7 +367,11 @@ const AddSpellDialog = ({ characterId, onAdd }: { characterId: string; onAdd: (s
   const [search, setSearch] = useState('');
   const librarySpells = useAppStore((s) => s.library.spells);
   const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
-  const [custom, setCustom] = useState({
+  const [custom, setCustom] = useState<{
+    name: string; level: number; school: SpellSchool; castingTime: string;
+    range: string; components: string; duration: string;
+    description: string; higherLevels: string; concentration: boolean;
+  }>({
     name: '', level: 0, school: 'Evocation', castingTime: 'Action',
     range: '60 ft', components: 'V, S', duration: 'Instantaneous',
     description: '', higherLevels: '', concentration: false,
