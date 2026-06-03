@@ -7,7 +7,7 @@ import { Pips } from '@/components/Pips';
 import { SourceTag } from '@/components/SourceTag';
 import { KeywordText } from '@/components/KeywordText';
 import { evalFormula, activeTierValue, type Derived } from '@/lib/rules';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
 import { LibraryPicker } from '@/components/LibraryPicker';
