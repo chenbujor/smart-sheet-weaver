@@ -14,7 +14,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { abilityMod, maxPreparedSpells } from '@/lib/rules';
-import type { AbilityKey, SourceType, SpellEntry } from '@/lib/types';
+import type { AbilityKey, SourceType, SpellEntry, SpellSchool } from '@/lib/types';
 import { ABILITY_KEYS, SPELL_SCHOOLS } from '@/lib/types';
 
 
@@ -431,7 +431,15 @@ const AddSpellDialog = ({ characterId, onAdd }: { characterId: string; onAdd: (s
             <div className="grid grid-cols-2 gap-2">
               <Input type="number" min={0} max={9} placeholder="Level (0=cantrip)" value={custom.level}
                 onChange={(e) => setCustom({ ...custom, level: parseInt(e.target.value || '0', 10) })} />
-              <Input placeholder="School" value={custom.school} onChange={(e) => setCustom({ ...custom, school: e.target.value })} />
+              <select
+                value={custom.school}
+                onChange={(e) => setCustom({ ...custom, school: e.target.value as SpellSchool })}
+                className="w-full rounded-sm border border-ink/40 bg-parchment-light px-2 py-[0.42rem] text-sm text-ink"
+              >
+                {SPELL_SCHOOLS.map((sch) => (
+                  <option key={sch} value={sch}>{sch}</option>
+                ))}
+              </select>
               <Input placeholder="Casting Time" value={custom.castingTime} onChange={(e) => setCustom({ ...custom, castingTime: e.target.value })} />
               <Input placeholder="Range" value={custom.range} onChange={(e) => setCustom({ ...custom, range: e.target.value })} />
               <Input placeholder="Components" value={custom.components} onChange={(e) => setCustom({ ...custom, components: e.target.value })} />
