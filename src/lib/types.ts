@@ -51,6 +51,10 @@ export interface CharacterFeature {
   alwaysPrepared?: boolean;   // for spells from species/feats
   level?: number;             // gain level (for class/subclass features)
   grants?: Grant[];           // automatic effects (actions/spells/bonuses) when this feature is on the character
+  /** True when this feature was auto-injected from the class library based on level. */
+  auto?: boolean;
+  /** Stable origin key for auto features, e.g. `class:<classId>:<libraryFeatureId>`. */
+  sourceRef?: string;
 }
 
 export interface SpellEntry {
