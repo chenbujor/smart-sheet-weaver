@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, Fragment, type ReactNode } from 'react';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
@@ -6,27 +6,63 @@ import { useAppStore } from '@/lib/store';
 import { buildGlossaryMap, lookupTerm, type GlossaryEntry } from '@/lib/glossary';
 
 /**
- * Tokenize text into plain spans, highlighting glossary terms with a styled
- * span (non-interactive). Returns both the rendered nodes and the unique set
- * of nested entries discovered (excluding `excludeId`).
+ * Split text into segments separated by *...* bold markers.
+ * Single asterisks with no closing pair are treated as literal text.
  */
-const tokenizeWithNested = (
+const splitBoldSegments = (text: string): { bold: boolean; text: string }[] => {
+  const out: { bold: boolean; text: string }[] = [];
+  const re = /\*([^*\n]+)\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push({ bold: false, text: text.slice(last, m.index) });
+    out.push({ bold: true, text: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ bold: false, text: text.slice(last) });
+  return out;
+};
+
+/**
+ * Render text into nodes: tokenize words for glossary highlighting, while
+ * honoring *bold* segments. When `interactive` is true, glossary terms become
+ * interactive Keyword buttons; otherwise they're styled inline spans and
+ * collected into `nested` for side-card rendering.
+ */
+const renderText = (
   text: string,
   map: Map<string, GlossaryEntry>,
-  excludeId: string | undefined,
-) => {
-  const tokens = text.split(/(\b[A-Za-z][A-Za-z'-]*\b)/g);
-  const nested = new Map<string, GlossaryEntry>();
-  const nodes = tokens.map((tok, i) => {
-    if (!tok) return null;
-    const entry = lookupTerm(map, tok);
-    if (entry && entry.id !== excludeId) {
-      if (!nested.has(entry.id)) nested.set(entry.id, entry);
-      return <span key={i} className="keyword-inline">{tok}</span>;
+  opts: {
+    excludeId?: string;
+    interactive: boolean;
+    nested?: Map<string, GlossaryEntry>;
+    keyPrefix?: string;
+  },
+): ReactNode[] => {
+  const segments = splitBoldSegments(text);
+  const nodes: ReactNode[] = [];
+  segments.forEach((seg, si) => {
+    const tokens = seg.text.split(/(\b[A-Za-z][A-Za-z'-]*\b)/g);
+    const inner: ReactNode[] = tokens.map((tok, i) => {
+      if (!tok) return null;
+      const entry = lookupTerm(map, tok);
+      const key = `${opts.keyPrefix ?? ''}${si}-${i}`;
+      if (entry && entry.id !== opts.excludeId) {
+        if (opts.interactive) {
+          return <Keyword key={key} token={tok} entry={entry} map={map} />;
+        }
+        if (opts.nested && !opts.nested.has(entry.id)) opts.nested.set(entry.id, entry);
+        return <span key={key} className="keyword-inline">{tok}</span>;
+      }
+      return <span key={key}>{tok}</span>;
+    });
+    if (seg.bold) {
+      nodes.push(<strong key={`b-${si}`} className="font-semibold text-ink">{inner}</strong>);
+    } else {
+      nodes.push(<Fragment key={`f-${si}`}>{inner}</Fragment>);
     }
-    return <span key={i}>{tok}</span>;
   });
-  return { nodes, nested: Array.from(nested.values()) };
+  return nodes;
 };
 
 /**
@@ -47,10 +83,15 @@ const Keyword = ({
   const [hovering, setHovering] = useState(false);
   const visible = open || hovering;
 
-  const { nodes, nested } = useMemo(
-    () => tokenizeWithNested(entry.description, map, entry.id),
-    [entry, map],
-  );
+  const { nodes, nested } = useMemo(() => {
+    const nestedMap = new Map<string, GlossaryEntry>();
+    const ns = renderText(entry.description, map, {
+      excludeId: entry.id,
+      interactive: false,
+      nested: nestedMap,
+    });
+    return { nodes: ns, nested: Array.from(nestedMap.values()) };
+  }, [entry, map]);
 
   return (
     <Popover open={visible} onOpenChange={(o) => { if (!o) { setOpen(false); setHovering(false); } }}>
@@ -90,7 +131,7 @@ const Keyword = ({
                 <div className="font-display text-base text-oxblood-deep">{sub.name}</div>
                 <div className="ink-divider my-2" />
                 <p className="text-sm text-ink-faded whitespace-pre-wrap leading-relaxed">
-                  {sub.description}
+                  {renderText(sub.description, map, { interactive: false })}
                 </p>
               </div>
             ))}
@@ -108,17 +149,9 @@ export const KeywordText = ({ text }: { text: string }) => {
 
   if (!text) return null;
 
-  const tokens = text.split(/(\b[A-Za-z][A-Za-z'-]*\b)/g);
   return (
     <span className="leading-relaxed whitespace-pre-wrap">
-      {tokens.map((tok, i) => {
-        if (!tok) return null;
-        const entry = lookupTerm(map, tok);
-        if (entry) {
-          return <Keyword key={i} token={tok} entry={entry} map={map} />;
-        }
-        return <span key={i}>{tok}</span>;
-      })}
+      {renderText(text, map, { interactive: true })}
     </span>
   );
 };
