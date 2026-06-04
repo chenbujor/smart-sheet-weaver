@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { abilityMod, maxPreparedSpells } from '@/lib/rules';
-import type { AbilityKey, SourceType, SpellEntry, SpellSchool } from '@/lib/types';
+import { abilityMod, maxPreparedSpells, evalFormula } from '@/lib/rules';
+import type { AbilityKey, SourceType, SpellEntry, SpellSchool, GrantUses } from '@/lib/types';
 import { ABILITY_KEYS, SPELL_SCHOOLS } from '@/lib/types';
+import type { GrantSourceRef } from '@/lib/grants';
+import { Pips } from '@/components/Pips';
 
 
 const SOURCE_OPTIONS: { value: SourceType; label: string }[] = [
