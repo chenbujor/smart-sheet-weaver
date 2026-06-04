@@ -290,6 +290,26 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                         </button>
                       )}
                     </div>
+                    {granted && (() => {
+                      const gu = (sp as any).grantUses as GrantUses | undefined;
+                      const ref = (sp as any).grantRef as GrantSourceRef | undefined;
+                      const max = gu?.formula
+                        ? evalFormula(gu.formula, { pb: d.pb, level: c.level, abilities: c.abilities })
+                        : 0;
+                      if (!max || !ref) return null;
+                      return (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Pips
+                            total={max}
+                            used={Math.min(max, gu?.used ?? 0)}
+                            onChange={(u) => setGrantUsed(c.id, ref, u)}
+                          />
+                          {gu?.reset && gu.reset !== 'none' && (
+                            <span className="text-[0.6rem] uppercase tracking-wider text-ink-faded">{gu.reset} rest</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p className="mt-1.5 text-[0.85rem] text-ink leading-snug"><KeywordText text={sp.description} /></p>
                     {sp.cantripScaling && (
                       <p className="mt-1 text-[0.72rem] italic text-oxblood-deep leading-snug">
