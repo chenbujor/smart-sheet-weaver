@@ -4,8 +4,9 @@
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Wand2, Swords, Sparkles } from 'lucide-react';
-import { ABILITY_KEYS, type Grant, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime } from '@/lib/types';
+import { Plus, Trash2, Wand2, Swords, Sparkles, Zap } from 'lucide-react';
+import { ABILITY_KEYS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType } from '@/lib/types';
+import { useState } from 'react';
 import { SKILLS } from '@/lib/rules';
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
