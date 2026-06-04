@@ -2,14 +2,21 @@
 // applied automatically to the character.
 
 import type {
-  Character, Library, CharacterAction, SpellEntry, Grant, AbilityKey,
+  Character, Library, CharacterAction, SpellEntry, Grant, AbilityKey, GrantUses,
 } from './types';
 
 type BonusDelta = NonNullable<Character['bonuses']>;
 
+/** Identifies where on the character a grant lives, so UI can mutate its `uses.used`. */
+export interface GrantSourceRef {
+  kind: 'feature' | 'item';
+  sourceId: string;   // feature.id or item.id on the character
+  grantId: string;    // grant.id within that feature/item
+}
+
 export interface ResolvedGrants {
-  actions: (CharacterAction & { grantedBy: string })[];
-  spells:  (SpellEntry & { grantedBy: string })[];
+  actions: (CharacterAction & { grantedBy: string; grantUses?: GrantUses; grantRef?: GrantSourceRef })[];
+  spells:  (SpellEntry & { grantedBy: string; grantUses?: GrantUses; grantRef?: GrantSourceRef })[];
   bonusDelta: BonusDelta;
   // For the BonusesPanel: how much did each bonus slot get from grants?
   contributions: {
@@ -35,11 +42,12 @@ const addToScalar = (b: BonusDelta, key: keyof BonusDelta, v: number) => {
 
 const applyGrants = (
   grants: Grant[],
-  source: { id: string; name: string },
+  source: { id: string; name: string; kind: 'feature' | 'item' },
   lib: Library,
   out: ResolvedGrants,
 ) => {
   for (const g of grants) {
+    const ref: GrantSourceRef = { kind: source.kind, sourceId: source.id, grantId: g.id };
     if (g.kind === 'action') {
       const tmpl = lib.actions.find((a) => a.id === g.libraryActionId);
       if (!tmpl) continue;
@@ -47,12 +55,16 @@ const applyGrants = (
         ...tmpl,
         id: `granted:${source.id}:${g.id}`,
         grantedBy: source.name,
+        grantUses: g.uses,
+        grantRef: ref,
       } as any);
     } else if (g.kind === 'inline-action') {
       out.actions.push({
         ...g.action,
         id: `granted:${source.id}:${g.id}`,
         grantedBy: source.name,
+        grantUses: g.uses,
+        grantRef: ref,
       } as any);
     } else if (g.kind === 'spell') {
       const tmpl = lib.spells.find((s) => s.id === g.librarySpellId);
@@ -62,6 +74,8 @@ const applyGrants = (
         id: `granted:${source.id}:${g.id}`,
         alwaysPrepared: g.alwaysPrepared ?? true,
         grantedBy: source.name,
+        grantUses: g.uses,
+        grantRef: ref,
       } as any);
     } else if (g.kind === 'bonus') {
       const t = g.target;
@@ -93,7 +107,7 @@ export const resolveGrants = (c: Character, lib: Library): ResolvedGrants => {
   // Features always grant
   for (const f of c.features ?? []) {
     if (!f.grants?.length) continue;
-    applyGrants(f.grants, { id: f.id, name: f.name }, lib, out);
+    applyGrants(f.grants, { id: f.id, name: f.name, kind: 'feature' }, lib, out);
   }
 
   // Items only grant when equipped (and attuned, if attunable)
@@ -101,7 +115,7 @@ export const resolveGrants = (c: Character, lib: Library): ResolvedGrants => {
     if (!it.grants?.length) continue;
     if (!it.equipped) continue;
     if (it.attunable && !it.attuned) continue;
-    applyGrants(it.grants, { id: it.id, name: it.name }, lib, out);
+    applyGrants(it.grants, { id: it.id, name: it.name, kind: 'item' }, lib, out);
   }
 
   return out;

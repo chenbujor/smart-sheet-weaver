@@ -4,8 +4,9 @@
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Wand2, Swords, Sparkles } from 'lucide-react';
-import { ABILITY_KEYS, type Grant, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime } from '@/lib/types';
+import { Plus, Trash2, Wand2, Swords, Sparkles, Zap } from 'lucide-react';
+import { ABILITY_KEYS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType } from '@/lib/types';
+import { useState } from 'react';
 import { SKILLS } from '@/lib/rules';
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -74,6 +75,12 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
       ) : (
         <div className="space-y-1.5">
           {list.map((g) => {
+            const chargesEditor = (
+              <ChargesEditor
+                uses={g.uses}
+                onChange={(uses) => update(g.id, { uses } as Partial<Grant>)}
+              />
+            );
             if (g.kind === 'inline-action') {
               return (
                 <div key={g.id} className="rounded-sm bg-parchment-light p-1.5 text-xs space-y-1.5">
@@ -98,50 +105,54 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                     action={g.action}
                     onChange={(action) => update(g.id, { action } as Partial<Grant>)}
                   />
+                  {chargesEditor}
                 </div>
               );
             }
             return (
-              <div key={g.id} className="flex items-center gap-2 rounded-sm bg-parchment-light p-1.5 text-xs">
-                {g.kind === 'spell' && (
-                  <>
-                    <Wand2 className="h-3 w-3 text-ink-faded flex-shrink-0" />
-                    <span className="text-ink-faded">Spell</span>
-                    <select
-                      value={g.librarySpellId}
-                      onChange={(e) => update(g.id, { librarySpellId: e.target.value } as Partial<Grant>)}
-                      className="flex-1 rounded-sm border border-ink/30 bg-parchment px-1 py-0.5"
-                    >
-                      {librarySpells.map((sp) => (
-                        <option key={sp.id} value={sp.id}>{sp.name} {sp.level === 0 ? '(C)' : `L${sp.level}`}</option>
-                      ))}
-                    </select>
-                    <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
-                      <input
-                        type="checkbox"
-                        checked={g.alwaysPrepared ?? true}
-                        onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
-                        className="accent-oxblood"
-                      />
-                      Always prepared
-                    </label>
-                  </>
-                )}
-                {g.kind === 'bonus' && (
-                  <BonusGrantRow
-                    target={g.target}
-                    value={g.value}
-                    onTarget={(t) => update(g.id, { target: t } as Partial<Grant>)}
-                    onValue={(v) => update(g.id, { value: v } as Partial<Grant>)}
-                  />
-                )}
-                <button
-                  onClick={() => remove(g.id)}
-                  className="rounded p-0.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10 flex-shrink-0"
-                  aria-label="Remove grant"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+              <div key={g.id} className="rounded-sm bg-parchment-light p-1.5 text-xs space-y-1.5">
+                <div className="flex items-center gap-2">
+                  {g.kind === 'spell' && (
+                    <>
+                      <Wand2 className="h-3 w-3 text-ink-faded flex-shrink-0" />
+                      <span className="text-ink-faded">Spell</span>
+                      <select
+                        value={g.librarySpellId}
+                        onChange={(e) => update(g.id, { librarySpellId: e.target.value } as Partial<Grant>)}
+                        className="flex-1 rounded-sm border border-ink/30 bg-parchment px-1 py-0.5"
+                      >
+                        {librarySpells.map((sp) => (
+                          <option key={sp.id} value={sp.id}>{sp.name} {sp.level === 0 ? '(C)' : `L${sp.level}`}</option>
+                        ))}
+                      </select>
+                      <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
+                        <input
+                          type="checkbox"
+                          checked={g.alwaysPrepared ?? true}
+                          onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
+                          className="accent-oxblood"
+                        />
+                        Always prepared
+                      </label>
+                    </>
+                  )}
+                  {g.kind === 'bonus' && (
+                    <BonusGrantRow
+                      target={g.target}
+                      value={g.value}
+                      onTarget={(t) => update(g.id, { target: t } as Partial<Grant>)}
+                      onValue={(v) => update(g.id, { value: v } as Partial<Grant>)}
+                    />
+                  )}
+                  <button
+                    onClick={() => remove(g.id)}
+                    className="rounded p-0.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10 flex-shrink-0"
+                    aria-label="Remove grant"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+                {chargesEditor}
               </div>
             );
           })}
@@ -344,6 +355,83 @@ const InlineActionEditor = ({
         className="h-7 px-2 text-xs"
         placeholder="Description / notes"
       />
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Charges editor — per-grant usage counter with optional recharge rule
+// ---------------------------------------------------------------------------
+
+const RESETS: ResetType[] = ['none', 'short', 'long', 'dawn'];
+
+const ChargesEditor = ({
+  uses,
+  onChange,
+}: {
+  uses: GrantUses | undefined;
+  onChange: (next: GrantUses | undefined) => void;
+}) => {
+  const [open, setOpen] = useState(!!uses?.formula);
+  const enabled = open || !!uses?.formula;
+  const u = uses ?? {};
+
+  if (!enabled) {
+    return (
+      <button
+        onClick={() => { setOpen(true); onChange({ formula: '1', reset: 'long' }); }}
+        className="flex items-center gap-1 text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+        type="button"
+      >
+        <Zap className="h-3 w-3" /> Add charges
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-sm border border-ink/15 bg-parchment/60 p-1.5">
+      <div className="flex items-center gap-1.5 mb-1">
+        <Zap className="h-3 w-3 text-ink-faded" />
+        <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Charges</span>
+        <button
+          type="button"
+          onClick={() => { setOpen(false); onChange(undefined); }}
+          className="ml-auto text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+        >
+          remove
+        </button>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Max
+          <Input
+            value={u.formula ?? ''}
+            onChange={(e) => onChange({ ...u, formula: e.target.value })}
+            placeholder="3, PB, 1+CHA"
+            className="mt-0.5 h-6 px-1.5 font-mono"
+          />
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Reset
+          <select
+            value={u.reset ?? 'none'}
+            onChange={(e) => onChange({ ...u, reset: e.target.value as ResetType })}
+            className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1"
+          >
+            {RESETS.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </label>
+        {u.reset && u.reset !== 'none' && (
+          <label className="flex flex-col text-[0.65rem] text-ink-faded">
+            Recharge
+            <Input
+              value={u.rechargeFormula ?? ''}
+              onChange={(e) => onChange({ ...u, rechargeFormula: e.target.value })}
+              placeholder="all, 1, 1d4"
+              className="mt-0.5 h-6 px-1.5 font-mono"
+            />
+          </label>
+        )}
+      </div>
     </div>
   );
 };

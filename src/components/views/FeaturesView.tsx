@@ -48,12 +48,21 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
       existing.filter((f) => f.auto && f.sourceRef).map((f) => [f.sourceRef!, f]),
     );
 
-    // Build the new auto list: refresh from library, preserve `used`.
+    // Build the new auto list: refresh from library, preserve `used` (feature + per-grant).
     const autoNext = expected.map((libF) => {
       const ref = `class:${c.classId}:${libF.id}`;
       const prev = existingAutoByRef.get(ref);
+      const prevGrantUsed = new Map(
+        (prev?.grants ?? []).map((g) => [g.id, g.uses?.used ?? 0]),
+      );
+      const grants = libF.grants?.map((g) =>
+        g.uses
+          ? ({ ...g, uses: { ...g.uses, used: prevGrantUsed.get(g.id) ?? g.uses.used ?? 0 } } as typeof g)
+          : g,
+      );
       return {
         ...libF,
+        grants,
         id: prev?.id ?? `auto-${ref}`,
         source: 'class' as const,
         sourceLabel: libF.sourceLabel ?? cls?.name,

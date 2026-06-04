@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { abilityMod, maxPreparedSpells } from '@/lib/rules';
-import type { AbilityKey, SourceType, SpellEntry, SpellSchool } from '@/lib/types';
+import { abilityMod, maxPreparedSpells, evalFormula } from '@/lib/rules';
+import type { AbilityKey, SourceType, SpellEntry, SpellSchool, GrantUses } from '@/lib/types';
 import { ABILITY_KEYS, SPELL_SCHOOLS } from '@/lib/types';
+import type { GrantSourceRef } from '@/lib/grants';
+import { Pips } from '@/components/Pips';
 
 
 const SOURCE_OPTIONS: { value: SourceType; label: string }[] = [
@@ -90,6 +92,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const addSpell = useAppStore((s) => s.addSpell);
   const removeSpell = useAppStore((s) => s.removeSpell);
   const updateSpell = useAppStore((s) => s.updateSpell);
+  const setGrantUsed = useAppStore((s) => s.setGrantUsed);
   const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
   const libraryClasses = useAppStore((s) => s.library.classes) ?? [];
   const librarySpells = useAppStore((s) => s.library.spells) ?? [];
@@ -287,6 +290,26 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
                         </button>
                       )}
                     </div>
+                    {granted && (() => {
+                      const gu = (sp as any).grantUses as GrantUses | undefined;
+                      const ref = (sp as any).grantRef as GrantSourceRef | undefined;
+                      const max = gu?.formula
+                        ? evalFormula(gu.formula, { pb: d.pb, level: c.level, abilities: c.abilities })
+                        : 0;
+                      if (!max || !ref) return null;
+                      return (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Pips
+                            total={max}
+                            used={Math.min(max, gu?.used ?? 0)}
+                            onChange={(u) => setGrantUsed(c.id, ref, u)}
+                          />
+                          {gu?.reset && gu.reset !== 'none' && (
+                            <span className="text-[0.6rem] uppercase tracking-wider text-ink-faded">{gu.reset} rest</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p className="mt-1.5 text-[0.85rem] text-ink leading-snug"><KeywordText text={sp.description} /></p>
                     {sp.cantripScaling && (
                       <p className="mt-1 text-[0.72rem] italic text-oxblood-deep leading-snug">
