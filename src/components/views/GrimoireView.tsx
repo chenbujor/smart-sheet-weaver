@@ -92,6 +92,7 @@ export const GrimoireView = ({ character: c, derived: d }: Props) => {
   const addSpell = useAppStore((s) => s.addSpell);
   const removeSpell = useAppStore((s) => s.removeSpell);
   const updateSpell = useAppStore((s) => s.updateSpell);
+  const setGrantUsed = useAppStore((s) => s.setGrantUsed);
   const copyFromLibrary = useAppStore((s) => s.copyFromLibrary);
   const libraryClasses = useAppStore((s) => s.library.classes) ?? [];
   const librarySpells = useAppStore((s) => s.library.spells) ?? [];
