@@ -617,13 +617,27 @@ export const useAppStore = create<AppState>()(
           const cur = s.characters[id];
           if (!cur) return s;
           const ctx = { pb: 2 + Math.floor((Math.max(1, cur.level) - 1) / 4), level: cur.level, abilities: cur.abilities };
+          const matches = (reset: string | undefined, event: 'short' | 'long') =>
+            reset === event || (event === 'long' && reset === 'short');
           const rechargeOn = (entity: { usesFormula?: string; reset?: string; used?: number; rechargeFormula?: string }, event: 'short' | 'long') => {
-            if (entity.reset !== event && !(event === 'long' && entity.reset === 'short')) return entity;
+            if (!matches(entity.reset, event)) return entity;
             const max = entity.usesFormula ? evalFormula(entity.usesFormula, ctx) : 0;
             if (max <= 0) return { ...entity, used: 0 };
             const restore = computeRecharge(entity.rechargeFormula, max, ctx);
             const used = Math.max(0, Math.min(max, (entity.used ?? 0) - restore));
             return { ...entity, used };
+          };
+          const rechargeGrants = (grants: NonNullable<CharacterFeature['grants']> | undefined, event: 'short' | 'long') => {
+            if (!grants?.length) return grants;
+            return grants.map((g) => {
+              const u = g.uses;
+              if (!u || !matches(u.reset, event)) return g;
+              const max = u.formula ? evalFormula(u.formula, ctx) : 0;
+              if (max <= 0) return { ...g, uses: { ...u, used: 0 } } as typeof g;
+              const restore = computeRecharge(u.rechargeFormula, max, ctx);
+              const used = Math.max(0, Math.min(max, (u.used ?? 0) - restore));
+              return { ...g, uses: { ...u, used } } as typeof g;
+            });
           };
           const newHpCurrent = Math.min(
             (cur.hpMaxOverride ?? Number.MAX_SAFE_INTEGER),
@@ -636,8 +650,14 @@ export const useAppStore = create<AppState>()(
                 ...cur,
                 hpCurrent: newHpCurrent,
                 hitDiceUsed: Math.min(cur.level, cur.hitDiceUsed + count),
-                features: cur.features.map((f) => rechargeOn(f, 'short') as typeof f),
-                inventory: cur.inventory.map((i) => rechargeOn(i, 'short') as typeof i),
+                features: cur.features.map((f) => {
+                  const r = rechargeOn(f, 'short') as typeof f;
+                  return { ...r, grants: rechargeGrants(f.grants, 'short') };
+                }),
+                inventory: cur.inventory.map((i) => {
+                  const r = rechargeOn(i, 'short') as typeof i;
+                  return { ...r, grants: rechargeGrants(i.grants, 'short') };
+                }),
                 pactSlotsUsed: 0,
               }),
             },
@@ -660,6 +680,18 @@ export const useAppStore = create<AppState>()(
             const used = Math.max(0, Math.min(m, (entity.used ?? 0) - restore));
             return { ...entity, used };
           };
+          const rechargeGrantsLong = (grants: NonNullable<CharacterFeature['grants']> | undefined) => {
+            if (!grants?.length) return grants;
+            return grants.map((g) => {
+              const u = g.uses;
+              if (!u || (u.reset !== 'short' && u.reset !== 'long')) return g;
+              const m = u.formula ? evalFormula(u.formula, ctx) : 0;
+              if (m <= 0) return { ...g, uses: { ...u, used: 0 } } as typeof g;
+              const restore = computeRecharge(u.rechargeFormula, m, ctx);
+              const used = Math.max(0, Math.min(m, (u.used ?? 0) - restore));
+              return { ...g, uses: { ...u, used } } as typeof g;
+            });
+          };
           return {
             characters: {
               ...s.characters,
@@ -671,8 +703,14 @@ export const useAppStore = create<AppState>()(
                 spellSlotsUsed: {},
                 pactSlotsUsed: 0,
                 exhaustion: Math.max(0, cur.exhaustion - 1),
-                features: cur.features.map((f) => rechargeOnLong(f) as typeof f),
-                inventory: cur.inventory.map((i) => rechargeOnLong(i) as typeof i),
+                features: cur.features.map((f) => {
+                  const r = rechargeOnLong(f) as typeof f;
+                  return { ...r, grants: rechargeGrantsLong(f.grants) };
+                }),
+                inventory: cur.inventory.map((i) => {
+                  const r = rechargeOnLong(i) as typeof i;
+                  return { ...r, grants: rechargeGrantsLong(i.grants) };
+                }),
                 concentration: { active: false },
                 deathSaves: { successes: 0, failures: 0 },
               }),
