@@ -27,6 +27,7 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
   const removeInventory = useAppStore((s) => s.removeInventory);
   const updateInventory = useAppStore((s) => s.updateInventory);
   const setItemUsed = useAppStore((s) => s.setItemUsed);
+  const setGrantUsed = useAppStore((s) => s.setGrantUsed);
   const addAction = useAppStore((s) => s.addAction);
   const removeAction = useAppStore((s) => s.removeAction);
   const updateAction = useAppStore((s) => s.updateAction);
