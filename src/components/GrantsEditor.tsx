@@ -75,6 +75,12 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
       ) : (
         <div className="space-y-1.5">
           {list.map((g) => {
+            const chargesEditor = (
+              <ChargesEditor
+                uses={g.uses}
+                onChange={(uses) => update(g.id, { uses } as Partial<Grant>)}
+              />
+            );
             if (g.kind === 'inline-action') {
               return (
                 <div key={g.id} className="rounded-sm bg-parchment-light p-1.5 text-xs space-y-1.5">
@@ -99,50 +105,54 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                     action={g.action}
                     onChange={(action) => update(g.id, { action } as Partial<Grant>)}
                   />
+                  {chargesEditor}
                 </div>
               );
             }
             return (
-              <div key={g.id} className="flex items-center gap-2 rounded-sm bg-parchment-light p-1.5 text-xs">
-                {g.kind === 'spell' && (
-                  <>
-                    <Wand2 className="h-3 w-3 text-ink-faded flex-shrink-0" />
-                    <span className="text-ink-faded">Spell</span>
-                    <select
-                      value={g.librarySpellId}
-                      onChange={(e) => update(g.id, { librarySpellId: e.target.value } as Partial<Grant>)}
-                      className="flex-1 rounded-sm border border-ink/30 bg-parchment px-1 py-0.5"
-                    >
-                      {librarySpells.map((sp) => (
-                        <option key={sp.id} value={sp.id}>{sp.name} {sp.level === 0 ? '(C)' : `L${sp.level}`}</option>
-                      ))}
-                    </select>
-                    <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
-                      <input
-                        type="checkbox"
-                        checked={g.alwaysPrepared ?? true}
-                        onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
-                        className="accent-oxblood"
-                      />
-                      Always prepared
-                    </label>
-                  </>
-                )}
-                {g.kind === 'bonus' && (
-                  <BonusGrantRow
-                    target={g.target}
-                    value={g.value}
-                    onTarget={(t) => update(g.id, { target: t } as Partial<Grant>)}
-                    onValue={(v) => update(g.id, { value: v } as Partial<Grant>)}
-                  />
-                )}
-                <button
-                  onClick={() => remove(g.id)}
-                  className="rounded p-0.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10 flex-shrink-0"
-                  aria-label="Remove grant"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+              <div key={g.id} className="rounded-sm bg-parchment-light p-1.5 text-xs space-y-1.5">
+                <div className="flex items-center gap-2">
+                  {g.kind === 'spell' && (
+                    <>
+                      <Wand2 className="h-3 w-3 text-ink-faded flex-shrink-0" />
+                      <span className="text-ink-faded">Spell</span>
+                      <select
+                        value={g.librarySpellId}
+                        onChange={(e) => update(g.id, { librarySpellId: e.target.value } as Partial<Grant>)}
+                        className="flex-1 rounded-sm border border-ink/30 bg-parchment px-1 py-0.5"
+                      >
+                        {librarySpells.map((sp) => (
+                          <option key={sp.id} value={sp.id}>{sp.name} {sp.level === 0 ? '(C)' : `L${sp.level}`}</option>
+                        ))}
+                      </select>
+                      <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
+                        <input
+                          type="checkbox"
+                          checked={g.alwaysPrepared ?? true}
+                          onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
+                          className="accent-oxblood"
+                        />
+                        Always prepared
+                      </label>
+                    </>
+                  )}
+                  {g.kind === 'bonus' && (
+                    <BonusGrantRow
+                      target={g.target}
+                      value={g.value}
+                      onTarget={(t) => update(g.id, { target: t } as Partial<Grant>)}
+                      onValue={(v) => update(g.id, { value: v } as Partial<Grant>)}
+                    />
+                  )}
+                  <button
+                    onClick={() => remove(g.id)}
+                    className="rounded p-0.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10 flex-shrink-0"
+                    aria-label="Remove grant"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+                {chargesEditor}
               </div>
             );
           })}
