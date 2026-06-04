@@ -358,3 +358,80 @@ const InlineActionEditor = ({
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Charges editor — per-grant usage counter with optional recharge rule
+// ---------------------------------------------------------------------------
+
+const RESETS: ResetType[] = ['none', 'short', 'long', 'dawn'];
+
+const ChargesEditor = ({
+  uses,
+  onChange,
+}: {
+  uses: GrantUses | undefined;
+  onChange: (next: GrantUses | undefined) => void;
+}) => {
+  const [open, setOpen] = useState(!!uses?.formula);
+  const enabled = open || !!uses?.formula;
+  const u = uses ?? {};
+
+  if (!enabled) {
+    return (
+      <button
+        onClick={() => { setOpen(true); onChange({ formula: '1', reset: 'long' }); }}
+        className="flex items-center gap-1 text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+        type="button"
+      >
+        <Zap className="h-3 w-3" /> Add charges
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-sm border border-ink/15 bg-parchment/60 p-1.5">
+      <div className="flex items-center gap-1.5 mb-1">
+        <Zap className="h-3 w-3 text-ink-faded" />
+        <span className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Charges</span>
+        <button
+          type="button"
+          onClick={() => { setOpen(false); onChange(undefined); }}
+          className="ml-auto text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+        >
+          remove
+        </button>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Max
+          <Input
+            value={u.formula ?? ''}
+            onChange={(e) => onChange({ ...u, formula: e.target.value })}
+            placeholder="3, PB, 1+CHA"
+            className="mt-0.5 h-6 px-1.5 font-mono"
+          />
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Reset
+          <select
+            value={u.reset ?? 'none'}
+            onChange={(e) => onChange({ ...u, reset: e.target.value as ResetType })}
+            className="mt-0.5 h-6 rounded-sm border border-ink/30 bg-parchment px-1"
+          >
+            {RESETS.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </label>
+        {u.reset && u.reset !== 'none' && (
+          <label className="flex flex-col text-[0.65rem] text-ink-faded">
+            Recharge
+            <Input
+              value={u.rechargeFormula ?? ''}
+              onChange={(e) => onChange({ ...u, rechargeFormula: e.target.value })}
+              placeholder="all, 1, 1d4"
+              className="mt-0.5 h-6 px-1.5 font-mono"
+            />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+};
