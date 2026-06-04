@@ -173,6 +173,7 @@ interface AppState {
   setPactSlotUsed: (id: string, used: number) => void;
   setFeatureUsed: (id: string, featureId: string, used: number) => void;
   setItemUsed: (id: string, itemId: string, used: number) => void;
+  setGrantUsed: (id: string, source: { kind: 'feature' | 'item'; sourceId: string; grantId: string }, used: number) => void;
   // features / spells / inventory
   addFeature: (id: string, f: Omit<CharacterFeature, 'id'>) => void;
   removeFeature: (id: string, fid: string) => void;
