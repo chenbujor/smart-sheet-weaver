@@ -555,6 +555,11 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
               <div className="grid gap-2 md:grid-cols-2">
                 {grantedActions.map((a) => {
                   const bonus = actionBonus(a as CharacterAction);
+                  const gu = (a as any).grantUses as import('@/lib/types').GrantUses | undefined;
+                  const ref = (a as any).grantRef as import('@/lib/grants').GrantSourceRef | undefined;
+                  const max = gu?.formula
+                    ? evalFormula(gu.formula, { pb: d.pb, level: c.level, abilities: c.abilities })
+                    : 0;
                   return (
                     <div key={a.id} className="stat-block rounded-sm p-2 border-royal/40 bg-royal/5">
                       <div className="flex items-center gap-2">
@@ -568,6 +573,18 @@ export const EquipmentView = ({ character: c, derived: d }: Props) => {
                         {a.range && <span>· {a.range}</span>}
                         <span className="ml-auto font-display text-ink">{bonus.label}: {formatMod(bonus.value)}</span>
                       </div>
+                      {max > 0 && ref && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Pips
+                            total={max}
+                            used={Math.min(max, gu?.used ?? 0)}
+                            onChange={(u) => setGrantUsed(c.id, ref, u)}
+                          />
+                          {gu?.reset && gu.reset !== 'none' && (
+                            <span className="text-[0.6rem] uppercase tracking-wider text-ink-faded">{gu.reset} rest</span>
+                          )}
+                        </div>
+                      )}
                       {a.description && (
                         <p className="mt-1 text-xs text-ink-faded whitespace-pre-wrap">
                           <KeywordText text={a.description} />
