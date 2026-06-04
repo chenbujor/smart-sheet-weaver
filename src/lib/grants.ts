@@ -107,7 +107,7 @@ export const resolveGrants = (c: Character, lib: Library): ResolvedGrants => {
   // Features always grant
   for (const f of c.features ?? []) {
     if (!f.grants?.length) continue;
-    applyGrants(f.grants, { id: f.id, name: f.name }, lib, out);
+    applyGrants(f.grants, { id: f.id, name: f.name, kind: 'feature' }, lib, out);
   }
 
   // Items only grant when equipped (and attuned, if attunable)
@@ -115,7 +115,7 @@ export const resolveGrants = (c: Character, lib: Library): ResolvedGrants => {
     if (!it.grants?.length) continue;
     if (!it.equipped) continue;
     if (it.attunable && !it.attuned) continue;
-    applyGrants(it.grants, { id: it.id, name: it.name }, lib, out);
+    applyGrants(it.grants, { id: it.id, name: it.name, kind: 'item' }, lib, out);
   }
 
   return out;
