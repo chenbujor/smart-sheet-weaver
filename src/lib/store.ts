@@ -350,6 +350,42 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
+      setGrantUsed: (id, { kind, sourceId, grantId }, used) =>
+        set((s) => {
+          const cur = s.characters[id];
+          if (!cur) return s;
+          const patchGrants = (grants: NonNullable<CharacterFeature['grants']>) =>
+            grants.map((g) =>
+              g.id !== grantId
+                ? g
+                : ({ ...g, uses: { ...(g.uses ?? {}), used: Math.max(0, used) } } as typeof g),
+            );
+          if (kind === 'feature') {
+            return {
+              characters: {
+                ...s.characters,
+                [id]: touch({
+                  ...cur,
+                  features: cur.features.map((f) =>
+                    f.id !== sourceId || !f.grants ? f : { ...f, grants: patchGrants(f.grants) },
+                  ),
+                }),
+              },
+            };
+          }
+          return {
+            characters: {
+              ...s.characters,
+              [id]: touch({
+                ...cur,
+                inventory: cur.inventory.map((i) =>
+                  i.id !== sourceId || !i.grants ? i : { ...i, grants: patchGrants(i.grants) },
+                ),
+              }),
+            },
+          };
+        }),
+
       addFeature: (id, f) =>
         set((s) => {
           const cur = s.characters[id];
