@@ -135,11 +135,23 @@ export type BonusTarget =
   | { type: 'skill';   skillId: string }
   | { type: 'scalar';  key: ScalarBonusKey };
 
+/**
+ * Optional charges attached to a grant — independent from the parent
+ * feature/item's own charges. Lets a single feature grant several actions
+ * or spells, each with its own usage counter and recharge rule.
+ */
+export interface GrantUses {
+  formula?: string;           // max charges; number or formula (PB, LEVEL, STR…)
+  reset?: ResetType;
+  rechargeFormula?: string;   // amount restored on reset; blank/"all" = full
+  used?: number;              // current consumed charges
+}
+
 export type Grant =
-  | { id: string; kind: 'action'; libraryActionId: string }
-  | { id: string; kind: 'inline-action'; action: Omit<LibraryAction, 'id'> }
-  | { id: string; kind: 'spell';  librarySpellId: string; alwaysPrepared?: boolean }
-  | { id: string; kind: 'bonus';  target: BonusTarget; value: number };
+  | { id: string; kind: 'action'; libraryActionId: string; uses?: GrantUses }
+  | { id: string; kind: 'inline-action'; action: Omit<LibraryAction, 'id'>; uses?: GrantUses }
+  | { id: string; kind: 'spell';  librarySpellId: string; alwaysPrepared?: boolean; uses?: GrantUses }
+  | { id: string; kind: 'bonus';  target: BonusTarget; value: number; uses?: GrantUses };
 
 export interface Character {
   id: string;
