@@ -280,6 +280,8 @@ export interface SubclassEntry {
   name: string;
   builtin?: boolean;
   features: CharacterFeature[];
+  /** Optional caster override — e.g. a subclass that turns a non-caster into a third-caster. */
+  caster?: CasterType;
 }
 
 export interface ClassEntry {
