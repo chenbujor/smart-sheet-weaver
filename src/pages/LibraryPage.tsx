@@ -1112,12 +1112,23 @@ const ClassesTab = () => {
               <div className="space-y-2">
                 {selected.subclasses.map((sb) => (
                   <div key={sb.id} className="stat-block rounded-sm p-2 space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <SmartInput
                         value={sb.name}
                         onValueChange={(v) => updateSubclass(selected.id, sb.id, { name: v })}
                         className="font-display flex-1"
                       />
+                      <label className="flex items-center gap-1.5 text-xs text-ink-faded">
+                        Caster override
+                        <select
+                          value={sb.caster ?? ''}
+                          onChange={(e) => updateSubclass(selected.id, sb.id, { caster: (e.target.value || undefined) as CasterType | undefined })}
+                          className="rounded-sm border border-ink/40 bg-parchment-light px-2 py-1 text-sm"
+                        >
+                          <option value="">— inherit —</option>
+                          {CASTERS.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </label>
                       <button
                         onClick={() => {
                           if (confirm(`Delete subclass "${sb.name}"?`)) removeSubclass(selected.id, sb.id);
