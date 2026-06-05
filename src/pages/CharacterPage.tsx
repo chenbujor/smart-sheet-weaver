@@ -9,11 +9,12 @@ import { GrimoireView } from '@/components/views/GrimoireView';
 import { ClassicView } from '@/components/views/ClassicView';
 import { EquipmentView } from '@/components/views/EquipmentView';
 import { FeaturesView } from '@/components/views/FeaturesView';
+import { ActionEconomyView } from '@/components/views/ActionEconomyView';
 import { Button } from '@/components/ui/button';
 import { RestControls } from '@/components/RestControls';
 import { cn } from '@/lib/utils';
 
-type ViewKey = 'dashboard' | 'features' | 'equipment' | 'grimoire' | 'classic';
+type ViewKey = 'dashboard' | 'features' | 'equipment' | 'grimoire' | 'actions' | 'classic';
 
 const CharacterPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +41,8 @@ const CharacterPage = () => {
     { key: 'features', label: 'Features' },
     { key: 'equipment', label: 'Equipment' },
     { key: 'grimoire', label: 'Grimoire' },
-    { key: 'classic', label: 'Classic Sheet' },
+    { key: 'actions', label: 'Action Economy' },
+    { key: 'classic', label: 'Everything' },
   ];
 
   return (
@@ -102,6 +104,7 @@ const CharacterPage = () => {
         {view === 'features' && <FeaturesView character={character} derived={derived} />}
         {view === 'equipment' && <EquipmentView character={character} derived={derived} />}
         {view === 'grimoire' && <GrimoireView character={character} derived={derived} />}
+        {view === 'actions' && <ActionEconomyView character={character} derived={derived} />}
         {view === 'classic' && <ClassicView character={character} derived={derived} />}
       </main>
     </div>
