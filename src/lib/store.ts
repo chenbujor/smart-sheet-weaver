@@ -1033,6 +1033,7 @@ export const useAppStore = create<AppState>()(
             subclasses: (c.subclasses ?? []).map((sb: any) => ({
               ...sb,
               features: sb.features ?? [],
+              caster: sb.caster ?? undefined,
             })),
           }));
         }
