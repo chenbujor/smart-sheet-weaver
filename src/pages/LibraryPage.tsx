@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield, Leaf, Scroll } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import type {
   GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
-  ClassEntry, CasterType, Grant,
+  ClassEntry, CasterType, Grant, SpeciesEntry, BackgroundEntry,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
@@ -24,6 +24,8 @@ type TabKeyExt = Exclude<TabKey, 'weapons'>;
 const TABS: { key: TabKeyExt; label: string; icon: any }[] = [
   { key: 'glossary', label: 'Glossary', icon: BookMarked },
   { key: 'classes', label: 'Classes', icon: Shield },
+  { key: 'species', label: 'Species', icon: Leaf },
+  { key: 'backgrounds', label: 'Backgrounds', icon: Scroll },
   { key: 'spells', label: 'Spells', icon: Wand2 },
   { key: 'features', label: 'Features', icon: Sparkles },
   { key: 'items', label: 'Items', icon: Backpack },
@@ -75,6 +77,8 @@ const LibraryPage = () => {
       <main className="container py-6 animate-fade-in">
         {tab === 'glossary' && <GlossaryTab />}
         {tab === 'classes' && <ClassesTab />}
+        {tab === 'species' && <SpeciesTab />}
+        {tab === 'backgrounds' && <BackgroundsTab />}
         {tab === 'spells' && <SpellsTab />}
         {tab === 'features' && <FeaturesTab />}
         
