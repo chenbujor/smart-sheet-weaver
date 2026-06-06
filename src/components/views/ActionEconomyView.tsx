@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 interface Props { character: Character; derived: Derived }
 
 type Slot = 'action' | 'bonus' | 'reaction';
-type SourceKey = 'basic' | 'weapon' | 'spell' | 'class' | 'item' | 'custom';
+type SourceKey = 'basic' | 'weapon' | 'spell' | 'feature' | 'item' | 'custom';
 
 interface Entry {
   key: string;
@@ -28,15 +28,15 @@ const SLOT_META: Record<Slot, { label: string; icon: typeof Swords; tint: string
 };
 
 const SOURCE_META: Record<SourceKey, { label: string }> = {
-  basic:  { label: 'Basic' },
-  weapon: { label: 'Weapons' },
-  spell:  { label: 'Spells' },
-  class:  { label: 'Class' },
-  item:   { label: 'Items' },
-  custom: { label: 'Custom' },
+  basic:   { label: 'Basic' },
+  weapon:  { label: 'Weapons' },
+  spell:   { label: 'Spells' },
+  feature: { label: 'Features' },
+  item:    { label: 'Items' },
+  custom:  { label: 'Custom' },
 };
 
-const ALL_SOURCES: SourceKey[] = ['basic', 'weapon', 'spell', 'class', 'item', 'custom'];
+const ALL_SOURCES: SourceKey[] = ['basic', 'weapon', 'spell', 'feature', 'item', 'custom'];
 
 // Basic actions available to any character (PHB 2024)
 const BASIC_ACTIONS: Record<Slot, { name: string; description: string; meta?: string }[]> = {
@@ -154,7 +154,7 @@ export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
     if (a.range) parts.push(a.range);
     if (a.damageDice) parts.push(`${a.damageDice}${a.damageType ? ' ' + a.damageType : ''}`);
     const refKind = (a as any).grantRef?.kind as 'feature' | 'item' | undefined;
-    const sourceKey: SourceKey = refKind === 'item' ? 'item' : 'class';
+    const sourceKey: SourceKey = refKind === 'item' ? 'item' : 'feature';
     buckets[slot].push({
       key: `granted:${a.id}`,
       name: a.name,
