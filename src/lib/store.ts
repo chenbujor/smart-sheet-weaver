@@ -121,6 +121,8 @@ const emptyLibrary = (): Library => ({
   actions: seedActions(),
   custom: [],
   classes: seedClasses(),
+  species: [],
+  backgrounds: [],
 });
 
 export const newCharacter = (name = 'New Adventurer'): Character => {
@@ -740,6 +742,8 @@ export const useAppStore = create<AppState>()(
                 actions: data.library.actions ?? s.library.actions,
                 custom: data.library.custom ?? s.library.custom,
                 classes: data.library.classes ?? s.library.classes,
+                species: data.library.species ?? s.library.species ?? [],
+                backgrounds: data.library.backgrounds ?? s.library.backgrounds ?? [],
               }
             : s.library,
         })),
@@ -1036,6 +1040,11 @@ export const useAppStore = create<AppState>()(
               caster: sb.caster ?? undefined,
             })),
           }));
+        }
+        // Backfill new library categories
+        if (persisted.library) {
+          if (!Array.isArray(persisted.library.species)) persisted.library.species = [];
+          if (!Array.isArray(persisted.library.backgrounds)) persisted.library.backgrounds = [];
         }
         return persisted;
       },

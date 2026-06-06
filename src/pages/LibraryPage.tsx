@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield, Leaf, Scroll } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, uid } from '@/lib/store';
 import { SmartInput, SmartTextarea } from '@/components/SmartText';
 import { KeywordText } from '@/components/KeywordText';
 import { GrantsEditor } from '@/components/GrantsEditor';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import type {
   GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
-  ClassEntry, CasterType, Grant,
+  ClassEntry, CasterType, Grant, SpeciesEntry, BackgroundEntry,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
@@ -24,6 +24,8 @@ type TabKeyExt = Exclude<TabKey, 'weapons'>;
 const TABS: { key: TabKeyExt; label: string; icon: any }[] = [
   { key: 'glossary', label: 'Glossary', icon: BookMarked },
   { key: 'classes', label: 'Classes', icon: Shield },
+  { key: 'species', label: 'Species', icon: Leaf },
+  { key: 'backgrounds', label: 'Backgrounds', icon: Scroll },
   { key: 'spells', label: 'Spells', icon: Wand2 },
   { key: 'features', label: 'Features', icon: Sparkles },
   { key: 'items', label: 'Items', icon: Backpack },
@@ -75,6 +77,8 @@ const LibraryPage = () => {
       <main className="container py-6 animate-fade-in">
         {tab === 'glossary' && <GlossaryTab />}
         {tab === 'classes' && <ClassesTab />}
+        {tab === 'species' && <SpeciesTab />}
+        {tab === 'backgrounds' && <BackgroundsTab />}
         {tab === 'spells' && <SpellsTab />}
         {tab === 'features' && <FeaturesTab />}
         
@@ -1226,3 +1230,195 @@ const ClassFeaturesSection = ({
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Species / Backgrounds tabs — feature-collection editors
+// ---------------------------------------------------------------------------
+
+const FeatureCollectionTab = <T extends SpeciesEntry | BackgroundEntry>({
+  category, label, placeholder,
+}: { category: 'species' | 'backgrounds'; label: string; placeholder: string }) => {
+  const list = useAppStore((s) => s.library[category] as T[]);
+  const add = useAppStore((s) => s.addLibraryEntry);
+  const update = useAppStore((s) => s.updateLibraryEntry);
+  const remove = useAppStore((s) => s.removeLibraryEntry);
+  const [q, setQ] = useState('');
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () => list.filter((e) => !q || e.name.toLowerCase().includes(q.toLowerCase())),
+    [list, q],
+  );
+
+  const addFeature = (id: string) => {
+    const entry = list.find((e) => e.id === id);
+    if (!entry) return;
+    const f: CharacterFeature = {
+      id: uid(),
+      name: 'New Feature',
+      source: category === 'species' ? 'species' : 'background',
+      sourceLabel: entry.name,
+      description: '',
+      reset: 'none',
+    };
+    update(category, id, { features: [...(entry.features ?? []), f] } as any);
+  };
+
+  const updateFeature = (id: string, fid: string, patch: Partial<CharacterFeature>) => {
+    const entry = list.find((e) => e.id === id);
+    if (!entry) return;
+    update(category, id, { features: (entry.features ?? []).map((f) => f.id === fid ? { ...f, ...patch } : f) } as any);
+  };
+
+  const removeFeatureFn = (id: string, fid: string) => {
+    const entry = list.find((e) => e.id === id);
+    if (!entry) return;
+    update(category, id, { features: (entry.features ?? []).filter((f) => f.id !== fid) } as any);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchBar value={q} onChange={setQ} placeholder={placeholder} />
+        <Button
+          onClick={() => add(category, { name: `New ${label}`, description: '', features: [] } as any)}
+          className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add {label}
+        </Button>
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState message={`No ${label.toLowerCase()} yet.`} />
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((e) => {
+            const open = openId === e.id;
+            return (
+              <div key={e.id} className="parchment-panel rounded-md p-3">
+                <div className="relative z-10 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setOpenId(open ? null : e.id)}
+                      className="font-display text-base text-ink hover:text-oxblood-deep flex-1 text-left"
+                    >
+                      {e.name}
+                      <span className="text-xs italic text-ink-faded ml-2">
+                        {(e.features ?? []).length} feature{(e.features ?? []).length === 1 ? '' : 's'}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Delete ${label.toLowerCase()} "${e.name}"?`)) remove(category, e.id); }}
+                      className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {open && (
+                    <div className="space-y-2 pt-1">
+                      <SmartInput
+                        value={e.name}
+                        onValueChange={(v) => update(category, e.id, { name: v } as any)}
+                        placeholder="Name"
+                      />
+                      <SmartTextarea
+                        value={e.description ?? ''}
+                        onValueChange={(v) => update(category, e.id, { description: v } as any)}
+                        placeholder="Description (use \ to reference glossary)"
+                        rows={2}
+                        className="bg-parchment-light border-ink/30"
+                      />
+                      <div className="ink-divider my-2" />
+                      <FeatureListEditor
+                        features={e.features ?? []}
+                        onAdd={() => addFeature(e.id)}
+                        onUpdate={(fid, patch) => updateFeature(e.id, fid, patch)}
+                        onRemove={(fid) => removeFeatureFn(e.id, fid)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SpeciesTab = () => (
+  <FeatureCollectionTab<SpeciesEntry> category="species" label="Species" placeholder="Search species..." />
+);
+
+const BackgroundsTab = () => (
+  <FeatureCollectionTab<BackgroundEntry> category="backgrounds" label="Background" placeholder="Search backgrounds..." />
+);
+
+// Lightweight feature editor (name + description + uses + grants) reused for
+// species & backgrounds. Mirrors the ClassFeaturesSection but without a level.
+const FeatureListEditor = ({
+  features, onAdd, onUpdate, onRemove,
+}: {
+  features: CharacterFeature[];
+  onAdd: () => void;
+  onUpdate: (fid: string, patch: Partial<CharacterFeature>) => void;
+  onRemove: (fid: string) => void;
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center justify-between">
+      <h4 className="font-display text-sm text-oxblood-deep">Features</h4>
+      <Button size="sm" onClick={onAdd} variant="outline" className="border-ink/40 bg-parchment-light hover:bg-secondary">
+        <Plus className="mr-1 h-3.5 w-3.5" /> Feature
+      </Button>
+    </div>
+    {features.length === 0 ? (
+      <p className="text-xs italic text-ink-faded">No features yet.</p>
+    ) : (
+      <div className="space-y-1.5">
+        {features.map((f) => (
+          <div key={f.id} className="rounded-sm border border-ink/20 bg-parchment-light p-2 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <SmartInput
+                value={f.name}
+                onValueChange={(v) => onUpdate(f.id, { name: v })}
+                className="font-display flex-1"
+              />
+              <Input
+                value={f.usesFormula ?? ''}
+                onChange={(e) => onUpdate(f.id, { usesFormula: e.target.value || undefined })}
+                placeholder="Uses (3, PB)"
+                className="w-28 h-8 font-mono text-xs"
+              />
+              <select
+                value={f.reset ?? 'none'}
+                onChange={(e) => onUpdate(f.id, { reset: e.target.value as ResetType })}
+                className="h-8 rounded-sm border border-ink/40 bg-parchment-light px-1.5 text-xs"
+              >
+                {RESETS.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <button
+                onClick={() => onRemove(f.id)}
+                className="rounded p-1 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                aria-label="Delete feature"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <SmartTextarea
+              value={f.description}
+              onValueChange={(v) => onUpdate(f.id, { description: v })}
+              placeholder="Description"
+              rows={2}
+              className="bg-parchment text-sm border-ink/30"
+            />
+            <GrantsEditor
+              grants={f.grants}
+              onChange={(grants) => onUpdate(f.id, { grants })}
+            />
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
