@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield, Leaf, Scroll } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, uid } from '@/lib/store';
 import { SmartInput, SmartTextarea } from '@/components/SmartText';
 import { KeywordText } from '@/components/KeywordText';
 import { GrantsEditor } from '@/components/GrantsEditor';
