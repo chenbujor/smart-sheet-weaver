@@ -296,6 +296,22 @@ export interface ClassEntry {
   subclasses: SubclassEntry[];
 }
 
+export interface SpeciesEntry {
+  id: string;
+  name: string;
+  description?: string;
+  features: CharacterFeature[];
+  builtin?: boolean;
+}
+
+export interface BackgroundEntry {
+  id: string;
+  name: string;
+  description?: string;
+  features: CharacterFeature[];
+  builtin?: boolean;
+}
+
 export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
@@ -306,6 +322,8 @@ export interface Library {
   actions: LibraryAction[];
   custom: CustomEntry[];
   classes: ClassEntry[];
+  species: SpeciesEntry[];
+  backgrounds: BackgroundEntry[];
 }
 
 export type LibraryCategory = keyof Library;
