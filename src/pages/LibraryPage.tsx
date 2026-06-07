@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield, Leaf, Scroll } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, BookMarked, Sparkles, Backpack, Wand2, ScrollText, Swords, Shield, Leaf, Scroll, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore, uid } from '@/lib/store';
