@@ -85,6 +85,7 @@ const LibraryPage = () => {
         
         {tab === 'items' && <ItemsTab />}
         {tab === 'actions' && <ActionsTab />}
+        {tab === 'basicActions' && <BasicActionsTab />}
         {tab === 'custom' && <CustomTab />}
       </main>
     </div>
