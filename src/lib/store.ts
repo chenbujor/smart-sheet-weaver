@@ -1066,6 +1066,7 @@ export const useAppStore = create<AppState>()(
         if (persisted.library) {
           if (!Array.isArray(persisted.library.species)) persisted.library.species = [];
           if (!Array.isArray(persisted.library.backgrounds)) persisted.library.backgrounds = [];
+          if (!Array.isArray(persisted.library.basicActions)) persisted.library.basicActions = seedBasicActions();
         }
         return persisted;
       },
