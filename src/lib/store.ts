@@ -760,6 +760,7 @@ export const useAppStore = create<AppState>()(
                 features: data.library.features ?? s.library.features,
                 items: data.library.items ?? s.library.items,
                 actions: data.library.actions ?? s.library.actions,
+                basicActions: data.library.basicActions ?? s.library.basicActions ?? seedBasicActions(),
                 custom: data.library.custom ?? s.library.custom,
                 classes: data.library.classes ?? s.library.classes,
                 species: data.library.species ?? s.library.species ?? [],
