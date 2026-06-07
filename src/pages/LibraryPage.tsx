@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import type {
   GlossaryTerm, CustomEntry, SpellEntry, CharacterFeature, InventoryItem,
   AbilityKey, SourceType, ResetType, LibraryCategory, LibraryAction, ActionTime,
-  ClassEntry, CasterType, Grant, SpeciesEntry, BackgroundEntry,
+  ClassEntry, CasterType, Grant, SpeciesEntry, BackgroundEntry, BasicActionEntry,
 } from '@/lib/types';
 import { ABILITY_KEYS } from '@/lib/types';
 import { WEAPON_MASTERIES } from '@/lib/srd';
