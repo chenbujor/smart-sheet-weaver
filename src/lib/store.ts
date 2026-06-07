@@ -105,6 +105,25 @@ const seedActions = (): LibraryAction[] => [
   },
 ];
 
+const seedBasicActions = (): import('./types').BasicActionEntry[] => [
+  { id: 'ba-attack', name: 'Attack', slot: 'action', meta: 'Standard combat action', description: 'Make one melee or ranged attack. Some features (like Extra Attack) let you make more.', builtin: true },
+  { id: 'ba-unarmed', name: 'Unarmed Strike', slot: 'action', meta: 'Melee · 5 ft', description: 'Choose Damage, Grapple, or Shove. Damage: melee attack, 1 + STR bludgeoning. Grapple: target makes STR or DEX save vs your Unarmed Strike DC (8 + STR + PB), on fail it is Grappled. Shove: same save, push 5 ft or knock Prone.', builtin: true },
+  { id: 'ba-dash', name: 'Dash', slot: 'action', description: 'Gain extra movement equal to your Speed for the current turn.', builtin: true },
+  { id: 'ba-disengage', name: 'Disengage', slot: 'action', description: 'Your movement doesn\'t provoke Opportunity Attacks for the rest of the turn.', builtin: true },
+  { id: 'ba-dodge', name: 'Dodge', slot: 'action', description: 'Until the start of your next turn, attack rolls against you have Disadvantage (if you can see the attacker) and you have Advantage on DEX saves. Lost if Incapacitated or Speed 0.', builtin: true },
+  { id: 'ba-help', name: 'Help', slot: 'action', description: 'Aid an ally: give them Advantage on their next ability check (within 5 ft, before your next turn) OR Advantage on the next attack roll against a creature within 5 ft of you.', builtin: true },
+  { id: 'ba-hide', name: 'Hide', slot: 'action', description: 'Make a DEX (Stealth) check while out of any enemy\'s line of sight to gain the Invisible condition.', builtin: true },
+  { id: 'ba-influence', name: 'Influence', slot: 'action', meta: 'Social', description: 'Interact socially to change a creature\'s attitude. The DM may call for a Charisma check (Deception, Intimidation, Performance, or Persuasion) or Wisdom (Animal Handling).', builtin: true },
+  { id: 'ba-magic', name: 'Magic', slot: 'action', description: 'Cast a spell with a casting time of an action, or use a magic feature that requires a Magic action.', builtin: true },
+  { id: 'ba-ready', name: 'Ready', slot: 'action', description: 'Choose a trigger and a prepared action or movement. When the trigger occurs before the start of your next turn, you may use your Reaction to act. Concentration is required.', builtin: true },
+  { id: 'ba-search', name: 'Search', slot: 'action', description: 'Make a Wisdom check (Insight, Medicine, Perception, or Survival) to look for something.', builtin: true },
+  { id: 'ba-study', name: 'Study', slot: 'action', description: 'Make an Intelligence check (Arcana, History, Investigation, Nature, or Religion) to recall lore or analyze.', builtin: true },
+  { id: 'ba-utilize', name: 'Utilize', slot: 'action', description: 'Use a non-magical object, such as drinking a potion you give to another creature or activating a mundane device.', builtin: true },
+  { id: 'ba-twf', name: 'Two-Weapon Fighting (offhand)', slot: 'bonus', description: 'After taking the Attack action with a Light weapon in one hand, use a Bonus Action to attack with a different Light weapon in the other hand. No ability mod on damage unless negative.', builtin: true },
+  { id: 'ba-opp', name: 'Opportunity Attack', slot: 'reaction', description: 'When a creature you can see moves out of your reach, use your Reaction to make one melee attack against it.', builtin: true },
+  { id: 'ba-ready-trig', name: 'Ready (triggered)', slot: 'reaction', description: 'When the trigger from a Ready action occurs, take the prepared action as your Reaction.', builtin: true },
+];
+
 const seedClasses = (): ClassEntry[] =>
   CLASSES.map((c) => ({
     ...c,
@@ -119,6 +138,7 @@ const emptyLibrary = (): Library => ({
   features: [],
   items: [],
   actions: seedActions(),
+  basicActions: seedBasicActions(),
   custom: [],
   classes: seedClasses(),
   species: [],
