@@ -5,6 +5,7 @@ import { abilityMod, formatMod, SKILLS } from '@/lib/rules';
 import { KeywordText } from '@/components/KeywordText';
 import { Swords, Zap, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 interface Props { character: Character; derived: Derived }
 
@@ -38,33 +39,8 @@ const SOURCE_META: Record<SourceKey, { label: string }> = {
 
 const ALL_SOURCES: SourceKey[] = ['basic', 'weapon', 'spell', 'feature', 'item', 'custom'];
 
-// Basic actions available to any character (PHB 2024)
-const BASIC_ACTIONS: Record<Slot, { name: string; description: string; meta?: string }[]> = {
-  action: [
-    { name: 'Attack', description: 'Make one melee or ranged attack. Some features (like Extra Attack) let you make more.', meta: 'Standard combat action' },
-    { name: 'Unarmed Strike', description: 'Choose Damage, Grapple, or Shove. Damage: melee attack, 1 + STR bludgeoning. Grapple: target makes STR or DEX save vs your Unarmed Strike DC (8 + STR + PB), on fail it is Grappled. Shove: same save, push 5 ft or knock Prone.', meta: 'Melee · 5 ft' },
-    { name: 'Dash', description: 'Gain extra movement equal to your Speed for the current turn.' },
-    { name: 'Disengage', description: 'Your movement doesn\'t provoke Opportunity Attacks for the rest of the turn.' },
-    { name: 'Dodge', description: 'Until the start of your next turn, attack rolls against you have Disadvantage (if you can see the attacker) and you have Advantage on DEX saves. Lost if Incapacitated or Speed 0.' },
-    { name: 'Help', description: 'Aid an ally: give them Advantage on their next ability check (within 5 ft, before your next turn) OR Advantage on the next attack roll against a creature within 5 ft of you.' },
-    { name: 'Hide', description: 'Make a DEX (Stealth) check while out of any enemy\'s line of sight to gain the Invisible condition.' },
-    { name: 'Influence', description: 'Interact socially to change a creature\'s attitude. The DM may call for a Charisma check (Deception, Intimidation, Performance, or Persuasion) or Wisdom (Animal Handling).', meta: 'Social' },
-    { name: 'Magic', description: 'Cast a spell with a casting time of an action, or use a magic feature that requires a Magic action.' },
-    { name: 'Ready', description: 'Choose a trigger and a prepared action or movement. When the trigger occurs before the start of your next turn, you may use your Reaction to act. Concentration is required.' },
-    { name: 'Search', description: 'Make a Wisdom check (Insight, Medicine, Perception, or Survival) to look for something.' },
-    { name: 'Study', description: 'Make an Intelligence check (Arcana, History, Investigation, Nature, or Religion) to recall lore or analyze.' },
-    { name: 'Utilize', description: 'Use a non-magical object, such as drinking a potion you give to another creature or activating a mundane device.' },
-  ],
-  bonus: [
-    { name: 'Two-Weapon Fighting (offhand)', description: 'After taking the Attack action with a Light weapon in one hand, use a Bonus Action to attack with a different Light weapon in the other hand. No ability mod on damage unless negative.' },
-  ],
-  reaction: [
-    { name: 'Opportunity Attack', description: 'When a creature you can see moves out of your reach, use your Reaction to make one melee attack against it.' },
-    { name: 'Ready (triggered)', description: 'When the trigger from a Ready action occurs, take the prepared action as your Reaction.' },
-  ],
-};
-
 export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
+  const basicActions = useAppStore((s) => s.library.basicActions);
   const [filters, setFilters] = useState<Record<Slot, Set<SourceKey>>>(() => ({
     action: new Set(ALL_SOURCES),
     bonus: new Set(ALL_SOURCES),
@@ -95,18 +71,17 @@ export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
 
   const buckets: Record<Slot, Entry[]> = { action: [], bonus: [], reaction: [] };
 
-  // Basic
-  for (const slot of ['action', 'bonus', 'reaction'] as Slot[]) {
-    for (const a of BASIC_ACTIONS[slot]) {
-      buckets[slot].push({
-        key: `basic:${slot}:${a.name}`,
-        name: a.name,
-        sourceKey: 'basic',
-        source: 'Basic',
-        meta: a.meta,
-        description: a.description,
-      });
-    }
+  // Basic actions — sourced from the Library
+  for (const a of basicActions ?? []) {
+    if (a.slot !== 'action' && a.slot !== 'bonus' && a.slot !== 'reaction') continue;
+    buckets[a.slot].push({
+      key: `basic:${a.id}`,
+      name: a.name,
+      sourceKey: 'basic',
+      source: 'Basic',
+      meta: a.meta,
+      description: a.description,
+    });
   }
 
   // Weapons

@@ -312,6 +312,16 @@ export interface BackgroundEntry {
   builtin?: boolean;
 }
 
+/** A basic action available to any character — surfaced in the Action Economy view. */
+export interface BasicActionEntry {
+  id: string;
+  name: string;
+  slot: 'action' | 'bonus' | 'reaction';
+  description: string;
+  meta?: string;
+  builtin?: boolean;
+}
+
 export interface Library {
   glossary: GlossaryTerm[];
   spells: SpellEntry[];
@@ -320,6 +330,7 @@ export interface Library {
   weapons?: Weapon[];
   items: InventoryItem[];
   actions: LibraryAction[];
+  basicActions: BasicActionEntry[];
   custom: CustomEntry[];
   classes: ClassEntry[];
   species: SpeciesEntry[];
