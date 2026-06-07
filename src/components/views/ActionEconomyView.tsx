@@ -5,6 +5,7 @@ import { abilityMod, formatMod, SKILLS } from '@/lib/rules';
 import { KeywordText } from '@/components/KeywordText';
 import { Swords, Zap, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
 interface Props { character: Character; derived: Derived }
 
