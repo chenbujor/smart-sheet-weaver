@@ -1424,3 +1424,97 @@ const FeatureListEditor = ({
     )}
   </div>
 );
+
+// ---------------------------------------------------------------------------
+// Basic Actions tab — the pool drawn into the Action Economy view
+// ---------------------------------------------------------------------------
+
+const BASIC_SLOTS: BasicActionEntry['slot'][] = ['action', 'bonus', 'reaction'];
+const BASIC_SLOT_LABEL: Record<BasicActionEntry['slot'], string> = {
+  action: 'Action',
+  bonus: 'Bonus Action',
+  reaction: 'Reaction',
+};
+
+const BasicActionsTab = () => {
+  const list = useAppStore((s) => s.library.basicActions);
+  const add = useAppStore((s) => s.addLibraryEntry);
+  const update = useAppStore((s) => s.updateLibraryEntry);
+  const remove = useAppStore((s) => s.removeLibraryEntry);
+  const [q, setQ] = useState('');
+
+  const filtered = useMemo(
+    () => list.filter((a) => !q || a.name.toLowerCase().includes(q.toLowerCase())),
+    [list, q],
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchBar value={q} onChange={setQ} placeholder="Search basic actions..." />
+        <Button
+          onClick={() =>
+            add('basicActions', {
+              name: 'New Basic Action',
+              slot: 'action',
+              description: '',
+            } as Omit<BasicActionEntry, 'id'>)
+          }
+          className="bg-oxblood text-primary-foreground hover:bg-oxblood-deep"
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Add Basic Action
+        </Button>
+      </div>
+      <p className="text-xs italic text-ink-faded">
+        Generic actions available to every character (Dash, Dodge, Influence, Opportunity Attack, etc.).
+        These populate the Basic source in the Action Economy view.
+      </p>
+      {filtered.length === 0 ? (
+        <EmptyState message="No basic actions defined." />
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((a) => (
+            <div key={a.id} className="parchment-panel rounded-md p-3">
+              <div className="relative z-10 space-y-2">
+                <div className="flex items-center gap-2">
+                  <SmartInput
+                    value={a.name}
+                    onValueChange={(v) => update('basicActions', a.id, { name: v })}
+                    className="font-display flex-1"
+                  />
+                  <select
+                    value={a.slot}
+                    onChange={(e) => update('basicActions', a.id, { slot: e.target.value as BasicActionEntry['slot'] })}
+                    className="rounded-sm border border-ink/40 bg-parchment-light px-2 py-1.5 text-sm"
+                  >
+                    {BASIC_SLOTS.map((s) => <option key={s} value={s}>{BASIC_SLOT_LABEL[s]}</option>)}
+                  </select>
+                  <button
+                    onClick={() => remove('basicActions', a.id)}
+                    className="rounded p-1.5 text-ink-faded hover:text-oxblood-deep hover:bg-oxblood/10"
+                    aria-label="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <Input
+                  value={a.meta ?? ''}
+                  onChange={(e) => update('basicActions', a.id, { meta: e.target.value || undefined })}
+                  placeholder="Meta tag (e.g. Social, Melee · 5 ft)"
+                  className="text-xs"
+                />
+                <SmartTextarea
+                  value={a.description}
+                  onValueChange={(v) => update('basicActions', a.id, { description: v })}
+                  placeholder="Description"
+                  rows={3}
+                  className="bg-parchment-light border-ink/30"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
