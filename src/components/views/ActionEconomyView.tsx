@@ -41,8 +41,6 @@ const ALL_SOURCES: SourceKey[] = ['basic', 'weapon', 'spell', 'feature', 'item',
 
 export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
   const basicActions = useAppStore((s) => s.library.basicActions);
-
-export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
   const [filters, setFilters] = useState<Record<Slot, Set<SourceKey>>>(() => ({
     action: new Set(ALL_SOURCES),
     bonus: new Set(ALL_SOURCES),
@@ -73,18 +71,17 @@ export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
 
   const buckets: Record<Slot, Entry[]> = { action: [], bonus: [], reaction: [] };
 
-  // Basic
-  for (const slot of ['action', 'bonus', 'reaction'] as Slot[]) {
-    for (const a of BASIC_ACTIONS[slot]) {
-      buckets[slot].push({
-        key: `basic:${slot}:${a.name}`,
-        name: a.name,
-        sourceKey: 'basic',
-        source: 'Basic',
-        meta: a.meta,
-        description: a.description,
-      });
-    }
+  // Basic actions — sourced from the Library
+  for (const a of basicActions ?? []) {
+    if (a.slot !== 'action' && a.slot !== 'bonus' && a.slot !== 'reaction') continue;
+    buckets[a.slot].push({
+      key: `basic:${a.id}`,
+      name: a.name,
+      sourceKey: 'basic',
+      source: 'Basic',
+      meta: a.meta,
+      description: a.description,
+    });
   }
 
   // Weapons
