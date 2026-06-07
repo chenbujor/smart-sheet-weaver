@@ -40,6 +40,9 @@ const SOURCE_META: Record<SourceKey, { label: string }> = {
 const ALL_SOURCES: SourceKey[] = ['basic', 'weapon', 'spell', 'feature', 'item', 'custom'];
 
 export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
+  const basicActions = useAppStore((s) => s.library.basicActions);
+
+export const ActionEconomyView = ({ character: c, derived: d }: Props) => {
   const [filters, setFilters] = useState<Record<Slot, Set<SourceKey>>>(() => ({
     action: new Set(ALL_SOURCES),
     bonus: new Set(ALL_SOURCES),
