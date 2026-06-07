@@ -30,6 +30,7 @@ const TABS: { key: TabKeyExt; label: string; icon: any }[] = [
   { key: 'features', label: 'Features', icon: Sparkles },
   { key: 'items', label: 'Items', icon: Backpack },
   { key: 'actions', label: 'Actions', icon: Swords },
+  { key: 'basicActions', label: 'Basic Actions', icon: Zap },
   { key: 'custom', label: 'Custom', icon: ScrollText },
 ];
 
