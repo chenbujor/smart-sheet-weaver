@@ -77,6 +77,21 @@ const applyGrants = (
         grantUses: g.uses,
         grantRef: ref,
       } as any);
+    } else if (g.kind === 'spell-choice') {
+      // Player picks a spell that matches `constraints`. Resolution only happens
+      // once they've chosen — until then the grant is inert (the picker UI lives
+      // on the character feature panel).
+      if (!g.chosenSpellId) continue;
+      const tmpl = lib.spells.find((s) => s.id === g.chosenSpellId);
+      if (!tmpl) continue;
+      out.spells.push({
+        ...tmpl,
+        id: `granted:${source.id}:${g.id}`,
+        alwaysPrepared: g.alwaysPrepared ?? true,
+        grantedBy: source.name,
+        grantUses: g.uses,
+        grantRef: ref,
+      } as any);
     } else if (g.kind === 'bonus') {
       const t = g.target;
       const v = g.value || 0;
