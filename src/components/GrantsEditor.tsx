@@ -68,6 +68,9 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
           <Button size="sm" variant="outline" onClick={addSpell} className="h-7 text-xs" disabled={!librarySpells.length}>
             <Wand2 className="h-3 w-3 mr-1" /> Spell
           </Button>
+          <Button size="sm" variant="outline" onClick={addSpellChoice} className="h-7 text-xs">
+            <HelpCircle className="h-3 w-3 mr-1" /> Spell Choice
+          </Button>
           <Button size="sm" variant="outline" onClick={addBonus} className="h-7 text-xs">
             <Sparkles className="h-3 w-3 mr-1" /> Bonus
           </Button>
