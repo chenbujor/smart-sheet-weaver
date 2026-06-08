@@ -147,10 +147,24 @@ export interface GrantUses {
   used?: number;              // current consumed charges
 }
 
+/**
+ * Constraints used by a "player's choice" spell grant. The character picks any
+ * library spell that satisfies all the listed filters. Empty/undefined arrays
+ * mean "no restriction" for that dimension.
+ */
+export interface SpellChoiceConstraints {
+  classes?: string[];      // restrict to spells whose `spellLists` include one of these class names
+  schools?: SpellSchool[]; // restrict to specific schools (e.g. Enchantment / Illusion for Fey Touched)
+  minLevel?: number;       // 0..9
+  maxLevel?: number;       // 0..9
+  ritualOnly?: boolean;    // only spells with the ritual tag
+}
+
 export type Grant =
   | { id: string; kind: 'action'; libraryActionId: string; uses?: GrantUses }
   | { id: string; kind: 'inline-action'; action: Omit<LibraryAction, 'id'>; uses?: GrantUses }
   | { id: string; kind: 'spell';  librarySpellId: string; alwaysPrepared?: boolean; uses?: GrantUses }
+  | { id: string; kind: 'spell-choice'; constraints: SpellChoiceConstraints; chosenSpellId?: string; alwaysPrepared?: boolean; uses?: GrantUses }
   | { id: string; kind: 'bonus';  target: BonusTarget; value: number; uses?: GrantUses };
 
 export interface Character {
