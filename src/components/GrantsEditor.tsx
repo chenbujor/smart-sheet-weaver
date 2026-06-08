@@ -47,6 +47,11 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
     ]);
   const addSpell = () =>
     onChange([...list, { id: uid(), kind: 'spell', librarySpellId: librarySpells[0]?.id ?? '', alwaysPrepared: true }]);
+  const addSpellChoice = () =>
+    onChange([
+      ...list,
+      { id: uid(), kind: 'spell-choice', constraints: {}, alwaysPrepared: true },
+    ]);
   const addBonus = () =>
     onChange([...list, { id: uid(), kind: 'bonus', target: { type: 'scalar', key: 'ac' }, value: 1 }]);
 
