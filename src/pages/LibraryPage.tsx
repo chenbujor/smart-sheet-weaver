@@ -281,15 +281,26 @@ const SpellsTab = () => {
                         <SmartInput value={s.components} onValueChange={(v) => update('spells', s.id, { components: v })} placeholder="Components" />
                         <SmartInput value={s.duration} onValueChange={(v) => update('spells', s.id, { duration: v })} placeholder="Duration" />
                       </div>
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={s.concentration ?? false}
-                          onChange={(e) => update('spells', s.id, { concentration: e.target.checked })}
-                          className="accent-oxblood"
-                        />
-                        Concentration
-                      </label>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={s.concentration ?? false}
+                            onChange={(e) => update('spells', s.id, { concentration: e.target.checked })}
+                            className="accent-oxblood"
+                          />
+                          Concentration
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={s.ritual ?? false}
+                            onChange={(e) => update('spells', s.id, { ritual: e.target.checked })}
+                            className="accent-oxblood"
+                          />
+                          Ritual
+                        </label>
+                      </div>
                       <SpellListsField
                         value={s.spellLists ?? []}
                         onChange={(v) => update('spells', s.id, { spellLists: v.length ? v : undefined })}
