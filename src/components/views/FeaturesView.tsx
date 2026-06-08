@@ -358,3 +358,69 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Spell choice picker — lets the player select a library spell that satisfies
+// a grant's constraints (e.g. Magic Initiate, Fey Touched).
+// ---------------------------------------------------------------------------
+
+const SpellChoicePicker = ({
+  grant,
+  onPick,
+}: {
+  grant: Extract<Grant, { kind: 'spell-choice' }>;
+  onPick: (spellId: string) => void;
+}) => {
+  const librarySpells = useAppStore((s) => s.library.spells);
+  const candidates = librarySpells
+    .filter((sp) => spellMatchesConstraints(sp, grant.constraints))
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+
+  const summary: string[] = [];
+  const k = grant.constraints;
+  if (k.minLevel !== undefined || k.maxLevel !== undefined) {
+    summary.push(
+      `level ${k.minLevel ?? 0}–${k.maxLevel ?? 9}`,
+    );
+  }
+  if (k.schools?.length) summary.push(k.schools.join(' / '));
+  if (k.classes?.length) summary.push(`${k.classes.join(' / ')} list`);
+  if (k.ritualOnly) summary.push('ritual only');
+  const limits = summary.length ? summary.join(' · ') : 'any spell';
+
+  return (
+    <div className="rounded-sm border border-ink/15 bg-parchment-light p-2 text-xs">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <span className="italic text-ink-faded">Pick a spell — {limits}</span>
+        {grant.chosenSpellId && (
+          <button
+            type="button"
+            onClick={() => onPick('')}
+            className="text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+          >
+            clear
+          </button>
+        )}
+      </div>
+      {candidates.length === 0 ? (
+        <p className="italic text-ink-faded">
+          No spell in your library matches these limits. Add spells (and tag them with school / class / ritual) in the Library.
+        </p>
+      ) : (
+        <select
+          value={grant.chosenSpellId ?? ''}
+          onChange={(e) => onPick(e.target.value)}
+          className="w-full rounded-sm border border-ink/40 bg-parchment px-2 py-1 text-sm"
+        >
+          <option value="">— choose a spell —</option>
+          {candidates.map((sp) => (
+            <option key={sp.id} value={sp.id}>
+              {sp.name} ({sp.level === 0 ? 'C' : `L${sp.level}`} · {sp.school}
+              {sp.ritual ? ' · R' : ''})
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
+};
