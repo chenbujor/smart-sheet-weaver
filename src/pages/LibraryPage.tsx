@@ -1361,12 +1361,13 @@ const BackgroundsTab = () => (
 // Lightweight feature editor (name + description + uses + grants) reused for
 // species & backgrounds. Mirrors the ClassFeaturesSection but without a level.
 const FeatureListEditor = ({
-  features, onAdd, onUpdate, onRemove,
+  features, onAdd, onUpdate, onRemove, showLevel,
 }: {
   features: CharacterFeature[];
   onAdd: () => void;
   onUpdate: (fid: string, patch: Partial<CharacterFeature>) => void;
   onRemove: (fid: string) => void;
+  showLevel?: boolean;
 }) => (
   <div className="space-y-2">
     <div className="flex items-center justify-between">
@@ -1387,6 +1388,17 @@ const FeatureListEditor = ({
                 onValueChange={(v) => onUpdate(f.id, { name: v })}
                 className="font-display flex-1"
               />
+              {showLevel && (
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={f.level ?? 1}
+                  onChange={(e) => onUpdate(f.id, { level: Math.max(1, Math.min(20, parseInt(e.target.value) || 1)) })}
+                  title="Unlocks at level"
+                  className="w-14 h-8 text-xs"
+                />
+              )}
               <Input
                 value={f.usesFormula ?? ''}
                 onChange={(e) => onUpdate(f.id, { usesFormula: e.target.value || undefined })}
