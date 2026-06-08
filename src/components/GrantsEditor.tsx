@@ -4,8 +4,8 @@
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Wand2, Swords, Sparkles, Zap } from 'lucide-react';
-import { ABILITY_KEYS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType } from '@/lib/types';
+import { Plus, Trash2, Wand2, Swords, Sparkles, Zap, HelpCircle } from 'lucide-react';
+import { ABILITY_KEYS, SPELL_SCHOOLS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType, type SpellSchool, type SpellChoiceConstraints } from '@/lib/types';
 import { useState } from 'react';
 import { SKILLS } from '@/lib/rules';
 
