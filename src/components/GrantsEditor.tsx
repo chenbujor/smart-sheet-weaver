@@ -4,8 +4,8 @@
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Wand2, Swords, Sparkles, Zap } from 'lucide-react';
-import { ABILITY_KEYS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType } from '@/lib/types';
+import { Plus, Trash2, Wand2, Swords, Sparkles, Zap, HelpCircle } from 'lucide-react';
+import { ABILITY_KEYS, SPELL_SCHOOLS, type Grant, type GrantUses, type AbilityKey, type ScalarBonusKey, type BonusTarget, type LibraryAction, type ActionTime, type ResetType, type SpellSchool, type SpellChoiceConstraints } from '@/lib/types';
 import { useState } from 'react';
 import { SKILLS } from '@/lib/rules';
 
@@ -47,6 +47,11 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
     ]);
   const addSpell = () =>
     onChange([...list, { id: uid(), kind: 'spell', librarySpellId: librarySpells[0]?.id ?? '', alwaysPrepared: true }]);
+  const addSpellChoice = () =>
+    onChange([
+      ...list,
+      { id: uid(), kind: 'spell-choice', constraints: {}, alwaysPrepared: true },
+    ]);
   const addBonus = () =>
     onChange([...list, { id: uid(), kind: 'bonus', target: { type: 'scalar', key: 'ac' }, value: 1 }]);
 
@@ -62,6 +67,9 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
           </Button>
           <Button size="sm" variant="outline" onClick={addSpell} className="h-7 text-xs" disabled={!librarySpells.length}>
             <Wand2 className="h-3 w-3 mr-1" /> Spell
+          </Button>
+          <Button size="sm" variant="outline" onClick={addSpellChoice} className="h-7 text-xs">
+            <HelpCircle className="h-3 w-3 mr-1" /> Spell Choice
           </Button>
           <Button size="sm" variant="outline" onClick={addBonus} className="h-7 text-xs">
             <Sparkles className="h-3 w-3 mr-1" /> Bonus
@@ -136,6 +144,24 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                       </label>
                     </>
                   )}
+                  {g.kind === 'spell-choice' && (
+                    <>
+                      <HelpCircle className="h-3 w-3 text-ink-faded flex-shrink-0" />
+                      <span className="text-ink-faded">Spell Choice</span>
+                      <span className="flex-1 italic text-[0.65rem] text-ink-faded">
+                        Player picks any spell matching the limits below.
+                      </span>
+                      <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
+                        <input
+                          type="checkbox"
+                          checked={g.alwaysPrepared ?? true}
+                          onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
+                          className="accent-oxblood"
+                        />
+                        Always prepared
+                      </label>
+                    </>
+                  )}
                   {g.kind === 'bonus' && (
                     <BonusGrantRow
                       target={g.target}
@@ -152,6 +178,12 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
+                {g.kind === 'spell-choice' && (
+                  <SpellChoiceConstraintsEditor
+                    constraints={g.constraints}
+                    onChange={(constraints) => update(g.id, { constraints } as Partial<Grant>)}
+                  />
+                )}
                 {chargesEditor}
               </div>
             );
@@ -434,4 +466,148 @@ const ChargesEditor = ({
       </div>
     </div>
   );
+};
+
+// ---------------------------------------------------------------------------
+// Spell-choice constraints editor — define what spells the player may pick
+// ---------------------------------------------------------------------------
+
+const SpellChoiceConstraintsEditor = ({
+  constraints,
+  onChange,
+}: {
+  constraints: SpellChoiceConstraints;
+  onChange: (next: SpellChoiceConstraints) => void;
+}) => {
+  const librarySpells = useAppStore((s) => s.library.spells);
+  const set = (patch: Partial<SpellChoiceConstraints>) => onChange({ ...constraints, ...patch });
+
+  const classOptions = Array.from(
+    new Set(librarySpells.flatMap((s) => s.spellLists ?? []).filter(Boolean)),
+  ).sort();
+
+  const matches = librarySpells.filter((s) => spellMatchesConstraints(s, constraints)).length;
+
+  const toggleSchool = (sch: SpellSchool) => {
+    const cur = constraints.schools ?? [];
+    const next = cur.includes(sch) ? cur.filter((x) => x !== sch) : [...cur, sch];
+    set({ schools: next.length ? next : undefined });
+  };
+  const toggleClass = (cls: string) => {
+    const cur = constraints.classes ?? [];
+    const next = cur.includes(cls) ? cur.filter((x) => x !== cls) : [...cur, cls];
+    set({ classes: next.length ? next : undefined });
+  };
+
+  return (
+    <div className="rounded-sm border border-ink/15 bg-parchment/60 p-1.5 space-y-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Min level
+          <Input
+            type="number" min={0} max={9}
+            value={constraints.minLevel ?? ''}
+            onChange={(e) => set({ minLevel: e.target.value === '' ? undefined : Math.max(0, Math.min(9, parseInt(e.target.value, 10) || 0)) })}
+            placeholder="any"
+            className="mt-0.5 h-6 px-1.5"
+          />
+        </label>
+        <label className="flex flex-col text-[0.65rem] text-ink-faded">
+          Max level
+          <Input
+            type="number" min={0} max={9}
+            value={constraints.maxLevel ?? ''}
+            onChange={(e) => set({ maxLevel: e.target.value === '' ? undefined : Math.max(0, Math.min(9, parseInt(e.target.value, 10) || 0)) })}
+            placeholder="any"
+            className="mt-0.5 h-6 px-1.5"
+          />
+        </label>
+        <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded col-span-2 mt-3">
+          <input
+            type="checkbox"
+            checked={constraints.ritualOnly ?? false}
+            onChange={(e) => set({ ritualOnly: e.target.checked || undefined })}
+            className="accent-oxblood"
+          />
+          Ritual spells only
+        </label>
+      </div>
+
+      <div>
+        <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded mb-0.5">Schools</div>
+        <div className="flex flex-wrap gap-1">
+          {SPELL_SCHOOLS.map((sch) => {
+            const on = (constraints.schools ?? []).includes(sch);
+            return (
+              <button
+                key={sch}
+                type="button"
+                onClick={() => toggleSchool(sch)}
+                className={`rounded-sm border px-1.5 py-0.5 text-[0.65rem] ${
+                  on ? 'border-oxblood bg-oxblood/15 text-oxblood-deep'
+                     : 'border-ink/30 bg-parchment text-ink-faded hover:text-ink'
+                }`}
+              >
+                {sch}
+              </button>
+            );
+          })}
+        </div>
+        {(constraints.schools ?? []).length === 0 && (
+          <p className="text-[0.6rem] italic text-ink-faded mt-0.5">Any school.</p>
+        )}
+      </div>
+
+      <div>
+        <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded mb-0.5">Class lists</div>
+        {classOptions.length === 0 ? (
+          <p className="text-[0.6rem] italic text-ink-faded">
+            No class lists declared on library spells yet. Add classes via each spell's "Spell lists" field.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {classOptions.map((cls) => {
+              const on = (constraints.classes ?? []).includes(cls);
+              return (
+                <button
+                  key={cls}
+                  type="button"
+                  onClick={() => toggleClass(cls)}
+                  className={`rounded-sm border px-1.5 py-0.5 text-[0.65rem] ${
+                    on ? 'border-oxblood bg-oxblood/15 text-oxblood-deep'
+                       : 'border-ink/30 bg-parchment text-ink-faded hover:text-ink'
+                  }`}
+                >
+                  {cls}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {(constraints.classes ?? []).length === 0 && classOptions.length > 0 && (
+          <p className="text-[0.6rem] italic text-ink-faded mt-0.5">Any class list.</p>
+        )}
+      </div>
+
+      <p className="text-[0.6rem] italic text-ink-faded">
+        {matches} matching spell{matches === 1 ? '' : 's'} in the library.
+      </p>
+    </div>
+  );
+};
+
+// Pure helper — exported so the character-side picker can reuse it.
+export const spellMatchesConstraints = (
+  sp: { level: number; school: SpellSchool; ritual?: boolean; spellLists?: string[] },
+  c: SpellChoiceConstraints,
+): boolean => {
+  if (c.minLevel !== undefined && sp.level < c.minLevel) return false;
+  if (c.maxLevel !== undefined && sp.level > c.maxLevel) return false;
+  if (c.ritualOnly && !sp.ritual) return false;
+  if (c.schools && c.schools.length && !c.schools.includes(sp.school)) return false;
+  if (c.classes && c.classes.length) {
+    const lists = sp.spellLists ?? [];
+    if (!c.classes.some((cls) => lists.includes(cls))) return false;
+  }
+  return true;
 };

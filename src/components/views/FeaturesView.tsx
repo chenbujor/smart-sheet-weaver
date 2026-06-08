@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
 import { LibraryPicker } from '@/components/LibraryPicker';
 import { LockableTextarea } from '@/components/LockableTextarea';
+import { spellMatchesConstraints } from '@/components/GrantsEditor';
+import type { Grant } from '@/lib/types';
 
 interface Props { character: Character; derived: Derived }
 
@@ -55,11 +57,22 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
       const prevGrantUsed = new Map(
         (prev?.grants ?? []).map((g) => [g.id, g.uses?.used ?? 0]),
       );
-      const grants = libF.grants?.map((g) =>
-        g.uses
-          ? ({ ...g, uses: { ...g.uses, used: prevGrantUsed.get(g.id) ?? g.uses.used ?? 0 } } as typeof g)
-          : g,
+      // Preserve player choices for spell-choice grants across auto-sync.
+      const prevGrantChoice = new Map(
+        (prev?.grants ?? [])
+          .filter((g) => g.kind === 'spell-choice')
+          .map((g) => [g.id, (g as { chosenSpellId?: string }).chosenSpellId]),
       );
+      const grants = libF.grants?.map((g) => {
+        let next: typeof g = g;
+        if (g.uses) {
+          next = { ...g, uses: { ...g.uses, used: prevGrantUsed.get(g.id) ?? g.uses.used ?? 0 } } as typeof g;
+        }
+        if (g.kind === 'spell-choice' && prevGrantChoice.has(g.id)) {
+          next = { ...(next as typeof g & { kind: 'spell-choice' }), chosenSpellId: prevGrantChoice.get(g.id) };
+        }
+        return next;
+      });
       return {
         ...libF,
         grants,
@@ -162,6 +175,27 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
             </button>
           )}
         </div>
+
+
+        {open && (f.grants ?? []).some((g) => g.kind === 'spell-choice') && (
+          <div className="border-t border-ink/15 p-3 space-y-2 bg-parchment-light/40">
+            <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Choices</div>
+            {(f.grants ?? [])
+              .filter((g): g is Extract<Grant, { kind: 'spell-choice' }> => g.kind === 'spell-choice')
+              .map((g) => (
+                <SpellChoicePicker
+                  key={g.id}
+                  grant={g}
+                  onPick={(spellId) => {
+                    const nextGrants = (f.grants ?? []).map((x) =>
+                      x.id === g.id ? ({ ...x, chosenSpellId: spellId || undefined } as Grant) : x,
+                    );
+                    updateFeature(c.id, f.id, { grants: nextGrants });
+                  }}
+                />
+              ))}
+          </div>
+        )}
 
         {open && f.auto && (
           <div className="border-t border-ink/15 p-3 text-xs italic text-ink-faded bg-parchment-light/40">
@@ -321,6 +355,72 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
           </div>
         </section>
       </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Spell choice picker — lets the player select a library spell that satisfies
+// a grant's constraints (e.g. Magic Initiate, Fey Touched).
+// ---------------------------------------------------------------------------
+
+const SpellChoicePicker = ({
+  grant,
+  onPick,
+}: {
+  grant: Extract<Grant, { kind: 'spell-choice' }>;
+  onPick: (spellId: string) => void;
+}) => {
+  const librarySpells = useAppStore((s) => s.library.spells);
+  const candidates = librarySpells
+    .filter((sp) => spellMatchesConstraints(sp, grant.constraints))
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+
+  const summary: string[] = [];
+  const k = grant.constraints;
+  if (k.minLevel !== undefined || k.maxLevel !== undefined) {
+    summary.push(
+      `level ${k.minLevel ?? 0}–${k.maxLevel ?? 9}`,
+    );
+  }
+  if (k.schools?.length) summary.push(k.schools.join(' / '));
+  if (k.classes?.length) summary.push(`${k.classes.join(' / ')} list`);
+  if (k.ritualOnly) summary.push('ritual only');
+  const limits = summary.length ? summary.join(' · ') : 'any spell';
+
+  return (
+    <div className="rounded-sm border border-ink/15 bg-parchment-light p-2 text-xs">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <span className="italic text-ink-faded">Pick a spell — {limits}</span>
+        {grant.chosenSpellId && (
+          <button
+            type="button"
+            onClick={() => onPick('')}
+            className="text-[0.65rem] text-ink-faded hover:text-oxblood-deep"
+          >
+            clear
+          </button>
+        )}
+      </div>
+      {candidates.length === 0 ? (
+        <p className="italic text-ink-faded">
+          No spell in your library matches these limits. Add spells (and tag them with school / class / ritual) in the Library.
+        </p>
+      ) : (
+        <select
+          value={grant.chosenSpellId ?? ''}
+          onChange={(e) => onPick(e.target.value)}
+          className="w-full rounded-sm border border-ink/40 bg-parchment px-2 py-1 text-sm"
+        >
+          <option value="">— choose a spell —</option>
+          {candidates.map((sp) => (
+            <option key={sp.id} value={sp.id}>
+              {sp.name} ({sp.level === 0 ? 'C' : `L${sp.level}`} · {sp.school}
+              {sp.ritual ? ' · R' : ''})
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 };
