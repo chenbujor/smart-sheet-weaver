@@ -176,6 +176,27 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
           )}
         </div>
 
+
+        {open && (f.grants ?? []).some((g) => g.kind === 'spell-choice') && (
+          <div className="border-t border-ink/15 p-3 space-y-2 bg-parchment-light/40">
+            <div className="text-[0.65rem] uppercase tracking-wider text-ink-faded">Spell Choices</div>
+            {(f.grants ?? [])
+              .filter((g): g is Extract<Grant, { kind: 'spell-choice' }> => g.kind === 'spell-choice')
+              .map((g) => (
+                <SpellChoicePicker
+                  key={g.id}
+                  grant={g}
+                  onPick={(spellId) => {
+                    const nextGrants = (f.grants ?? []).map((x) =>
+                      x.id === g.id ? ({ ...x, chosenSpellId: spellId || undefined } as Grant) : x,
+                    );
+                    updateFeature(c.id, f.id, { grants: nextGrants });
+                  }}
+                />
+              ))}
+          </div>
+        )}
+
         {open && f.auto && (
           <div className="border-t border-ink/15 p-3 text-xs italic text-ink-faded bg-parchment-light/40">
             This feature is granted automatically by your class at level {f.level ?? 1}. Edit it in
