@@ -144,6 +144,24 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                       </label>
                     </>
                   )}
+                  {g.kind === 'spell-choice' && (
+                    <>
+                      <HelpCircle className="h-3 w-3 text-ink-faded flex-shrink-0" />
+                      <span className="text-ink-faded">Spell Choice</span>
+                      <span className="flex-1 italic text-[0.65rem] text-ink-faded">
+                        Player picks any spell matching the limits below.
+                      </span>
+                      <label className="flex items-center gap-1 text-[0.65rem] text-ink-faded">
+                        <input
+                          type="checkbox"
+                          checked={g.alwaysPrepared ?? true}
+                          onChange={(e) => update(g.id, { alwaysPrepared: e.target.checked } as Partial<Grant>)}
+                          className="accent-oxblood"
+                        />
+                        Always prepared
+                      </label>
+                    </>
+                  )}
                   {g.kind === 'bonus' && (
                     <BonusGrantRow
                       target={g.target}
@@ -160,6 +178,12 @@ export const GrantsEditor = ({ grants, onChange }: Props) => {
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
+                {g.kind === 'spell-choice' && (
+                  <SpellChoiceConstraintsEditor
+                    constraints={g.constraints}
+                    onChange={(constraints) => update(g.id, { constraints } as Partial<Grant>)}
+                  />
+                )}
                 {chargesEditor}
               </div>
             );
