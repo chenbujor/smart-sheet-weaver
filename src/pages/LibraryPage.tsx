@@ -1336,6 +1336,7 @@ const FeatureCollectionTab = <T extends SpeciesEntry | BackgroundEntry>({
                         onAdd={() => addFeature(e.id)}
                         onUpdate={(fid, patch) => updateFeature(e.id, fid, patch)}
                         onRemove={(fid) => removeFeatureFn(e.id, fid)}
+                        showLevel={category === 'species'}
                       />
                     </div>
                   )}
