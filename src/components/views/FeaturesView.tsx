@@ -55,11 +55,22 @@ export const FeaturesView = ({ character: c, derived: d }: Props) => {
       const prevGrantUsed = new Map(
         (prev?.grants ?? []).map((g) => [g.id, g.uses?.used ?? 0]),
       );
-      const grants = libF.grants?.map((g) =>
-        g.uses
-          ? ({ ...g, uses: { ...g.uses, used: prevGrantUsed.get(g.id) ?? g.uses.used ?? 0 } } as typeof g)
-          : g,
+      // Preserve player choices for spell-choice grants across auto-sync.
+      const prevGrantChoice = new Map(
+        (prev?.grants ?? [])
+          .filter((g) => g.kind === 'spell-choice')
+          .map((g) => [g.id, (g as { chosenSpellId?: string }).chosenSpellId]),
       );
+      const grants = libF.grants?.map((g) => {
+        let next: typeof g = g;
+        if (g.uses) {
+          next = { ...g, uses: { ...g.uses, used: prevGrantUsed.get(g.id) ?? g.uses.used ?? 0 } } as typeof g;
+        }
+        if (g.kind === 'spell-choice' && prevGrantChoice.has(g.id)) {
+          next = { ...(next as typeof g & { kind: 'spell-choice' }), chosenSpellId: prevGrantChoice.get(g.id) };
+        }
+        return next;
+      });
       return {
         ...libF,
         grants,
