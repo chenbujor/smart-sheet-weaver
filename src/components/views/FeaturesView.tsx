@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { BonusesPanel } from '@/components/BonusesPanel';
 import { LibraryPicker } from '@/components/LibraryPicker';
 import { LockableTextarea } from '@/components/LockableTextarea';
+import { spellMatchesConstraints } from '@/components/GrantsEditor';
+import type { Grant } from '@/lib/types';
 
 interface Props { character: Character; derived: Derived }
 
